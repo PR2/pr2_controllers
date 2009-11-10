@@ -1,0 +1,46 @@
+<package>
+  <description brief='PR2 Controller Library'>
+    Library for doing controls on the PR2.
+  </description>
+  <author>Sachin Chita, John Hsu, David Li, Jimmy Sastra, Melonee Wise</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+  <depend package="trajectory" />
+
+  <!-- ROS Interfaces -->
+  <depend package="std_msgs" />
+  <depend package="geometry_msgs" />
+  <depend package="pr2_mechanism_msgs" />
+  <depend package="nav_msgs" />
+  <depend package="pr2_msgs" />
+  <depend package="visualization_msgs" />
+  <depend package="diagnostic_msgs" />
+
+  <!-- Plugins -->
+  <depend package="pr2_controller_interface" />
+  
+  <depend package="roscpp" />
+  <depend package="pr2_mechanism_model" />
+  <depend package="realtime_tools" />
+  <depend package="robot_mechanism_controllers" />
+  <depend package="rospy" />
+  <depend package="pluginlib" />
+  <depend package="rosconsole" />
+  <depend package="eigen" />
+  <depend package="tf" />
+  <depend package="angles" />
+  <depend package="control_toolbox" />
+  <depend package="filters" />
+  <depend package="diagnostic_updater" />
+  
+  <url>http://pr.willowgarage.com</url>
+  <repository>http://pr.willowgarage.com/repos</repository>
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
+	 lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpr2_mechanism_controllers" />
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
+
+  </export>
+
+</package>

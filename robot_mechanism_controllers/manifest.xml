@@ -1,0 +1,36 @@
+<package>
+  <description brief="Generic Mechanism Controller Library">
+  </description>
+  <author>John Hsu, David Li, Melonee Wise, Stuart Glaser</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+  <depend package="rospy"/>
+  <depend package="roscpp" />
+  <depend package="angles" />
+  <depend package="tf" />
+  <depend package="tf_conversions" />
+  <depend package="kdl" />
+  <depend package="pluginlib" />
+
+  <depend package="std_msgs" />
+  <depend package="geometry_msgs" />
+  <depend package="diagnostic_msgs" />
+  <depend package="trajectory_msgs" />
+
+  <depend package="pr2_controller_interface" />
+  <depend package="pr2_controller_manager" />
+  <depend package="kdl_parser"/>
+  <depend package="pr2_mechanism_model" />
+  <depend package="control_toolbox" />
+  <depend package="realtime_tools" />
+
+  <url>http://pr.willowgarage.com</url>
+  <repository>http://pr.willowgarage.com/repos</repository>
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
+	 lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lrobot_mechanism_controllers" />
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
+  </export>
+  <rosdep name="libtool"/>
+</package>

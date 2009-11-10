@@ -1,0 +1,5 @@
+<library path="lib/libethercat_trigger_controllers" >
+  <class name="MultiTriggerController" type="controller::MultiTriggerController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="TriggerController" type="controller::TriggerController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="ProjectorController" type="controller::ProjectorController" base_class_type="pr2_controller_interface::Controller" />
+</library>

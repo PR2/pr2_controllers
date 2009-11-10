@@ -1,0 +1,9 @@
+<library path="lib/libpr2_calibration_controllers">
+
+  <class name="JointCalibrationController" type="controller::JointCalibrationController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="CasterCalibrationController" type="controller::CasterCalibrationController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="GripperCalibrationController" type="controller::GripperCalibrationController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="GripperCalibrationControllerNode" type="controller::GripperCalibrationControllerNode" base_class_type="pr2_controller_interface::Controller" />
+  <class name="WristCalibrationController" type="controller::WristCalibrationController" base_class_type="pr2_controller_interface::Controller" />
+
+</library>

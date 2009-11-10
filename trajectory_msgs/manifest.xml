@@ -1,0 +1,18 @@
+<package>
+  <description brief="trajectory_msgs">
+
+     trajectory_msgs
+
+  </description>
+  <author>Stuart Glaser</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/trajectory_msgs</url>
+
+  <export>
+    <cpp cflags="-I${prefix}/msg/cpp" />
+  </export>
+
+</package>
+
+
