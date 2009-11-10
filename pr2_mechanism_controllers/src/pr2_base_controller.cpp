@@ -84,7 +84,7 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   state_publisher_->msg_.set_joint_speed_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
   state_publisher_->msg_.set_joint_speed_filtered_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
   state_publisher_->msg_.set_joint_commanded_effort_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_applied_effort_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
+  state_publisher_->msg_.set_joint_measured_effort_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
 
 //    joy_sub_ = ros_node_.subscribe(joy_listen_topic, 1, &AntiCollisionBaseController::joyCallBack, this);
 
@@ -326,7 +326,7 @@ void Pr2BaseController::publishState(ros::Time time)
       state_publisher_->msg_.joint_speed_error[i] = base_kin_.caster_[i].caster_speed_error_;
       state_publisher_->msg_.joint_stall[i] = base_kin_.caster_[i].caster_stuck_;
       state_publisher_->msg_.joint_commanded_effort[i] = base_kin_.caster_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_applied_effort[i] = base_kin_.caster_[i].joint_->applied_effort_;
+      state_publisher_->msg_.joint_measured_effort[i] = base_kin_.caster_[i].joint_->measured_effort_;
     }
     for(int i = 0; i < base_kin_.num_wheels_; i++)
     {
@@ -335,7 +335,7 @@ void Pr2BaseController::publishState(ros::Time time)
       state_publisher_->msg_.joint_speed_error[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_error_;
       state_publisher_->msg_.joint_stall[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_stuck_;
       state_publisher_->msg_.joint_commanded_effort[i + base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_applied_effort[i + base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->applied_effort_;
+      state_publisher_->msg_.joint_measured_effort[i + base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->measured_effort_;
     }
 
     state_publisher_->unlockAndPublish();
@@ -454,7 +454,7 @@ void Pr2BaseController::computeStall()
     base_kin_.caster_[i].caster_speed_filtered_ = alpha_stall_ * base_kin_.caster_[i].caster_speed_filtered_ + (1 - alpha_stall_) * base_kin_.caster_[i].joint_->velocity_;//low pass filter
     base_kin_.caster_[i].caster_speed_ = base_kin_.caster_[i].joint_->velocity_;
 
-    if(fabs(base_kin_.caster_[i].caster_speed_) < caster_speed_threshold_ && fabs(base_kin_.caster_[i].caster_position_error_) > caster_position_error_threshold_ && fabs(base_kin_.caster_[i].joint_->applied_effort_) > caster_effort_threshold_)
+    if(fabs(base_kin_.caster_[i].caster_speed_) < caster_speed_threshold_ && fabs(base_kin_.caster_[i].caster_position_error_) > caster_position_error_threshold_ && fabs(base_kin_.caster_[i].joint_->measured_effort_) > caster_effort_threshold_)
     {
       base_kin_.caster_[i].caster_stuck_ = 1;
     }
@@ -468,7 +468,7 @@ void Pr2BaseController::computeStall()
   {
     base_kin_.wheel_[j].wheel_speed_error_ = fabs(base_kin_.wheel_[j].joint_->velocity_ - base_kin_.wheel_[j].wheel_speed_cmd_);
     base_kin_.wheel_[j].wheel_speed_filtered_ = alpha_stall_ * base_kin_.wheel_[j].wheel_speed_filtered_ + (1 - alpha_stall_) * base_kin_.wheel_[j].wheel_speed_actual_;
-    if(fabs(base_kin_.wheel_[j].wheel_speed_filtered_) < wheel_speed_threshold_ && fabs(base_kin_.wheel_[j].joint_->applied_effort_) > wheel_effort_threshold_)
+    if(fabs(base_kin_.wheel_[j].wheel_speed_filtered_) < wheel_speed_threshold_ && fabs(base_kin_.wheel_[j].joint_->measured_effort_) > wheel_effort_threshold_)
     {
       base_kin_.wheel_[j].wheel_stuck_ = 1;
     }

@@ -5,7 +5,7 @@ float64[] joint_speed
 float64[] joint_speed_filtered
 float64[] joint_speed_error
 float64[] joint_commanded_effort
-float64[] joint_applied_effort
+float64[] joint_measured_effort
 int32[] joint_stall
 string[] joint_name
 
