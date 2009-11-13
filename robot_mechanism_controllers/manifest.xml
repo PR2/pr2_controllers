@@ -24,6 +24,7 @@
   <depend package="pr2_mechanism_model" />
   <depend package="control_toolbox" />
   <depend package="realtime_tools" />
+  <depend package="realtime_infuser" />
 
   <url>http://pr.willowgarage.com</url>
   <repository>http://pr.willowgarage.com/repos</repository>

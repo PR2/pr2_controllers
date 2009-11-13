@@ -45,7 +45,7 @@
 #include <control_toolbox/pid.h>
 #include <realtime_tools/recorder.h>
 #include <pr2_controller_interface/controller.h>
-#include <realtime_tools/realtime_infuser.h>
+#include <realtime_infuser/realtime_infuser.h>
 #include <realtime_tools/realtime_publisher.h>
 
 #include "trajectory_msgs/JointTrajectory.h"
