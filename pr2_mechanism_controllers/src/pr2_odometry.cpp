@@ -94,7 +94,7 @@ bool Pr2Odometry::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHa
   weight_matrix_ = Eigen::MatrixXf::Identity(16, 16);
 
   odometry_publisher_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(node_,odom_frame_, 1));
-  transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>("/tf", 1));
+  transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(node_,"/tf", 1));
   transform_publisher_->msg_.set_transforms_size(2);
 
   return true;

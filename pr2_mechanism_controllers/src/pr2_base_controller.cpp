@@ -77,7 +77,7 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   node_ = n;
 //  if(state_publisher_ != NULL)// Make sure that we don't memory leak if initXml gets called twice
 //    delete state_publisher_;
-  state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(base_kin_.name_ + "/state", 1));
+  state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(n, base_kin_.name_ + "/state", 1));
   state_publisher_->msg_.set_joint_name_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
   state_publisher_->msg_.set_joint_stall_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
   state_publisher_->msg_.set_joint_speed_error_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
