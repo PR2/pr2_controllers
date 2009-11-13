@@ -43,7 +43,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <ros/node_handle.h>
 #include <control_toolbox/pid.h>
-#include <realtime_tools/recorder.h>
+#include <realtime_recorder/recorder.h>
 #include <pr2_controller_interface/controller.h>
 #include <realtime_infuser/realtime_infuser.h>
 #include <realtime_tools/realtime_publisher.h>
