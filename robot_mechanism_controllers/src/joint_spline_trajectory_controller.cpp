@@ -362,6 +362,14 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
   boost::shared_ptr<SpecifiedTrajectory> new_traj_ptr(new SpecifiedTrajectory);
   SpecifiedTrajectory &new_traj = *new_traj_ptr;
 
+  // ------ If requested, performs a stop
+
+  if (msg->points.empty())
+  {
+    starting();
+    return;
+  }
+
   // ------ Correlates the joints we're commanding to the joints in the message
 
   std::vector<int> lookup(joints_.size(), -1);  // Maps from an index in joints_ to an index in the msg
