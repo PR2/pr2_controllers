@@ -267,13 +267,13 @@ void WristCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    original_switch_state_ = actuator_l_->state_.calibration_reading_;
+    original_switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
     vc_flex_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
     vc_roll_.setCommand(0);
     state_ = MOVING_FLEX;
     break;
   case MOVING_FLEX: {
-    bool switch_state_ = actuator_l_->state_.calibration_reading_;
+    bool switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)
@@ -292,7 +292,7 @@ void WristCalibrationController::update()
       assert(0 <= k && k <= 1);
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
-      original_switch_state_ = actuator_r_->state_.calibration_reading_;
+      original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
       vc_flex_.setCommand(0);
       vc_roll_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
       state_ = MOVING_ROLL;
@@ -300,7 +300,7 @@ void WristCalibrationController::update()
     break;
   }
   case MOVING_ROLL: {
-    bool switch_state_ = actuator_r_->state_.calibration_reading_;
+    bool switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)

@@ -199,14 +199,14 @@ void JointCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    if (actuator_->state_.calibration_reading_)
+    if (actuator_->state_.calibration_reading_ & 1)
       state_ = MOVING_TO_LOW;
     else
       state_ = MOVING_TO_HIGH;
     break;
   case MOVING_TO_LOW:
     vc_.setCommand(-search_velocity_);
-    if (!actuator_->state_.calibration_reading_)
+    if (!(actuator_->state_.calibration_reading_ & 1))
     {
       if (--countdown_ <= 0)
         state_ = MOVING_TO_HIGH;
@@ -217,7 +217,7 @@ void JointCalibrationController::update()
   case MOVING_TO_HIGH: {
     vc_.setCommand(search_velocity_);
 
-    if (actuator_->state_.calibration_reading_)
+    if (actuator_->state_.calibration_reading_ & 1)
     {
       pr2_hardware_interface::Actuator a;
       pr2_mechanism_model::JointState j;

@@ -215,12 +215,12 @@ void CasterCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    original_switch_state_ = actuator_->state_.calibration_reading_;
+    original_switch_state_ = actuator_->state_.calibration_reading_ & 1;
     cc_.steer_velocity_ = (original_switch_state_ ? -search_velocity_ : search_velocity_);
     state_ = MOVING;
     break;
   case MOVING: {
-    bool switch_state_ = actuator_->state_.calibration_reading_;
+    bool switch_state_ = actuator_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
       pr2_hardware_interface::Actuator a;
