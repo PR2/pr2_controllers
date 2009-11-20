@@ -47,6 +47,7 @@
 #include <pr2_controller_interface/controller.h>
 #include <realtime_infuser/realtime_infuser.h>
 #include <realtime_tools/realtime_publisher.h>
+#include <realtime_tools/realtime_box.h>
 
 #include "trajectory_msgs/JointTrajectory.h"
 //#include "robot_mechanism_controllers/Trajectory.h"
@@ -106,11 +107,14 @@ private:
   };
   typedef std::vector<Segment> SpecifiedTrajectory;
 
+  realtime_tools::RealtimeBox<
+    boost::shared_ptr<const SpecifiedTrajectory> > current_trajectory_box_;
+
   // Holds the trajectory that we are currently following.  The mutex
   // guarding current_trajectory_ is locked from within realtime, so
   // it may only be locked for a bounded duration.
-  boost::shared_ptr<const SpecifiedTrajectory> current_trajectory_;
-  boost::recursive_mutex current_trajectory_lock_RT_;
+  //boost::shared_ptr<const SpecifiedTrajectory> current_trajectory_;
+  //boost::recursive_mutex current_trajectory_lock_RT_;
 
   std::vector<double> q, qd, qdd;  // Preallocated in init
 

@@ -245,8 +245,7 @@ bool JointSplineTrajectoryController::starting()
   for (size_t j = 0; j < joints_.size(); ++j)
     hold[0].splines[j].coef[0] = joints_[j]->position_;
 
-  boost::recursive_mutex::scoped_lock guard(current_trajectory_lock_RT_);
-  current_trajectory_ = hold_ptr;
+  current_trajectory_box_.set(hold_ptr);
 
   return true;
 }
@@ -260,10 +259,7 @@ void JointSplineTrajectoryController::update()
   last_time_ = time;
 
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
-  {
-    boost::recursive_mutex::scoped_lock guard(current_trajectory_lock_RT_);
-    traj_ptr = current_trajectory_;
-  }
+  current_trajectory_box_.get(traj_ptr);
   if (!traj_ptr)
     ROS_FATAL("The current trajectory can never be null");
 
@@ -394,10 +390,7 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
   // ------ Grabs the trajectory that we're currently following.
 
   boost::shared_ptr<const SpecifiedTrajectory> prev_traj_ptr;
-  {
-    boost::recursive_mutex::scoped_lock guard(current_trajectory_lock_RT_);
-    prev_traj_ptr = current_trajectory_;
-  }
+  current_trajectory_box_.get(prev_traj_ptr);
   if (!prev_traj_ptr)
   {
     ROS_FATAL("The current trajectory can never be null");
@@ -561,10 +554,7 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
     return;
   }
 
-  {
-    boost::recursive_mutex::scoped_lock guard(current_trajectory_lock_RT_);
-    current_trajectory_ = new_traj_ptr;
-  }
+  current_trajectory_box_.set(new_traj_ptr);
   ROS_DEBUG("The new trajectory has %d segments", new_traj.size());
 #if 0
   for (size_t i = 0; i < std::min((size_t)20,new_traj.size()); ++i)
