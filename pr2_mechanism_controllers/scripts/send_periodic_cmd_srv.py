@@ -54,4 +54,4 @@ if __name__ == '__main__':
     #sleep(1)
 
     print 'Command sent!'
-    print '  Resposne: %f' % resp.start_time.to_seconds()
+    print '  Response: %f' % resp.start_time.to_sec()
