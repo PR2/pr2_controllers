@@ -60,7 +60,6 @@ public:
 private:
   pr2_mechanism_model::RobotState * robot_;
   pr2_hardware_interface::Projector *projector_;
-  pr2_hardware_interface::DigitalOut *digital_out_M_;
 
   uint32_t old_rising_;
   uint32_t old_falling_;

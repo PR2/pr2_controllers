@@ -88,7 +88,7 @@ bool ProjectorController::starting()
   projector_->command_.enable_ = true;
   projector_->command_.pulse_replicator_ = false;
   //projector_->command_.M_ = 0xf;
-  projector_->command_.current_ = 27;
+  //projector_->command_.current_ = 27
   old_rising_ = projector_->state_.rising_timestamp_us_;
   old_falling_ = projector_->state_.falling_timestamp_us_;
   start_time_ = 0;//robot_->getTime().toSec();
@@ -124,15 +124,16 @@ bool ProjectorController::init(pr2_mechanism_model::RobotState *robot, ros::Node
   falling_edge_pub_.reset(new realtime_tools::RealtimePublisher<roslib::Header>(n, "falling_edge_timestamps", 10));
 
   projector_ = robot_->model_->hw_->getProjector(actuator_name_);
-  digital_out_M_ = robot_->model_->hw_->getDigitalOut(actuator_name_ + "_digital_out_M");
-  printf("Got projector: %p\n", projector_);
-  printf("Got digital_out: %p\n", digital_out_M_);
+  ROS_DEBUG("Got projector: %p\n", projector_);
   if (!projector_)
   {
     ROS_ERROR("ProjectorController could not find digital out named \"%s\".",
         actuator_name_.c_str());
     return false;
-  }
+  } 
 
+  n.getParam("current", projector_->command_.current_, 27.0);
+  ROS_DEBUG("Projector current = %f", projector_->command_.current_);
+    
   return true;
 }
