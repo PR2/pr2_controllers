@@ -132,7 +132,7 @@ bool ProjectorController::init(pr2_mechanism_model::RobotState *robot, ros::Node
     return false;
   } 
 
-  n.getParam("current", projector_->command_.current_, 27.0);
+  n.param("current", projector_->command_.current_, 27.0);
   ROS_DEBUG("Projector current = %f", projector_->command_.current_);
     
   return true;
