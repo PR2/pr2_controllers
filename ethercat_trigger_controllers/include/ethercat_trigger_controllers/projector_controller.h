@@ -73,6 +73,8 @@ private:
   // Configuration of controller.
   std::string actuator_name_;
 
+  double current_setting_;
+
   double start_time_; /// @todo KILLME FIXME
 };
 

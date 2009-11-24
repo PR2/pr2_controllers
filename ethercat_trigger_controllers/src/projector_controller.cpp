@@ -88,7 +88,7 @@ bool ProjectorController::starting()
   projector_->command_.enable_ = true;
   projector_->command_.pulse_replicator_ = false;
   //projector_->command_.M_ = 0xf;
-  //projector_->command_.current_ = 27
+  projector_->command_.current_ = current_setting_;
   old_rising_ = projector_->state_.rising_timestamp_us_;
   old_falling_ = projector_->state_.falling_timestamp_us_;
   start_time_ = 0;//robot_->getTime().toSec();
@@ -132,8 +132,8 @@ bool ProjectorController::init(pr2_mechanism_model::RobotState *robot, ros::Node
     return false;
   } 
 
-  n.param("current", projector_->command_.current_, 27.0);
-  ROS_DEBUG("Projector current = %f", projector_->command_.current_);
+  n.param("current", current_setting_, 27.0);
+  ROS_DEBUG("Projector current = %f", current_setting_);
     
   return true;
 }
