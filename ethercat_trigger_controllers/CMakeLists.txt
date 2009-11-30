@@ -12,8 +12,8 @@ set(_srcs
 )
 
 # For some reason, the endeffector_constraint_controller won't build on OSX
-rospack_add_library(ethercat_trigger_controllers ${_srcs})
-rospack_remove_compile_flags(ethercat_trigger_controllers -W)
+rosbuild_add_library(ethercat_trigger_controllers ${_srcs})
+rosbuild_remove_compile_flags(ethercat_trigger_controllers -W)
 target_link_libraries(ethercat_trigger_controllers ltdl)
 
 # A hack to remove a library by an old name.
