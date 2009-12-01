@@ -88,7 +88,7 @@ namespace controller
     * the first call to update.  Overrides Controller.staring().
     * @return Successful start
     */
-    bool starting();
+    void starting();
 
     /*!
     * \brief (a) Updates positions of the caster and wheels.

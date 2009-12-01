@@ -83,7 +83,7 @@ void ProjectorController::update()
   }
 }
 
-bool ProjectorController::starting()
+void ProjectorController::starting()
 {
   projector_->command_.enable_ = true;
   projector_->command_.pulse_replicator_ = false;
@@ -92,8 +92,6 @@ bool ProjectorController::starting()
   old_rising_ = projector_->state_.rising_timestamp_us_;
   old_falling_ = projector_->state_.falling_timestamp_us_;
   start_time_ = 0;//robot_->getTime().toSec();
-
-  return true;
 }
 
 void ProjectorController::stopping()

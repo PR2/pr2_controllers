@@ -65,7 +65,7 @@ public:
 
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
-  bool starting();
+  void starting();
   void update();
 
 private:

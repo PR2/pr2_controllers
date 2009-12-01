@@ -117,7 +117,7 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
   return true;
 }
 
-bool CartesianPoseController::starting()
+void CartesianPoseController::starting()
 {
   // reset pid controllers
   for (unsigned int i=0; i<6; i++)
@@ -129,7 +129,6 @@ bool CartesianPoseController::starting()
   last_time_ = robot_state_->getTime();
 
   loop_count_ = 0;
-  return true;
 }
 
 

@@ -232,7 +232,7 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
   return true;
 }
 
-bool JointSplineTrajectoryController::starting()
+void JointSplineTrajectoryController::starting()
 {
   last_time_ = robot_->getTime();
 
@@ -246,8 +246,6 @@ bool JointSplineTrajectoryController::starting()
     hold[0].splines[j].coef[0] = joints_[j]->position_;
 
   current_trajectory_box_.set(hold_ptr);
-
-  return true;
 }
 
 void JointSplineTrajectoryController::update()

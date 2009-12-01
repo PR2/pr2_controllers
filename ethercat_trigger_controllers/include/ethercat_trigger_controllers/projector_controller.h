@@ -52,7 +52,7 @@ public:
   ~ProjectorController();
 
   void update();
-  bool starting();
+  void starting();
   void stopping();
 
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);

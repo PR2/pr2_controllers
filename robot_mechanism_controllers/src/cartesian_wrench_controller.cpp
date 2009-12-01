@@ -122,12 +122,10 @@ bool CartesianWrenchController::init(pr2_mechanism_model::RobotState *robot, ros
   return true;
 }
 
-bool CartesianWrenchController::starting()
+void CartesianWrenchController::starting()
 {
   // set desired wrench to 0
   wrench_desi_ = Wrench::Zero();
-
-  return true;
 }
 
 

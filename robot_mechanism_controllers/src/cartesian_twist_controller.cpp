@@ -135,7 +135,7 @@ bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state
   return true;
 }
 
-bool CartesianTwistController::starting()
+void CartesianTwistController::starting()
 {
   // reset pid controllers
   for (unsigned int i=0; i<6; i++)
@@ -146,8 +146,6 @@ bool CartesianTwistController::starting()
 
   // set disired twist to 0
   twist_desi_ = Twist::Zero();
-
-  return true;
 }
 
 

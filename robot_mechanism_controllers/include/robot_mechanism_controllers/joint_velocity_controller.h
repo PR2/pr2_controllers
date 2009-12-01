@@ -109,10 +109,9 @@ public:
    * \brief Issues commands to the joint. Should be called at regular intervals
    */
 
-  virtual bool starting() {
+  virtual void starting() {
     command_ = 0.0;
     pid_controller_.reset();
-    return true;
   }
   virtual void update();
 

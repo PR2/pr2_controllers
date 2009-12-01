@@ -148,6 +148,16 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
       return false;
    }
   }
+
+  for(int i = 0; i < base_kin_.num_casters_; ++i)
+  {
+    if(!base_kin_.caster_[i].joint_->calibrated_)
+    {
+      ROS_ERROR("The Base controller could not start because the casters were not calibrated. Relaunch the base controller after you see the caster calibration finish.");
+      return false; // Casters are not calibrated
+    }
+  }
+
   return true;
 }
 
@@ -242,17 +252,8 @@ geometry_msgs::Twist Pr2BaseController::getCommand()// Return the current veloci
   return cmd_vel;
 }
 
-bool Pr2BaseController::starting()
+void Pr2BaseController::starting()
 {
-  for(int i = 0; i < base_kin_.num_casters_; ++i)
-  {
-    if(!base_kin_.caster_[i].joint_->calibrated_)
-    {
-      ROS_ERROR("The Base controller could not start because the casters were not calibrated. Relaunch the base controller after you see the caster calibration finish.");
-      return false; // Casters are not calibrated
-    }
-  }
-
   last_time_ = base_kin_.robot_state_->getTime();
   cmd_received_timestamp_ = base_kin_.robot_state_->getTime();
   for(int i = 0; i < base_kin_.num_casters_; i++)
@@ -263,7 +264,6 @@ bool Pr2BaseController::starting()
   {
     wheel_controller_[j]->starting();
   }
-  return true;
 }
 
 void Pr2BaseController::update()

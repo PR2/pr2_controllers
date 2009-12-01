@@ -92,7 +92,7 @@ public:
   ~CartesianPoseController();
 
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-  bool starting();
+  void starting();
   void update();
 
   void command(const tf::MessageNotifier<geometry_msgs::PoseStamped>::MessagePtr& pose_msg);
