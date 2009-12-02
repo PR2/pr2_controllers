@@ -147,7 +147,10 @@ bool MultiTriggerController::init(pr2_mechanism_model::RobotState *robot, ros::N
         ethercat_trigger_controllers::MultiWaveformTransition t;
         t.time = times[i];
         t.value = values[i];
-        t.topic = topics[i];
+        if (t.topic == "-") // Use "-" for an empty topic.
+          t.topic = "";
+        else 
+          t.topic = topics[i];
         config_.transitions.push_back(t);
       }
 
