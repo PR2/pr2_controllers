@@ -5,4 +5,5 @@
   <class name="LaserScannerTrajControllerNode" type="controller::LaserScannerTrajControllerNode" base_class_type="pr2_controller_interface::Controller" />
   <class name="Pr2BaseController" type="controller::Pr2BaseController" base_class_type="pr2_controller_interface::Controller" />
   <class name="Pr2Odometry" type="controller::Pr2Odometry" base_class_type="pr2_controller_interface::Controller" />
+  <class name="Pr2GripperController" type="controller::Pr2GripperController" base_class_type="pr2_controller_interface::Controller" />
 </library>
