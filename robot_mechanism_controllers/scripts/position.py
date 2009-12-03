@@ -65,7 +65,6 @@ def main():
         sys.exit(1)
 
     rospy.init_node('position', anonymous=True)
-    rospy.wait_for_service('load_controller')
 
     joint = sys.argv[1]
     p = float(sys.argv[2])
