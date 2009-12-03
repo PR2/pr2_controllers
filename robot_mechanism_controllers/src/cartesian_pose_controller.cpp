@@ -91,7 +91,7 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
 
   // create 6 identical pid controllers for x, y and z translation, and x, y, z rotation
   control_toolbox::Pid pid_controller;
-  if (!pid_controller.init(node_)) return false;
+  if (!pid_controller.init(ros::NodeHandle(node_,"pid"))) return false;
   for (unsigned int i=0; i<6; i++)
     pid_controller_.push_back(pid_controller);
 
