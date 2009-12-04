@@ -188,7 +188,7 @@ void Pr2Odometry::populateCovariance(double residual, nav_msgs::Odometry &msg)
   odom_multiplier = fmax(0.00001, fmin(100.0, odom_multiplier));
   odom_multiplier *= 2.0;
   */
-  odom_multiplier = 1.0;
+  double  odom_multiplier = 1.0;
 
   //nav_msgs::Odometry has a 6x6 covariance matrix
   msg.pose.covariance[0] = odom_multiplier*pow(sigma_x_,2);
