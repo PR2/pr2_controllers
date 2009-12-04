@@ -174,6 +174,8 @@ void Pr2Odometry::populateCovariance(double residual, nav_msgs::Odometry &msg)
 {
   // multiplier to scale covariance
   // the smaller the residual, the more reliable odom
+  /*
+  //this does not seem to work correctly, commenting it out
   double odom_multiplier;
   if (residual < 0.05)
   {
@@ -185,6 +187,8 @@ void Pr2Odometry::populateCovariance(double residual, nav_msgs::Odometry &msg)
   }
   odom_multiplier = fmax(0.00001, fmin(100.0, odom_multiplier));
   odom_multiplier *= 2.0;
+  */
+  odom_multiplier = 1.0;
 
   //nav_msgs::Odometry has a 6x6 covariance matrix
   msg.pose.covariance[0] = odom_multiplier*pow(sigma_x_,2);
