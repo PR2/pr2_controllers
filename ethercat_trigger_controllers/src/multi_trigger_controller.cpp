@@ -184,6 +184,12 @@ bool MultiTriggerController::setMultiWaveformSrv(
   unsigned int new_transition_index = 0;
   bool error = false;
 
+  if (new_transition_period <= 0)
+  {
+    ROS_ERROR("MultiTrigger period must be >0.");
+    error = true;
+  }
+
   for (std::vector<ethercat_trigger_controllers::MultiWaveformTransition>::iterator trans = new_config.transitions.begin();
       trans != new_config.transitions.end() && !error; trans++)
   {
