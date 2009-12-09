@@ -48,59 +48,6 @@ CasterCalibrationController::~CasterCalibrationController()
 {
 }
 
-bool CasterCalibrationController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  // This method is gross and ugly and should change (and the xml
-  // config format along with it)
-  assert(robot);
-  assert(config);
-
-  TiXmlElement *cal = config->FirstChildElement("calibrate");
-  if (!cal)
-  {
-    ROS_ERROR("CasterCalibrationController was not given calibration parameters");
-    return false;
-  }
-
-  if(cal->QueryDoubleAttribute("velocity", &search_velocity_) != TIXML_SUCCESS)
-  {
-    ROS_ERROR("Velocity value was not specified");
-    return false;
-  }
-
-  const char *joint_name = cal->Attribute("joint");
-  joint_ = joint_name ? robot->getJointState(joint_name) : NULL;
-  if (!joint_)
-  {
-    ROS_ERROR("Error: CasterCalibrationController could not find joint \"%s\"\n",
-              joint_name);
-    return false;
-  }
-
-  const char *actuator_name = cal->Attribute("actuator");
-  actuator_ = actuator_name ? robot->model_->getActuator(actuator_name) : NULL;
-  if (!actuator_)
-  {
-    ROS_ERROR("Error: CasterCalibrationController could not find actuator \"%s\"\n",
-              actuator_name);
-    return false;
-  }
-
-  const char *transmission_name = cal->Attribute("transmission");
-  transmission_ = transmission_name ? robot->model_->getTransmission(transmission_name) : NULL;
-  if (!transmission_)
-  {
-    ROS_ERROR("Error: CasterCalibrationController could not find transmission \"%s\"\n",
-            transmission_name);
-    return false;
-  }
-
-  if (!cc_.initXml(robot, config))
-    return false;
-
-  return true;
-}
-
 bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   node_ = n;

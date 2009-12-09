@@ -103,7 +103,7 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
       {
         pr2_mechanism_model::JointState *j;
         std::string name = (std::string)other_joint_names[i];
-        if (j = robot->getJointState(name)){
+        if ((j = robot->getJointState(name))){
           other_joints_.push_back(j);
         }
         else {
