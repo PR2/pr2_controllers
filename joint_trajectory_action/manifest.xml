@@ -1,0 +1,26 @@
+<package>
+  <description brief="joint_trajectory_action">
+
+     The joint_trajectory_action is a node that exposes an action interface
+     to a joint trajectory controller.
+
+  </description>
+  <author>Stuart Glaser</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/joint_trajectory_action</url>
+
+  <depend package="roscpp" />
+  <depend package="trajectory_msgs" />
+  <depend package="actionlib_msgs" />
+  <depend package="pr2_controllers_msgs" />
+  <depend package="actionlib" />
+  <depend package="robot_mechanism_controllers" />
+
+  <export>
+    <cpp cflags="-I${prefix}/msg/cpp"/>
+  </export>
+
+</package>
+
+
