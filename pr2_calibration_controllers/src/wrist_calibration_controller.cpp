@@ -60,11 +60,14 @@ bool WristCalibrationController::initXml(pr2_mechanism_model::RobotState *robot,
     return false;
   }
 
-  if(cal->QueryDoubleAttribute("velocity", &search_velocity_) != TIXML_SUCCESS)
+  double search_velocity;
+  if(cal->QueryDoubleAttribute("velocity", &search_velocity) != TIXML_SUCCESS)
   {
     std::cerr<<"Velocity value was not specified\n";
     return false;
   }
+  roll_search_velocity_ = search_velocity;
+  flex_search_velocity_ = search_velocity;
 
   const char *flex_joint_name = cal->Attribute("flex_joint");
   flex_joint_ = flex_joint_name ? robot->getJointState(flex_joint_name) : NULL;
@@ -138,9 +141,15 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   node_ = n;
   robot_ = robot;
 
-  if (!node_.getParam("velocity", search_velocity_))
+  if (!node_.getParam("roll_velocity", roll_search_velocity_))
   {
-    ROS_ERROR("No velocity given (namespace: %s)", node_.getNamespace().c_str());
+    ROS_ERROR("No roll_velocity given (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
+
+  if (!node_.getParam("flex_velocity", flex_search_velocity_))
+  {
+    ROS_ERROR("No flex_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
 
@@ -268,7 +277,7 @@ void WristCalibrationController::update()
     break;
   case BEGINNING:
     original_switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
-    vc_flex_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
+    vc_flex_.setCommand(original_switch_state_ ? -flex_search_velocity_ : flex_search_velocity_);
     vc_roll_.setCommand(0);
     state_ = MOVING_FLEX;
     break;
@@ -294,7 +303,7 @@ void WristCalibrationController::update()
 
       original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
       vc_flex_.setCommand(0);
-      vc_roll_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
+      vc_roll_.setCommand(original_switch_state_ ? -roll_search_velocity_ : roll_search_velocity_);
       state_ = MOVING_ROLL;
     }
     break;
