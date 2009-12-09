@@ -81,6 +81,7 @@ private:
 
   ros::ServiceServer set_waveform_handle_;
   ros::NodeHandle node_handle_;
+  ros::Publisher waveform_;
 
   std::vector<boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > > pubs_;
 

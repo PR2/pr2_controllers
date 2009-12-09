@@ -135,6 +135,8 @@ bool MultiTriggerController::init(pr2_mechanism_model::RobotState *robot, ros::N
   std::vector<double> times;
   std::vector<uint32_t> values;
   
+  waveform_ = node_handle_.advertise<ethercat_trigger_controllers::MultiWaveform>("waveform", 1, true);
+  
   if (parseParamList(n, "times", times) && parseParamList(n, "topics", topics) && parseParamList(n, "values", values))
   {
     if (times.size() != topics.size() || times.size() != values.size())
@@ -238,6 +240,7 @@ bool MultiTriggerController::setMultiWaveformSrv(
     transition_period_ = new_transition_period;
     transition_index_ = new_transition_index;
     transition_time_ = new_transition_time;
+    waveform_.publish(req.waveform);
   }
   
   resp.success = !error;
