@@ -51,7 +51,6 @@ public:
   JointCalibrationController();
   virtual ~JointCalibrationController();
 
-  //virtual bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   virtual void update();

@@ -28,15 +28,6 @@
  */
 
 /*
-  Sample config:
-  <controller type="WristCalibrationController" name="cal_wrist">
-    <calibrate transmission="wrist_trans"
-               actuator_l="wrist_l_motor" actuator_r="wrist_r_motor"
-               flex_joint="wrist_flex_joint" roll_joint="wrist_roll_joint"
-               velocity="0.6" />
-    <pid p="3.0" i="0.2" d="0" iClamp="2.0" />
-  </controller>
-
  * Author: Stuart Glaser
  */
 
@@ -56,7 +47,6 @@ public:
   WristCalibrationController();
   ~WristCalibrationController();
 
-  //virtual bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   /*!
