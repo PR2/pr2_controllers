@@ -196,7 +196,7 @@ bool MultiTriggerController::setMultiWaveformSrv(
   {
     boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > new_pub;
         
-    if (!trans->topic.compare("-"))
+    if (trans->topic.compare("-"))
       new_pub.reset(new realtime_tools::RealtimePublisher<roslib::Header>(node_handle_, trans->topic, 10));
 
     new_pubs.push_back(new_pub);
