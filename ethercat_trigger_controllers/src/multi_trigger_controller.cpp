@@ -151,10 +151,7 @@ bool MultiTriggerController::init(pr2_mechanism_model::RobotState *robot, ros::N
         ethercat_trigger_controllers::MultiWaveformTransition t;
         t.time = times[i];
         t.value = values[i];
-        if (t.topic == "-") // Use "-" for an empty topic.
-          t.topic = "";
-        else 
-          t.topic = topics[i];
+        t.topic = topics[i];
         config_.transitions.push_back(t);
       }
 
@@ -198,8 +195,8 @@ bool MultiTriggerController::setMultiWaveformSrv(
       trans != new_config.transitions.end() && resp.success; trans++)
   {
     boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > new_pub;
-    
-    if (!trans->topic.empty())
+        
+    if (!trans->topic.compare("-"))
       new_pub.reset(new realtime_tools::RealtimePublisher<roslib::Header>(node_handle_, trans->topic, 10));
 
     new_pubs.push_back(new_pub);
