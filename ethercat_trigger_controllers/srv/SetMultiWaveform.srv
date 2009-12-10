@@ -1,3 +1,4 @@
 MultiWaveform waveform
 ---
-uint8 success
+bool success
+string status_message

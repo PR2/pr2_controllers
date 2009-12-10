@@ -33,6 +33,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
+#include <boost/format.hpp>
+
 #include "ethercat_trigger_controllers/multi_trigger_controller.h"
 #include "ros/console.h"
 #include "pluginlib/class_list_macros.h"
@@ -184,16 +186,16 @@ bool MultiTriggerController::setMultiWaveformSrv(
   double current_period_start = new_config.zero_offset + new_transition_period * new_config.period;
   double now_offset = now - current_period_start;
   unsigned int new_transition_index = 0;
-  bool error = false;
+  resp.success = true;
 
   if (new_transition_period <= 0)
   {
-    ROS_ERROR("MultiTrigger period must be >0.");
-    error = true;
+    resp.status_message = "MultiTrigger period must be >0.";
+    resp.success = false;
   }
 
   for (std::vector<ethercat_trigger_controllers::MultiWaveformTransition>::iterator trans = new_config.transitions.begin();
-      trans != new_config.transitions.end() && !error; trans++)
+      trans != new_config.transitions.end() && resp.success; trans++)
   {
     boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > new_pub;
     
@@ -207,16 +209,16 @@ bool MultiTriggerController::setMultiWaveformSrv(
 
     if (trans->time < 0 || trans->time >= new_config.period)
     {
-      ROS_ERROR("MultiTriggerController::setMultiWaveformSrv transition time (%f) must be >= 0 and < period (%f).",
-          trans->time, new_config.period);
-      error = true;
+      resp.status_message = (boost::format("MultiTriggerController::setMultiWaveformSrv transition time (%f) must be >= 0 and < period (%f).")%
+        trans->time%new_config.period).str();
+      resp.success = false;
     }
     
     if (prev_time >= trans->time)
     {
-      ROS_ERROR("MultiTriggerController::setMultiWaveformSrv transition times must be in increasing order. %f >= %f", 
-          prev_time, trans->time);
-      error = true;
+      resp.status_message = (boost::format("MultiTriggerController::setMultiWaveformSrv transition times must be in increasing order. %f >= %f")% 
+          prev_time%trans->time).str();
+      resp.success = false;
     }
   }
 
@@ -232,7 +234,7 @@ bool MultiTriggerController::setMultiWaveformSrv(
 //      " rr=%f ph=%f al=%i r=%i p=%i dc=%f.", config_.rep_rate, config_.phase,
 //      config_.active_low, config_.running, config_.pulsed, config_.duty_cycle);
 
-  if (!error)
+  if (resp.success)
   { 
     boost::mutex::scoped_lock lock(config_mutex_);
     config_ = new_config;
@@ -242,7 +244,8 @@ bool MultiTriggerController::setMultiWaveformSrv(
     transition_time_ = new_transition_time;
     waveform_.publish(req.waveform);
   }
+  else
+    ROS_ERROR(resp.status_message.c_str());
   
-  resp.success = !error;
   return true;
 }
