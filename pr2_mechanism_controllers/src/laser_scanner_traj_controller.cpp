@@ -38,14 +38,13 @@
 #include "angles/angles.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(LaserScannerTrajController, controller::LaserScannerTrajController, pr2_controller_interface::Controller)
-PLUGINLIB_REGISTER_CLASS(LaserScannerTrajControllerNode, controller::LaserScannerTrajControllerNode, pr2_controller_interface::Controller)
+PLUGINLIB_REGISTER_CLASS(LaserScannerTrajController, controller::LaserScannerTrajControllerNode, pr2_controller_interface::Controller)
 
 using namespace std ;
 using namespace controller ;
 using namespace filters ;
 
-LaserScannerTrajController::LaserScannerTrajController() : traj_(1)
+LaserScannerTrajController::LaserScannerTrajController() : traj_(1), d_error_filter_chain_("double")
 {
   tracking_offset_ = 0 ;
   //track_link_enabled_ = false ;
@@ -56,104 +55,69 @@ LaserScannerTrajController::~LaserScannerTrajController()
 
 }
 
-bool LaserScannerTrajController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
+bool LaserScannerTrajController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle& n)
 {
-  if (!robot || !config)
+  if (!robot)
     return false ;
   robot_ = robot ;
 
-  // ***** Name element *****
-  const char* name = config->Attribute("name") ;
-  if (!name)
+  // ***** Joint *****
+  string joint_name;
+  if (!n.getParam("joint", joint_name))
   {
-    ROS_ERROR("LaserScannerTrajController:: Name attribute not defined in controller tag") ;
-    return false ;
+    ROS_ERROR("LaserScannerTrajController: joint_name param not defined (namespace: %s)", n.getNamespace().c_str()) ;
+    return false;
   }
-  name_ = name ;
 
-  // ***** Joint Element *****
-  TiXmlElement *j = config->FirstChildElement("joint") ;
-  if (!j)
-  {
-    ROS_ERROR("%s:: joint element not defined inside controller", name_.c_str()) ;
-    return false ;
-  }
-  const char *jn = j->Attribute("name") ;
+  joint_state_ = robot_->getJointState(joint_name) ;  // Need joint state to check 'calibrated' flag
 
-  if (!jn)
-  {
-    ROS_ERROR("%s:: name attribute not defined insidejoint element", name_.c_str()) ;
-    return false ;
-  }
-  joint_state_ = robot_->getJointState(string(jn)) ;  // Need joint state to check calibrated flag
   if (!joint_state_)
   {
-    ROS_ERROR("%s:: Could not find joint \"%s\" in robot model", name_.c_str(), jn) ;
+    ROS_ERROR("LaserScannerTrajController: Could not find joint \"%s\" in robot model (namespace: %s)", joint_name.c_str(), n.getNamespace().c_str()) ;
     return false ;
   }
   if (!joint_state_->joint_->limits)
   {
-    ROS_ERROR("%s:: Joint \"%s\" has no limits specified", name_.c_str(), jn) ;
+    ROS_ERROR("LaserScannerTrajController: Joint \"%s\" has no limits specified (namespace: %s)", joint_name.c_str(), n.getNamespace().c_str()) ;
     return false ;
   }
 
-
-  TiXmlElement *pid_elem = j->FirstChildElement("pid") ;
-  if (!pid_elem)
+  // Fail if we're not calibrated. Is this better than checking it in the update loop?  I'm not sure.
+  if (!joint_state_->calibrated_)
   {
-    ROS_ERROR("%s:: Could not find element \"pid\" in joint", name_.c_str()) ;
+    ROS_ERROR("LaserScannerTrajController: Could not start because joint [%s] isn't calibrated (namespace: %s)", joint_name.c_str(), n.getNamespace().c_str());
+    return false;
+  }
+
+  // ***** Gains *****
+  if (!pid_controller_.init(ros::NodeHandle(n, "gains")))
+  {
+    ROS_ERROR("LaserTiltController: Error initializing pid gains (namespace: %s)", n.getNamespace().c_str());
     return false ;
   }
 
-  bool result ;
-  result = pid_controller_.initXml(pid_elem) ;
-  if (!result)
-  {
-    ROS_ERROR("%s:: Error initializing pid element", name_.c_str()) ;
-    return false ;
-  }
   last_time_ = robot->getTime() ;
   last_error_ = 0.0 ;
 
   // ***** Derivative Error Filter Element *****
-  TiXmlElement *filter_elem = config->FirstChildElement("filter");
-  if(!filter_elem)
+  if(!d_error_filter_chain_.configure("velocity_filter", n))
   {
-    ROS_ERROR("%s:: filter element not defined inside controller", name_.c_str()) ;
-    return false ;
-  }
-
-  std::string xml_string;
-  TiXmlElement *struct_elem = filter_elem->FirstChildElement("value");
-  if(!struct_elem)
-  {
-    ROS_ERROR("Xml is missing a <value> tag inside filter spec, cannot parse!");
+    ROS_ERROR("LaserTiltController: Error initializing filter chain");
     return false;
   }
 
-  TiXmlPrinter printer;
-  printer.SetIndent("  ");
-  struct_elem->Accept(&printer);
-  std::string filter_str = printer.Str();
-  ROS_DEBUG("Constructing filter with XML: %s", filter_str.c_str());
-  //xmlrpc_elem->Print(xml_string, 10);
-  int offset = 0;
-  XmlRpc::XmlRpcValue rpc_config(filter_str, &offset);
-  ROS_DEBUG("XmlRpc parsed xml: %s type: %d", rpc_config.toXml().c_str(), rpc_config.getType());
-  d_error_filter.MultiChannelFilterBase<double>::configure((unsigned int)1, rpc_config) ;
-
   // ***** Max Rate and Acceleration Elements *****
-  TiXmlElement *max_rate_elem = config->FirstChildElement("max_rate") ;
-  if (!max_rate_elem)
-    return false ;
-  if(max_rate_elem->QueryDoubleAttribute("value", &max_rate_) != TIXML_SUCCESS )
-    return false ;
+  if (!n.getParam("max_velocity", max_rate_))
+  {
+    ROS_ERROR("max velocity param not defined");
+    return false;
+  }
 
-  TiXmlElement *max_acc_elem = config->FirstChildElement("max_acc") ;
-  if (!max_acc_elem)
-    return false ;
-  if(max_acc_elem->QueryDoubleAttribute("value", &max_acc_) != TIXML_SUCCESS )
-    return false ;
+  if (!n.getParam("max_acceleration", max_acc_))
+  {
+    ROS_ERROR("max acceleration param not defined");
+    return false;
+  }
 
   // Set to hold the current position
 
@@ -165,28 +129,7 @@ bool LaserScannerTrajController::initXml(pr2_mechanism_model::RobotState *robot,
 
   setPeriodicCmd(cmd) ;
 
-
   return true ;
-}
-
-bool LaserScannerTrajController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
-{
-  std::string xml;
-  if (!n.getParam("xml", xml))
-  {
-    ROS_ERROR("No XML given (namespace: %s)", n.getNamespace().c_str());
-    return false;
-  }
-
-  TiXmlDocument doc;
-  doc.Parse(xml.c_str());
-  if (!doc.RootElement())
-  {
-    ROS_ERROR("Error parsing XML (namespace: %s)", n.getNamespace().c_str());
-    return false;
-  }
-
-  return initXml(robot, doc.RootElement());
 }
 
 void LaserScannerTrajController::update()
@@ -249,15 +192,12 @@ void LaserScannerTrajController::update()
                                                 error) ;
   ros::Duration dt = time - last_time_ ;
   double d_error = (error-last_error_)/dt.toSec();
-  std::vector<double> vin;
-  vin.push_back(d_error);
-  std::vector<double> vout = vin;
+  double filtered_d_error;
 
-  d_error_filter.update(vin, vout) ;
+  // Weird that we're filtering the d_error. Probably makes more sense to filter the velocity,
+  //   and then compute (filtered_velocity - desired_velocity)
+  d_error_filter_chain_.update(d_error, filtered_d_error);
 
-  double filtered_d_error  = vout[0];
-
-  // Add filtering step
   // Update pid with d_error added
   joint_state_->commanded_effort_ = pid_controller_.updatePid(error, filtered_d_error, dt) ;
   last_time_ = time ;
@@ -374,10 +314,10 @@ bool LaserScannerTrajController::setTrajCmd(const pr2_msgs::LaserTrajCmd& traj_c
   if (traj_cmd.profile == "linear" ||
       traj_cmd.profile == "blended_linear")
   {
-    const unsigned int N = traj_cmd.pos.size() ;
-    if (traj_cmd.time.size() != N)
+    const unsigned int N = traj_cmd.position.size() ;
+    if (traj_cmd.time_from_start.size() != N)
     {
-      ROS_ERROR("# Times and # Pos must match! pos.size()=%u times.size()=%u", N, traj_cmd.time.size()) ;
+      ROS_ERROR("# Times and # Pos must match! pos.size()=%u times.size()=%u", N, traj_cmd.time_from_start.size()) ;
       return false ;
     }
 
@@ -387,8 +327,8 @@ bool LaserScannerTrajController::setTrajCmd(const pr2_msgs::LaserTrajCmd& traj_c
     {
       trajectory::Trajectory::TPoint cur_point(1) ;
       cur_point.dimension_ = 1 ;
-      cur_point.q_[0] = traj_cmd.pos[i] ;
-      cur_point.time_ = traj_cmd.time[i] ;
+      cur_point.q_[0] = traj_cmd.position[i] ;
+      cur_point.time_ = traj_cmd.time_from_start[i].toSec() ;
       tpoints.push_back(cur_point) ;
     }
 
@@ -396,10 +336,10 @@ bool LaserScannerTrajController::setTrajCmd(const pr2_msgs::LaserTrajCmd& traj_c
     double cur_max_acc  = max_acc_ ;
 
     // Overwrite our limits, if they're specified in the msg. Is this maybe too dangerous?
-    if (traj_cmd.max_rate > 0)                  // Only overwrite if a positive val
-      cur_max_rate = traj_cmd.max_rate ;
-    if (traj_cmd.max_accel > 0)
-      cur_max_acc = traj_cmd.max_accel ;
+    if (traj_cmd.max_velocity > 0)                  // Only overwrite if a positive val
+      cur_max_rate = traj_cmd.max_velocity ;
+    if (traj_cmd.max_acceleration > 0)
+      cur_max_acc = traj_cmd.max_acceleration ;
 
     if (!setTrajectory(tpoints, cur_max_rate, cur_max_acc, traj_cmd.profile))
     {
@@ -465,10 +405,12 @@ LaserScannerTrajControllerNode::LaserScannerTrajControllerNode(): c_()
 
 LaserScannerTrajControllerNode::~LaserScannerTrajControllerNode()
 {
-  publisher_->stop() ;
-
-  delete publisher_ ;    // Probably should wait on publish_->is_running() before exiting. Need to
-                         //   look into shutdown semantics for realtime_publisher
+  if (publisher_)
+  {
+    publisher_->stop();
+    delete publisher_;    // Probably should wait on publish_->is_running() before exiting. Need to
+                          //   look into shutdown semantics for realtime_publisher
+  }
 }
 
 void LaserScannerTrajControllerNode::update()
@@ -502,16 +444,16 @@ void LaserScannerTrajControllerNode::update()
   }
 }
 
-bool LaserScannerTrajControllerNode::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
+bool LaserScannerTrajControllerNode::init(pr2_mechanism_model::RobotState *robot,
+                                          ros::NodeHandle &n)
 {
   robot_ = robot ;      // Need robot in order to grab hardware time
 
-  service_prefix_ = config->Attribute("name") ;
-  node_ = ros::NodeHandle(service_prefix_);
+  node_ = n;
 
-  if (!c_.initXml(robot, config))
+  if (!c_.init(robot, n))
   {
-    ROS_ERROR("Error Loading LaserScannerTrajControllerNode XML") ;
+    ROS_ERROR("Error Loading LaserScannerTrajController Params") ;
     return false ;
   }
 
@@ -525,8 +467,11 @@ bool LaserScannerTrajControllerNode::initXml(pr2_mechanism_model::RobotState *ro
   serve_set_Traj_cmd_ =
     node_.advertiseService("set_traj_cmd", &LaserScannerTrajControllerNode::setTrajSrv, this);
 
-  if (publisher_ != NULL)               // Make sure that we don't memory leak if initXml gets called twice
-    delete publisher_ ;
+  if (publisher_ != NULL)               // Make sure that we don't memory leak
+  {
+    ROS_ERROR("LaserScannerTrajController shouldn't ever execute this line... could be a bug elsewhere");
+    delete publisher_;
+  }
   publisher_ = new realtime_tools::RealtimePublisher <pr2_msgs::LaserScannerSignal> (node_, "laser_scanner_signal", 1) ;
 
   prev_profile_segment_ = -1 ;
@@ -534,27 +479,6 @@ bool LaserScannerTrajControllerNode::initXml(pr2_mechanism_model::RobotState *ro
   ROS_INFO("Successfully spawned %s", service_prefix_.c_str()) ;
 
   return true ;
-}
-
-bool LaserScannerTrajControllerNode::init(pr2_mechanism_model::RobotState *robot,
-                                          ros::NodeHandle &n)
-{
-  std::string xml;
-  if (!n.getParam("xml", xml))
-  {
-    ROS_ERROR("No XML given (namespace: %s)", n.getNamespace().c_str());
-    return false;
-  }
-
-  TiXmlDocument doc;
-  doc.Parse(xml.c_str());
-  if (!doc.RootElement())
-  {
-    ROS_ERROR("Error parsing XML (namespace: %s)", n.getNamespace().c_str());
-    return false;
-  }
-
-  return initXml(robot, doc.RootElement());
 }
 
 
