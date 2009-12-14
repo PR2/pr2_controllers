@@ -46,23 +46,24 @@ private:
 public:
   JointTrajectoryExecuter(ros::NodeHandle &n) :
     node_(n),
-    action_server_(ros::NodeHandle()/*node_*/, "action",
+    action_server_(node_, "joint_trajectory_action",
                    boost::bind(&JointTrajectoryExecuter::goalCB, this, _1),
                    boost::bind(&JointTrajectoryExecuter::cancelCB, this, _1)),
     has_active_goal_(false)
   {
     using namespace XmlRpc;
+    ros::NodeHandle pn("~");
 
     // Gets all of the joints
     XmlRpc::XmlRpcValue joint_names;
-    if (!node_.getParam("joints", joint_names))
+    if (!pn.getParam("joints", joint_names))
     {
-      ROS_FATAL("No joints given. (namespace: %s)", node_.getNamespace().c_str());
+      ROS_FATAL("No joints given. (namespace: %s)", pn.getNamespace().c_str());
       exit(1);
     }
     if (joint_names.getType() != XmlRpc::XmlRpcValue::TypeArray)
     {
-      ROS_FATAL("Malformed joint specification.  (namespace: %s)", node_.getNamespace().c_str());
+      ROS_FATAL("Malformed joint specification.  (namespace: %s)", pn.getNamespace().c_str());
       exit(1);
     }
     for (int i = 0; i < joint_names.size(); ++i)
@@ -71,7 +72,7 @@ public:
       if (name_value.getType() != XmlRpcValue::TypeString)
       {
         ROS_FATAL("Array of joint names should contain all strings.  (namespace: %s)",
-                  node_.getNamespace().c_str());
+                  pn.getNamespace().c_str());
         exit(1);
       }
 
@@ -84,16 +85,16 @@ public:
     {
       std::string ns = std::string("constraints/") + joint_names_[i];
       double g, t;
-      node_.param(ns + "/goal", g, -1.0);
-      node_.param(ns + "/trajectory", t, -1.0);
+      pn.param(ns + "/goal", g, -1.0);
+      pn.param(ns + "/trajectory", t, -1.0);
       goal_constraints_[joint_names_[i]] = g;
       trajectory_constraints_[joint_names_[i]] = t;
     }
 
    pub_controller_command_ =
-      node_.advertise<trajectory_msgs::JointTrajectory>("controller_command", 1);
+      node_.advertise<trajectory_msgs::JointTrajectory>("command", 1);
     sub_controller_state_ =
-      node_.subscribe("controller_state", 1, &JointTrajectoryExecuter::controllerStateCB, this);
+      node_.subscribe("state", 1, &JointTrajectoryExecuter::controllerStateCB, this);
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &JointTrajectoryExecuter::watchdog, this);
   }
@@ -298,8 +299,8 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "joint_trajectory_action");
-  ros::NodeHandle node("~");
+  ros::init(argc, argv, "joint_trajectory_action_node");
+  ros::NodeHandle node;//("~");
   JointTrajectoryExecuter jte(node);
 
   ros::spin();
