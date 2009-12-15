@@ -63,7 +63,7 @@ Dither::~Dither()
 
 bool Dither::init(const ros::NodeHandle &n)
 {
-  if (!n.getParam("amplitude", amplitude_) || amplitude_ < 0.0)
+  if (!n.getParam("dither", amplitude_) || amplitude_ < 0.0)
   {
     ROS_ERROR("Dither amplitude not set properly. Amplitude must be >0.");
     return false;
