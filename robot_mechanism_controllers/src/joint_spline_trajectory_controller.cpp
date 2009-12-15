@@ -578,6 +578,12 @@ bool JointSplineTrajectoryController::queryStateService(
   robot_mechanism_controllers::QueryTrajectoryState::Response &resp)
 {
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
+  current_trajectory_box_.get(traj_ptr);
+  if (!traj_ptr)
+  {
+    ROS_FATAL("The current trajectory can never be null");
+    return false;
+  }
   const SpecifiedTrajectory &traj = *traj_ptr;
 
   // Determines which segment of the trajectory to use
