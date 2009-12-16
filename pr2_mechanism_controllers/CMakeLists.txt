@@ -17,6 +17,7 @@ rosbuild_add_library( pr2_mechanism_controllers
   src/pr2_odometry.cpp
   src/pr2_base_controller.cpp
   src/pr2_gripper_controller.cpp
+  src/trajectory.cpp
   )
 rosbuild_link_boost(pr2_mechanism_controllers thread)
 rosbuild_remove_compile_flags(pr2_mechanism_controllers -W)

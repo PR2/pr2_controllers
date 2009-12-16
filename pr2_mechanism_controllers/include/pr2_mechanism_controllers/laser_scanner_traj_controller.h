@@ -57,7 +57,7 @@
 #include <pr2_msgs/SetLaserTrajCmd.h>
 
 #include "boost/thread/mutex.hpp"
-#include "trajectory/trajectory.h"
+#include "pr2_mechanism_controllers/trajectory.h"
 
 namespace controller
 {

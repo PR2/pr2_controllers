@@ -6,8 +6,6 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
 
-  <depend package="trajectory" />
-
   <!-- ROS Interfaces -->
   <depend package="std_msgs" />
   <depend package="geometry_msgs" />
