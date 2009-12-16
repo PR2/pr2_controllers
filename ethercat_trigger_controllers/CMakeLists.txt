@@ -15,6 +15,3 @@ set(_srcs
 rosbuild_add_library(ethercat_trigger_controllers ${_srcs})
 rosbuild_remove_compile_flags(ethercat_trigger_controllers -W)
 target_link_libraries(ethercat_trigger_controllers ltdl)
-
-# A hack to remove a library by an old name.
-execute_process(COMMAND cmake -E remove ${PROJECT_SOURCE_DIR}/lib/librobot_mechanism_controllers.so)
