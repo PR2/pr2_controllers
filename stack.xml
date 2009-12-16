@@ -1,21 +1,19 @@
-<stack name="controllers" version="0.1">
+<stack name="pr2_controllers" version="0.1.0">
   <description brief="pr2_controllers">
     Contains the controllers that run in realtime on the PR2 and supporting packages.
   </description>
   <author>Stuart Glaser sglaser@willowgarage.com</author>
-  <license>BSD</license>
+  <license>BSD</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_controllers</url>
-  
-  <depend stack="manipulation_common"/> <!-- trajectory -->
-  <depend stack="robot_model"/> <!-- kdl_parser -->
-  <depend stack="geometry"/> <!-- tf, kdl, angles, tf_conversions, eigen -->
-  <depend stack="pr2_mechanism"/> <!-- pr2_mechanism_msgs, pr2_mechanism_model, pr2_controller_manager, realtime_tools, pr2_controller_interface -->
-  <depend stack="visualization_common"/> <!-- visualization_msgs -->
-  <depend stack="common"/> <!-- filters, tinyxml, pluginlib -->
-  <depend stack="diagnostics"/> <!-- diagnostic_updater -->
-  <depend stack="pr2_common"/> <!-- pr2_msgs -->
-  <depend stack="ros"/> <!-- std_msgs, rospy, roscpp, rosconsole -->
-  <depend stack="common_msgs"/> <!-- nav_msgs, geometry_msgs, diagnostic_msgs -->
+  <depend stack="robot_model"/> <!-- kdl_parser --> 
+  <depend stack="geometry"/> <!-- tf, kdl, tf_conversions, angles, eigen --> 
+  <depend stack="pr2_mechanism"/> <!-- pr2_mechanism_msgs, pr2_controller_manager, pr2_mechanism_model, realtime_tools, pr2_controller_interface --> 
+  <depend stack="visualization_common"/> <!-- visualization_msgs --> 
+  <depend stack="common"/> <!-- actionlib, filters, tinyxml, pluginlib --> 
+  <depend stack="diagnostics"/> <!-- diagnostic_updater --> 
+  <depend stack="pr2_common"/> <!-- pr2_msgs --> 
+  <depend stack="ros"/> <!-- rosconsole, std_msgs, roscpp, message_filters, rospy --> 
+  <depend stack="common_msgs"/> <!-- nav_msgs, sensor_msgs, actionlib_msgs, geometry_msgs, diagnostic_msgs --> 
 
 </stack>
