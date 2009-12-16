@@ -80,6 +80,9 @@ public:
       node_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("query_state");
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &ControlHead::watchdog, this);
+
+    // Retrieves the name of pan_link's parent link
+    tf_.getParent(pan_link_, ros::Time(), pan_parent_);
   }
 
 
@@ -88,17 +91,13 @@ public:
   {
     std::vector<double> q_goal(2);  // [pan, tilt]
 
-    // Retrieves the name of pan_link's parent link
-    std::string pan_parent;
-    tf_.getParent(pan_link_, ros::Time(), pan_parent);
-
     // Transforms the target point into the pan and tilt links.
     const geometry_msgs::PointStamped &target = gh.getGoal()->target;
     bool ret1, ret2;
     try {
       ros::Time now = ros::Time::now();
       std::string error_msg;
-      ret1 = tf_.waitForTransform(pan_parent, target.header.frame_id, target.header.stamp,
+      ret1 = tf_.waitForTransform(pan_parent_, target.header.frame_id, target.header.stamp,
                                  ros::Duration(5.0), ros::Duration(0.01), &error_msg);
       ret2 = tf_.waitForTransform(pan_link_, target.header.frame_id, target.header.stamp,
                                    ros::Duration(5.0), ros::Duration(0.01), &error_msg);
@@ -106,17 +105,17 @@ public:
       // Performs IK to determine the desired joint angles
 
       // Transforms the target into the pan and tilt frames
-      tf::Stamped<tf::Point> target_point, target_in_pan, target_in_tilt;
+      tf::Stamped<tf::Point> target_point, target_in_tilt;
       tf::pointStampedMsgToTF(target, target_point);
-      tf_.transformPoint(pan_parent, target_point, target_in_pan);
+      tf_.transformPoint(pan_parent_, target_point, target_in_pan_);
       tf_.transformPoint(pan_link_, target_point, target_in_tilt);
 
       // Computes the desired joint positions.
-      q_goal[0] = atan2(target_in_pan.y(), target_in_pan.x());
+      q_goal[0] = atan2(target_in_pan_.y(), target_in_pan_.x());
       q_goal[1] = atan2(-target_in_tilt.z(),
                         sqrt(pow(target_in_tilt.x(),2) + pow(target_in_tilt.y(),2)));
     }
-    catch(tf::TransformException ex)
+    catch(const tf::TransformException &ex)
     {
       ROS_ERROR("Transform failure (%d,%d): %s", ret1, ret2, ex.what());
       gh.setRejected();
@@ -198,6 +197,8 @@ private:
   PHAS action_server_;
   bool has_active_goal_;
   GoalHandle active_goal_;
+  tf::Stamped<tf::Point> target_in_pan_;
+  std::string pan_parent_;
 
   void watchdog(const ros::TimerEvent &e)
   {
@@ -259,7 +260,23 @@ private:
     if (!has_active_goal_)
       return;
 
-    // TODO: report feedback on our proximity to the goal
+    //! \todo Support frames that are not the pan link itself
+    try
+    {
+      tf::Stamped<tf::Vector3> origin(tf::Vector3(0,0,0), msg->header.stamp, tilt_link_);
+      tf::Stamped<tf::Vector3> forward(tf::Vector3(1,0,0), msg->header.stamp, tilt_link_);
+      tf_.waitForTransform(pan_parent_, tilt_link_, msg->header.stamp, ros::Duration(1.0));
+      tf_.transformPoint(pan_parent_, origin, origin);
+      tf_.transformPoint(pan_parent_, forward, forward);
+      pr2_controllers_msgs::PointHeadFeedback feedback;
+      feedback.pointing_angle_error =
+        (forward - origin).angle(target_in_pan_ - origin);
+      active_goal_.publishFeedback(feedback);
+    }
+    catch(const tf::TransformException &ex)
+    {
+      ROS_ERROR("Could not transform: %s", ex.what());
+    }
   }
 
 };
