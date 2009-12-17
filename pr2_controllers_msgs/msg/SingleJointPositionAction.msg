@@ -1,0 +1,4 @@
+
+SingleJointPositionActionGoal action_goal
+SingleJointPositionActionResult action_result
+SingleJointPositionActionFeedback action_feedback
