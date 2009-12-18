@@ -1,4 +1,4 @@
-pr2_mechanism_controllers/Pr2GripperCommand command
+pr2_controllers_msgs/Pr2GripperCommand command
 ---
 ---
 float64 position  # The current gripper gap size (in meters)

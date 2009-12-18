@@ -84,7 +84,7 @@ bool Pr2GripperController::init(pr2_mechanism_model::RobotState *robot, ros::Nod
     new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointControllerState>
     (node_, "state", 1));
 
-  sub_command_ = node_.subscribe<pr2_mechanism_controllers::Pr2GripperCommand>(
+  sub_command_ = node_.subscribe<pr2_controllers_msgs::Pr2GripperCommand>(
     "command", 1, &Pr2GripperController::commandCB, this);
 
   return true;
@@ -101,7 +101,7 @@ void Pr2GripperController::update()
   assert(joint_state_->joint_);
   ros::Duration dt = time - last_time_;
 
-  pr2_mechanism_controllers::Pr2GripperCommandConstPtr command;
+  pr2_controllers_msgs::Pr2GripperCommandConstPtr command;
   command_box_.get(command);
   assert(command);
 
@@ -142,7 +142,7 @@ void Pr2GripperController::update()
   last_time_ = time;
 }
 
-void Pr2GripperController::commandCB(const pr2_mechanism_controllers::Pr2GripperCommandConstPtr& msg)
+void Pr2GripperController::commandCB(const pr2_controllers_msgs::Pr2GripperCommandConstPtr& msg)
 {
   command_box_.set(msg);
 }

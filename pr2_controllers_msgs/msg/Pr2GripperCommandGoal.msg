@@ -1,1 +1,1 @@
-pr2_mechanism_controllers/Pr2GripperCommand command
+pr2_controllers_msgs/Pr2GripperCommand command

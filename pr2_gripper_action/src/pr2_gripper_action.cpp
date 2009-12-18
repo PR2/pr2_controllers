@@ -33,15 +33,15 @@
 
 #include <actionlib/server/action_server.h>
 #include <robot_mechanism_controllers/JointControllerState.h>
-#include <pr2_mechanism_controllers/Pr2GripperCommand.h>
-#include "pr2_gripper_action/Pr2GripperCommandAction.h"
+#include <pr2_controllers_msgs/Pr2GripperCommand.h>
+#include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 
 const double EPS = 1e-6;
 
 class Pr2GripperAction
 {
 private:
-  typedef actionlib::ActionServer<pr2_gripper_action::Pr2GripperCommandAction> GAS;
+  typedef actionlib::ActionServer<pr2_controllers_msgs::Pr2GripperCommandAction> GAS;
   typedef GAS::GoalHandle GoalHandle;
 public:
   Pr2GripperAction(ros::NodeHandle &n) :
@@ -57,7 +57,7 @@ public:
     pn.param("stall_timeout", stall_timeout_, 0.1);
 
     pub_controller_command_ =
-      node_.advertise<pr2_mechanism_controllers::Pr2GripperCommand>("command", 1);
+      node_.advertise<pr2_controllers_msgs::Pr2GripperCommand>("command", 1);
     sub_controller_state_ =
       node_.subscribe("state", 1, &Pr2GripperAction::controllerStateCB, this);
 
@@ -145,7 +145,7 @@ private:
       // Stops the controller.
       if (last_controller_state_)
       {
-        pr2_mechanism_controllers::Pr2GripperCommand stop;
+        pr2_controllers_msgs::Pr2GripperCommand stop;
         stop.position = last_controller_state_->process_value;
         stop.max_effort = 0.0;
         pub_controller_command_.publish(stop);
@@ -184,7 +184,7 @@ private:
     }
 
 
-    pr2_gripper_action::Pr2GripperCommandFeedback feedback;
+    pr2_controllers_msgs::Pr2GripperCommandFeedback feedback;
     feedback.position = msg->process_value;
     feedback.effort = msg->command;
     feedback.reached_goal = false;

@@ -69,7 +69,7 @@
 #include <std_msgs/Float64.h>
 
 #include <robot_mechanism_controllers/JointControllerState.h>
-#include <pr2_mechanism_controllers/Pr2GripperCommand.h>
+#include <pr2_controllers_msgs/Pr2GripperCommand.h>
 
 namespace controller
 {
@@ -84,7 +84,7 @@ public:
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   virtual void starting() {
-    using namespace pr2_mechanism_controllers;
+    using namespace pr2_controllers_msgs;
     Pr2GripperCommandPtr c(new Pr2GripperCommand);
     c->position = joint_state_->position_;
     c->max_effort = 0.0;
@@ -97,7 +97,7 @@ public:
   virtual void update();
 
   pr2_mechanism_model::JointState *joint_state_;
-  realtime_tools::RealtimeBox<pr2_mechanism_controllers::Pr2GripperCommandConstPtr> command_box_;
+  realtime_tools::RealtimeBox<pr2_controllers_msgs::Pr2GripperCommandConstPtr> command_box_;
 
 private:
   int loop_count_;
@@ -112,7 +112,7 @@ private:
       robot_mechanism_controllers::JointControllerState> > controller_state_publisher_ ;
 
   ros::Subscriber sub_command_;
-  void commandCB(const pr2_mechanism_controllers::Pr2GripperCommandConstPtr& msg);
+  void commandCB(const pr2_controllers_msgs::Pr2GripperCommandConstPtr& msg);
 };
 
 } // namespace
