@@ -46,19 +46,20 @@ private:
 public:
   Pr2GripperAction(ros::NodeHandle &n) :
     node_(n),
-    action_server_(ros::NodeHandle()/*node_*/, "action",
+    action_server_(node_, "gripper_action",
                    boost::bind(&Pr2GripperAction::goalCB, this, _1),
                    boost::bind(&Pr2GripperAction::cancelCB, this, _1)),
     has_active_goal_(false)
   {
-    using namespace XmlRpc;
+    ros::NodeHandle pn("~");
 
-    node_.param("goal_threshold", goal_threshold_, 0.01);
+    pn.param("goal_threshold", goal_threshold_, 0.01);
+    pn.param("stall_timeout", stall_timeout_, 0.1);
 
     pub_controller_command_ =
-      node_.advertise<pr2_mechanism_controllers::Pr2GripperCommand>("controller_command", 1);
+      node_.advertise<pr2_mechanism_controllers::Pr2GripperCommand>("command", 1);
     sub_controller_state_ =
-      node_.subscribe("controller_state", 1, &Pr2GripperAction::controllerStateCB, this);
+      node_.subscribe("state", 1, &Pr2GripperAction::controllerStateCB, this);
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &Pr2GripperAction::watchdog, this);
   }
@@ -84,6 +85,8 @@ private:
 
   double min_error_seen_;
   double goal_threshold_;
+  double stall_timeout_;
+  ros::Time last_movement_time_;
 
   void watchdog(const ros::TimerEvent &e)
   {
@@ -132,6 +135,7 @@ private:
 
     // Sends the command along to the controller.
     pub_controller_command_.publish(active_goal_.getGoal()->command);
+    last_movement_time_ = ros::Time::now();
   }
 
   void cancelCB(GoalHandle gh)
@@ -164,12 +168,6 @@ private:
     if (!has_active_goal_)
       return;
 
-    if (fabs(msg->process_value - active_goal_.getGoal()->command.position) < goal_threshold_)
-    {
-      active_goal_.setSucceeded();
-      has_active_goal_ = false;
-    }
-
     // Ensures that the controller is tracking my setpoint.
     if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > EPS)
     {
@@ -185,17 +183,38 @@ private:
       }
     }
 
-    // TODO
-    // Abort if:
-    // - Not reached goal and not moving towards goal (for n seconds???)
+
+    pr2_gripper_action::Pr2GripperCommandFeedback feedback;
+    feedback.position = msg->process_value;
+    feedback.effort = msg->command;
+    feedback.reached_goal = false;
+    feedback.stalled = false;
+
+    if (fabs(msg->process_value - active_goal_.getGoal()->command.position) < goal_threshold_)
+    {
+      feedback.reached_goal = true;
+    }
+    else
+    {
+      // Determines if the gripper has stalled.
+      if (fabs(msg->process_value_dot) > EPS)
+      {
+        last_movement_time_ = ros::Time::now();
+      }
+      else if ((ros::Time::now() - last_movement_time_).toSec() > stall_timeout_)
+      {
+        feedback.stalled = true;
+      }
+    }
+    active_goal_.publishFeedback(feedback);
   }
 };
 
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "pr2_gripper_action");
-  ros::NodeHandle node("~");
+  ros::init(argc, argv, "gripper_action_node");
+  ros::NodeHandle node;
   Pr2GripperAction jte(node);
 
   ros::spin();

@@ -123,6 +123,7 @@ void Pr2GripperController::update()
       controller_state_publisher_->msg_.header.stamp = time;
       controller_state_publisher_->msg_.set_point = command->position;
       controller_state_publisher_->msg_.process_value = joint_state_->position_;
+      controller_state_publisher_->msg_.process_value_dot = joint_state_->velocity_;
       controller_state_publisher_->msg_.error = error;
       controller_state_publisher_->msg_.time_step = dt.toSec();
       controller_state_publisher_->msg_.command = effort;
