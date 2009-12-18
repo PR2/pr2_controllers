@@ -1,0 +1,1 @@
+pr2_mechanism_controllers/Pr2GripperCommand command
