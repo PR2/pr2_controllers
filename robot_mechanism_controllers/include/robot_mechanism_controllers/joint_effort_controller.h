@@ -71,7 +71,7 @@ public:
   bool init(pr2_mechanism_model::RobotState *robot, const std::string &joint_name);
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
-  virtual bool starting() { command_ = 0.0; return true; }
+  virtual void starting() { command_ = 0.0;}
   virtual void update();
 
   pr2_mechanism_model::JointState *joint_state_;

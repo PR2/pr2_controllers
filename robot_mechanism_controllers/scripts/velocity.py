@@ -65,7 +65,6 @@ def main():
         print "Usage: velocity.py <joint> <p> <i> <d> <iClamp>"
         sys.exit(1)
     rospy.init_node('velocity', anonymous=True)
-    rospy.wait_for_service('load_controller')
 
     joint = sys.argv[1]
     p = float(sys.argv[2])

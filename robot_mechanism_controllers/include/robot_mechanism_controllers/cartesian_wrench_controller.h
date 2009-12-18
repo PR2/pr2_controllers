@@ -78,7 +78,7 @@ public:
   bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
-  bool starting();
+  void starting();
   void update();
 
   // input of the controller

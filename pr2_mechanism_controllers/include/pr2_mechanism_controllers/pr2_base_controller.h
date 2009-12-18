@@ -70,7 +70,7 @@ namespace controller
        * the first call to update.  Overrides Controller.staring().
        * @return Successful start
        */
-      bool starting();
+      void starting();
 
       bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 

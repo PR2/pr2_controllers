@@ -1,0 +1,1 @@
+pr2_controllers_msgs/Pr2GripperCommand command

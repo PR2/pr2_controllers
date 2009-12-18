@@ -1,0 +1,23 @@
+<package>
+  <description brief="pr2_gripper_action">
+
+     pr2_gripper_action
+
+  </description>
+  <author>Stuart Glaser</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_gripper_action</url>
+  <depend package="roscpp"/>
+  <depend package="actionlib_msgs" />
+  <depend package="actionlib"/>
+  <depend package="pr2_mechanism_controllers"/>
+  <depend package="robot_mechanism_controllers" />
+
+  <export>
+    <cpp cflags="-I${prefix}/msg/cpp" />
+  </export>
+
+</package>
+
+

@@ -6,8 +6,6 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
 
-  <depend package="trajectory" />
-
   <!-- ROS Interfaces -->
   <depend package="std_msgs" />
   <depend package="geometry_msgs" />
@@ -21,6 +19,7 @@
   <depend package="pr2_controller_interface" />
   
   <depend package="roscpp" />
+  <depend package="pr2_controllers_msgs" />
   <depend package="pr2_mechanism_model" />
   <depend package="realtime_tools" />
   <depend package="robot_mechanism_controllers" />

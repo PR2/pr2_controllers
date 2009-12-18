@@ -52,67 +52,6 @@ JointCalibrationController::~JointCalibrationController()
 {
 }
 
-bool JointCalibrationController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  assert(robot);
-  assert(config);
-
-  TiXmlElement *cal = config->FirstChildElement("calibrate");
-  if (!cal)
-  {
-    std::cerr<<"JointCalibrationController was not given calibration parameters"<<std::endl;
-    return false;
-  }
-
-  if(cal->QueryDoubleAttribute("velocity", &search_velocity_) != TIXML_SUCCESS)
-  {
-    std::cerr<<"Velocity value was not specified\n";
-    return false;
-  }
-
-  const char *joint_name = cal->Attribute("joint");
-  joint_ = joint_name ? robot->getJointState(joint_name) : NULL;
-  if (!joint_)
-  {
-    fprintf(stderr, "Error: JointCalibrationController could not find joint \"%s\"\n",
-            joint_name);
-    return false;
-  }
-
-  const char *actuator_name = cal->Attribute("actuator");
-  actuator_ = actuator_name ? robot->model_->getActuator(actuator_name) : NULL;
-  if (!actuator_)
-  {
-    fprintf(stderr, "Error: JointCalibrationController could not find actuator \"%s\"\n",
-            actuator_name);
-    return false;
-  }
-
-  const char *transmission_name = cal->Attribute("transmission");
-  transmission_ = transmission_name ? robot->model_->getTransmission(transmission_name) : NULL;
-  if (!transmission_)
-  {
-    fprintf(stderr, "Error: JointCalibrationController could not find transmission \"%s\"\n",
-            transmission_name);
-    return false;
-  }
-
-  control_toolbox::Pid pid;
-  TiXmlElement *pid_el = config->FirstChildElement("pid");
-  if (!pid_el)
-  {
-    fprintf(stderr, "Error: JointCalibrationController was not given a pid element.\n");
-    return false;
-  }
-  if (!pid.initXml(pid_el))
-    return false;
-
-  if (!vc_.init(robot, joint_name, pid))
-    return false;
-
-  return true;
-}
-
 bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   robot_ = robot;
@@ -199,14 +138,14 @@ void JointCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    if (actuator_->state_.calibration_reading_)
+    if (actuator_->state_.calibration_reading_ & 1)
       state_ = MOVING_TO_LOW;
     else
       state_ = MOVING_TO_HIGH;
     break;
   case MOVING_TO_LOW:
     vc_.setCommand(-search_velocity_);
-    if (!actuator_->state_.calibration_reading_)
+    if (!(actuator_->state_.calibration_reading_ & 1))
     {
       if (--countdown_ <= 0)
         state_ = MOVING_TO_HIGH;
@@ -217,7 +156,7 @@ void JointCalibrationController::update()
   case MOVING_TO_HIGH: {
     vc_.setCommand(search_velocity_);
 
-    if (actuator_->state_.calibration_reading_)
+    if (actuator_->state_.calibration_reading_ & 1)
     {
       pr2_hardware_interface::Actuator a;
       pr2_mechanism_model::JointState j;

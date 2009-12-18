@@ -189,6 +189,7 @@ void JointPositionController::update()
   {
     if(controller_state_publisher_ && controller_state_publisher_->trylock())
     {
+      controller_state_publisher_->msg_.header.stamp = time;
       controller_state_publisher_->msg_.set_point = command_;
       controller_state_publisher_->msg_.process_value = joint_state_->position_;
       controller_state_publisher_->msg_.error = error;

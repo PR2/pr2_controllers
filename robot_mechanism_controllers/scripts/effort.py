@@ -60,7 +60,6 @@ def main():
         sys.exit(1)
     joint = sys.argv[1]
     rospy.init_node('effort', anonymous=True)
-    rospy.wait_for_service('load_controller')
 
     # Override rospy's signal handling.  We'll invoke rospy's handler after
     # we're done shutting down

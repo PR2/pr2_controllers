@@ -94,9 +94,8 @@ public:
    */
    void getCommand(double & cmd);
 
-  virtual bool starting() {
+  virtual void starting() {
     command_ = joint_state_->position_;
-    return true;
   }
 
   /*!

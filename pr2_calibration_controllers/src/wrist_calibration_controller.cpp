@@ -48,89 +48,6 @@ WristCalibrationController::~WristCalibrationController()
 {
 }
 
-bool WristCalibrationController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  assert(robot);
-  assert(config);
-
-  TiXmlElement *cal = config->FirstChildElement("calibrate");
-  if (!cal)
-  {
-    std::cerr<<"WristCalibrationController was not given calibration parameters"<<std::endl;
-    return false;
-  }
-
-  if(cal->QueryDoubleAttribute("velocity", &search_velocity_) != TIXML_SUCCESS)
-  {
-    std::cerr<<"Velocity value was not specified\n";
-    return false;
-  }
-
-  const char *flex_joint_name = cal->Attribute("flex_joint");
-  flex_joint_ = flex_joint_name ? robot->getJointState(flex_joint_name) : NULL;
-  if (!flex_joint_)
-  {
-    fprintf(stderr, "Error: WristCalibrationController could not find flex joint \"%s\"\n",
-            flex_joint_name);
-    return false;
-  }
-
-  const char *roll_joint_name = cal->Attribute("roll_joint");
-  roll_joint_ = roll_joint_name ? robot->getJointState(roll_joint_name) : NULL;
-  if (!roll_joint_)
-  {
-    fprintf(stderr, "Error: WristCalibrationController could not find roll_joint \"%s\"\n",
-            roll_joint_name);
-    return false;
-  }
-
-  const char *actuator_l_name = cal->Attribute("actuator_l");
-  actuator_l_ = actuator_l_name ? robot->model_->getActuator(actuator_l_name) : NULL;
-  if (!actuator_l_)
-  {
-    fprintf(stderr, "Error: WristCalibrationController could not find actuator_l \"%s\"\n",
-            actuator_l_name);
-    return false;
-  }
-
-  const char *actuator_r_name = cal->Attribute("actuator_r");
-  actuator_r_ = actuator_r_name ? robot->model_->getActuator(actuator_r_name) : NULL;
-  if (!actuator_r_)
-  {
-    fprintf(stderr, "Error: WristCalibrationController could not find actuator_r \"%s\"\n",
-            actuator_r_name);
-    return false;
-  }
-
-  const char *transmission_name = cal->Attribute("transmission");
-  transmission_ = transmission_name ? robot->model_->getTransmission(transmission_name) : NULL;
-  if (!transmission_)
-  {
-    fprintf(stderr, "Error: WristCalibrationController could not find transmission \"%s\"\n",
-            transmission_name);
-    return false;
-  }
-
-  control_toolbox::Pid pid;
-  TiXmlElement *p = config->FirstChildElement("pid");
-  if (p)
-    pid.initXml(p);
-  else
-  {
-    fprintf(stderr, "WristCalibrationController's config did not specify the default pid parameters.\n");
-    return false;
-  }
-
-  if (!vc_flex_.init(robot, flex_joint_name, pid))
-    return false;
-  if (!vc_roll_.init(robot, roll_joint_name, pid))
-    return false;
-
-  fprintf(stderr, "WristCalibrationController initialized!\n");
-
-  return true;
-}
-
 bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
                                       ros::NodeHandle &n)
 {
@@ -138,9 +55,15 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   node_ = n;
   robot_ = robot;
 
-  if (!node_.getParam("velocity", search_velocity_))
+  if (!node_.getParam("roll_velocity", roll_search_velocity_))
   {
-    ROS_ERROR("No velocity given (namespace: %s)", node_.getNamespace().c_str());
+    ROS_ERROR("No roll_velocity given (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
+
+  if (!node_.getParam("flex_velocity", flex_search_velocity_))
+  {
+    ROS_ERROR("No flex_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
 
@@ -267,13 +190,13 @@ void WristCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    original_switch_state_ = actuator_l_->state_.calibration_reading_;
-    vc_flex_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
+    original_switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
+    vc_flex_.setCommand(original_switch_state_ ? -flex_search_velocity_ : flex_search_velocity_);
     vc_roll_.setCommand(0);
     state_ = MOVING_FLEX;
     break;
   case MOVING_FLEX: {
-    bool switch_state_ = actuator_l_->state_.calibration_reading_;
+    bool switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)
@@ -292,15 +215,15 @@ void WristCalibrationController::update()
       assert(0 <= k && k <= 1);
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
-      original_switch_state_ = actuator_r_->state_.calibration_reading_;
+      original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
       vc_flex_.setCommand(0);
-      vc_roll_.setCommand(original_switch_state_ ? -search_velocity_ : search_velocity_);
+      vc_roll_.setCommand(original_switch_state_ ? -roll_search_velocity_ : roll_search_velocity_);
       state_ = MOVING_ROLL;
     }
     break;
   }
   case MOVING_ROLL: {
-    bool switch_state_ = actuator_r_->state_.calibration_reading_;
+    bool switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)

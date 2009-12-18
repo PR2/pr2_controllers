@@ -52,7 +52,7 @@ public:
   ~ProjectorController();
 
   void update();
-  bool starting();
+  void starting();
   void stopping();
 
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
@@ -60,7 +60,6 @@ public:
 private:
   pr2_mechanism_model::RobotState * robot_;
   pr2_hardware_interface::Projector *projector_;
-  pr2_hardware_interface::DigitalOut *digital_out_M_;
 
   uint32_t old_rising_;
   uint32_t old_falling_;
@@ -73,6 +72,8 @@ private:
 
   // Configuration of controller.
   std::string actuator_name_;
+
+  double current_setting_;
 
   double start_time_; /// @todo KILLME FIXME
 };

@@ -13,4 +13,4 @@ rosbuild_add_library(control_toolbox
  src/sinusoid.cpp
  )
  
-# rospack_add_executable(test_linear test/linear.cpp)
+# rosbuild_add_executable(test_linear test/linear.cpp)

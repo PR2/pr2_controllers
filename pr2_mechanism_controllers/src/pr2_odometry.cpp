@@ -94,7 +94,7 @@ bool Pr2Odometry::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHa
   weight_matrix_ = Eigen::MatrixXf::Identity(16, 16);
 
   odometry_publisher_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(node_,odom_frame_, 1));
-  transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>("/tf", 1));
+  transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(node_,"/tf", 1));
   transform_publisher_->msg_.set_transforms_size(2);
 
   return true;
@@ -106,12 +106,11 @@ bool Pr2Odometry::initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlEle
   return init(robot_state, n);
 }
 
-bool Pr2Odometry::starting()
+void Pr2Odometry::starting()
 {
   current_time_ = base_kin_.robot_state_->getTime();
   last_time_ = base_kin_.robot_state_->getTime();
   last_publish_time_ = base_kin_.robot_state_->getTime();
-  return true;
 }
 
 void Pr2Odometry::update()
@@ -175,6 +174,8 @@ void Pr2Odometry::populateCovariance(double residual, nav_msgs::Odometry &msg)
 {
   // multiplier to scale covariance
   // the smaller the residual, the more reliable odom
+  /*
+  //this does not seem to work correctly, commenting it out
   double odom_multiplier;
   if (residual < 0.05)
   {
@@ -186,6 +187,8 @@ void Pr2Odometry::populateCovariance(double residual, nav_msgs::Odometry &msg)
   }
   odom_multiplier = fmax(0.00001, fmin(100.0, odom_multiplier));
   odom_multiplier *= 2.0;
+  */
+  double  odom_multiplier = 1.0;
 
   //nav_msgs::Odometry has a 6x6 covariance matrix
   msg.pose.covariance[0] = odom_multiplier*pow(sigma_x_,2);
