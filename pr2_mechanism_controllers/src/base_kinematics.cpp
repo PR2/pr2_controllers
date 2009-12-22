@@ -61,6 +61,11 @@ bool Wheel::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &
   joint_name_ = link->parent_joint->name;
 
   joint_ = robot_state->getJointState(joint_name_);
+  if (!joint_){
+    ROS_ERROR("Could not find joint with name %s",joint_name_.c_str());
+    return false;
+  }
+
   urdf::Vector3 offset = link->parent_joint->parent_to_joint_origin_transform.position;
   offset_.x = offset.x;
   offset_.y = offset.y;
@@ -94,6 +99,10 @@ bool Caster::init(pr2_mechanism_model::RobotState *robot_state,  ros::NodeHandle
   joint_name_ = link->parent_joint->name;
 
   joint_ = robot_state->getJointState(joint_name_);
+  if (!joint_){
+    ROS_ERROR("Could not find joint with name %s",joint_name_.c_str());
+    return false;
+  }
   urdf::Vector3 offset = link->parent_joint->parent_to_joint_origin_transform.position;
   offset_.x = offset.x;
   offset_.y = offset.y;
@@ -134,8 +143,6 @@ bool BaseKinematics::init(pr2_mechanism_model::RobotState *robot_state, ros::Nod
   {
     caster_names.push_back(tmp);
   }
-
-
 
   for(unsigned int i=0; i < caster_names.size(); i++)
   {

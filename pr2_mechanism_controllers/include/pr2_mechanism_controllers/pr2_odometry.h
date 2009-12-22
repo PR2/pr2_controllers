@@ -43,13 +43,21 @@
 
 #include <boost/scoped_ptr.hpp>
 
+#include <std_msgs/Float64.h>
+#include <pr2_mechanism_controllers/OdometryMatrix.h>
+#include <pr2_mechanism_controllers/DebugInfo.h>
+
+#include <std_msgs/Bool.h>
+
+namespace controller
+{
+
 typedef Eigen::Matrix<float, 3, 1> OdomMatrix3x1;
 typedef Eigen::Matrix<float, 16, 1> OdomMatrix16x1;
 typedef Eigen::Matrix<float, 16, 3> OdomMatrix16x3;
 typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
 
-namespace controller
-{
+
   /*! \class
   \brief This class inherits from Controller and computes the base odometry
   */
@@ -151,17 +159,17 @@ namespace controller
     * \brief Computes the wheel's speed adjusted for the attached caster's rotational velocity
     * @param index The index of the wheel
     */
-    double getCorrectedWheelSpeed(int index);
+    double getCorrectedWheelSpeed(const int &index);
 
     /*!
     * \brief Function used to compute the most likely solution to the odometry using iterative least squares
     */
-    Eigen::MatrixXf iterativeLeastSquares(Eigen::MatrixXf lhs, Eigen::MatrixXf rhs, std::string weight_type, int max_iter);
+    OdomMatrix3x1 iterativeLeastSquares(const OdomMatrix16x3 &lhs, const OdomMatrix16x1 &rhs, const std::string &weight_type, const int &max_iter);
     
     /*!
     * \brief Finds the weight matrix from the iterative least squares residuals
     */
-    Eigen::MatrixXf findWeightMatrix(Eigen::MatrixXf residual, std::string weight_type);
+    OdomMatrix16x16 findWeightMatrix(const OdomMatrix16x1 &residual, const std::string &weight_type);
 
     /*!
     * \brief Total distance traveled by the base as computed by the odometer
@@ -181,7 +189,7 @@ namespace controller
     /*!
     * \brief Matricies used in the computation of the iterative least squares and related functions
     */
-    Eigen::MatrixXf cbv_rhs_, fit_rhs_, fit_residual_, odometry_residual_, cbv_lhs_, fit_lhs_, cbv_soln_,fit_soln_,  weight_matrix_;
+    //    Eigen::MatrixXf cbv_rhs_, fit_rhs_, fit_residual_, odometry_residual_, cbv_lhs_, fit_lhs_, cbv_soln_,fit_soln_,  weight_matrix_;
 
     /*!
     * \brief Point that stores the current translational position (x,y) and angular position (z)
@@ -250,7 +258,17 @@ namespace controller
     /*!
     * \brief populate the covariance part of the odometry message
     */
-    void populateCovariance(double residual, nav_msgs::Odometry &msg);
+    void populateCovariance(const double &residual, nav_msgs::Odometry &msg);
 
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::OdometryMatrix> > matrix_publisher_;
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::DebugInfo> > debug_publisher_;
+
+    int sequence_;
+
+    bool isInputValid();
+
+    bool verbose_, publish_odom_;
+
+    double odom_publish_rate_;
   };
 }
