@@ -196,6 +196,16 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
     if (!pids_[i].init(ros::NodeHandle(gains_ns + "/" + joints_[i]->joint_->name)))
       return false;
 
+  // Creates a dummy trajectory
+  boost::shared_ptr<SpecifiedTrajectory> traj_ptr(new SpecifiedTrajectory(1));
+  SpecifiedTrajectory &traj = *traj_ptr;
+  traj[0].start_time = robot_->getTime().toSec();
+  traj[0].duration = 0.0;
+  traj[0].splines.resize(joints_.size());
+  for (size_t j = 0; j < joints_.size(); ++j)
+    traj[0].splines[j].coef[0] = 0.0;
+  current_trajectory_box_.set(traj_ptr);
+
   sub_command_ = node_.subscribe("command", 1, &JointSplineTrajectoryController::commandCB, this);
   serve_query_state_ = node_.advertiseService(
     "query_state", &JointSplineTrajectoryController::queryStateService, this);
