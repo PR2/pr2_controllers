@@ -249,7 +249,7 @@ void JointSplineTrajectoryController::starting()
   // Creates a "hold current position" trajectory.
   boost::shared_ptr<SpecifiedTrajectory> hold_ptr(new SpecifiedTrajectory(1));
   SpecifiedTrajectory &hold = *hold_ptr;
-  hold[0].start_time = last_time_.toSec();
+  hold[0].start_time = last_time_.toSec() - 0.001;
   hold[0].duration = 0.0;
   hold[0].splines.resize(joints_.size());
   for (size_t j = 0; j < joints_.size(); ++j)
@@ -287,7 +287,7 @@ void JointSplineTrajectoryController::update()
     if (traj.size() == 0)
       ROS_ERROR("No segments in the trajectory");
     else
-      ROS_ERROR("First segment starts at %.3lf (now = %.3lf)", traj[0].start_time, time.toSec());
+      ROS_ERROR("No earlier segments.  First segment starts at %.3lf (now = %.3lf)", traj[0].start_time, time.toSec());
     return;
   }
 
