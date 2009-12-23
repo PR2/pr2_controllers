@@ -80,15 +80,34 @@ public:
       node_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("query_state");
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &ControlHead::watchdog, this);
-
-    // Retrieves the name of pan_link's parent link
-    tf_.getParent(pan_link_, ros::Time(), pan_parent_);
   }
 
 
   //void pointHeadCB(const geometry_msgs::PointStampedConstPtr &msg)
   void goalCB(GoalHandle gh)
   {
+    // Before we do anything, we need to know that name of the pan_link's parent.
+    if (pan_parent_.empty())
+    {
+      for (int i = 0; i < 10; ++i)
+      {
+        try {
+          tf_.getParent(pan_link_, ros::Time(), pan_parent_);
+          break;
+        }
+        catch (const tf::TransformException &ex) {}
+        ros::Duration(0.5).sleep();
+      }
+
+      if (pan_parent_.empty())
+      {
+        ROS_ERROR("Could not get parent of %s in the TF tree", pan_link_.c_str());
+        gh.setRejected();
+        return;
+      }
+    }
+
+
     std::vector<double> q_goal(2);  // [pan, tilt]
 
     // Transforms the target point into the pan and tilt links.
