@@ -84,7 +84,8 @@ public:
     traj_state.request.time = ros::Time::now() + ros::Duration(0.01);
     if (!cli_query_traj_.call(traj_state))
     {
-      ROS_ERROR("Service call to query controller trajectory failed.");
+      ROS_ERROR("Service call to query controller trajectory failed.  Service: (%s)",
+                cli_query_traj_.getService().c_str());
       gh.setRejected();
       return;
     }
