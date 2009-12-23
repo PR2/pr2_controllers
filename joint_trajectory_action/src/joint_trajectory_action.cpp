@@ -79,6 +79,7 @@ public:
       joint_names_.push_back((std::string)name_value);
     }
 
+    pn.param("constraints/goal_time", goal_time_constraint_, 0.0);
 
     // Gets the constraints for each joint.
     for (size_t i = 0; i < joint_names_.size(); ++i)
@@ -223,8 +224,7 @@ private:
   std::vector<std::string> joint_names_;
   std::map<std::string,double> goal_constraints_;
   std::map<std::string,double> trajectory_constraints_;
-
-  std::map<std::string,double> goal_thresholds_;
+  double goal_time_constraint_;
 
   robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr last_controller_state_;
   void controllerStateCB(const robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr &msg)
@@ -284,14 +284,21 @@ private:
       }
 
       if (inside_goal_constraints)
+      {
         active_goal_.setSucceeded();
+        has_active_goal_ = false;
+      }
+      else if (now < end_time + ros::Duration(goal_time_constraint_))
+      {
+        // Still have some time left to make it.
+      }
       else
       {
         ROS_WARN("Aborting because we wound up outside the goal constraints");
         active_goal_.setAborted();
+        has_active_goal_ = false;
       }
 
-      has_active_goal_ = false;
     }
   }
 };
