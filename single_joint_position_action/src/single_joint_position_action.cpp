@@ -85,6 +85,7 @@ public:
     if (!cli_query_traj_.call(traj_state))
     {
       ROS_ERROR("Service call to query controller trajectory failed.");
+      gh.setRejected();
       return;
     }
 
