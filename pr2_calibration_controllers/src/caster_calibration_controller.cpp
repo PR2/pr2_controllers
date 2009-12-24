@@ -153,6 +153,7 @@ void CasterCalibrationController::update()
 {
   assert(joint_);
   assert(actuator_);
+  ros::Time time = robot_->getTime();
 
   switch(state_)
   {
@@ -162,6 +163,7 @@ void CasterCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
+    beginning_ = time;
     original_switch_state_ = actuator_->state_.calibration_reading_ & 1;
     cc_.steer_velocity_ = (original_switch_state_ ? -search_velocity_ : search_velocity_);
     state_ = MOVING;
@@ -194,6 +196,22 @@ void CasterCalibrationController::update()
       wheel_r_joint_->calibrated_ = true;
 
       state_ = CALIBRATED;
+    }
+    else
+    {
+      // The caster is not strong enough to consistently move.  The
+      // rest of this block contains the hacks to ensure that
+      // calibration always completes.
+      if (time > beginning_ + ros::Duration(6.0))
+      {
+        if ((unstick_iter_ / 1000) % 2 == 0)
+          cc_.steer_velocity_ = 4.0 * (original_switch_state_ ? -search_velocity_ : search_velocity_);
+        else
+          cc_.steer_velocity_ = 0.0;
+        ++unstick_iter_;
+      }
+      else
+        unstick_iter_ = 0;
     }
     break;
   }
