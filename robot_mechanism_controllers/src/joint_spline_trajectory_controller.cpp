@@ -312,24 +312,7 @@ void JointSplineTrajectoryController::update()
   std::vector<double> error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    error[i] = 0.0;
-    switch (joints_[i]->joint_->type)
-    {
-    case urdf::Joint::REVOLUTE:
-      angles::shortest_angular_distance_with_limits(
-        q[i], joints_[i]->position_,
-        joints_[i]->joint_->limits->lower, joints_[i]->joint_->limits->upper, error[i]);
-      break;
-    case urdf::Joint::CONTINUOUS:
-      error[i] = angles::shortest_angular_distance(q[i], joints_[i]->position_);
-      break;
-    case urdf::Joint::PRISMATIC:
-      error[i] = joints_[i]->position_ - q[i];
-      break;
-    default:
-      ROS_FATAL("Joint type: %d", joints_[i]->joint_->type);
-    }
-
+    error[i] = joints_[i]->position_ - q[i];
     joints_[i]->commanded_effort_ += pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
   }
 
