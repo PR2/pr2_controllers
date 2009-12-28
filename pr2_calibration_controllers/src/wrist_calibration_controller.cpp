@@ -212,7 +212,13 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (flex_switch_l_ - prev_actuator_l_position_) / dl;
-      assert(0 <= k && k <= 1);
+      if ( !(0 <= k && k <= 1) )
+      {
+        // Break realtime and crash.
+        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
+        sleep(2);
+        abort();
+      }
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
       original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
@@ -235,7 +241,13 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (roll_switch_r_ - prev_actuator_r_position_) / dr;
-      assert(0 <= k && k <= 1);
+      if ( !(0 <= k && k <= 1) )
+      {
+        // Break realtime and crash.
+        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
+        sleep(2);
+        abort();
+      }
       roll_switch_l_ =  k * dl + prev_actuator_l_position_;
 
 
