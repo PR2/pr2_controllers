@@ -32,9 +32,9 @@
 #include <ros/ros.h>
 #include <actionlib/server/action_server.h>
 
-#include <robot_mechanism_controllers/JointTrajectoryControllerState.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
+#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 const double DEFAULT_GOAL_THRESHOLD = 0.1;
 
@@ -226,8 +226,8 @@ private:
   std::map<std::string,double> trajectory_constraints_;
   double goal_time_constraint_;
 
-  robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr last_controller_state_;
-  void controllerStateCB(const robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr &msg)
+  pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr last_controller_state_;
+  void controllerStateCB(const pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr &msg)
   {
     last_controller_state_ = msg;
     ros::Time now = ros::Time::now();
