@@ -66,7 +66,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <realtime_tools/realtime_publisher.h>
 #include <std_msgs/Float64.h>
-#include <robot_mechanism_controllers/JointControllerState.h>
+#include <pr2_controllers_msgs/JointControllerState.h>
 
 namespace controller
 {
@@ -123,7 +123,7 @@ private:
 
   boost::scoped_ptr<
     realtime_tools::RealtimePublisher<
-      robot_mechanism_controllers::JointControllerState> > controller_state_publisher_ ;
+      pr2_controllers_msgs::JointControllerState> > controller_state_publisher_ ;
 
   ros::Subscriber sub_command_;
   void setCommandCB(const std_msgs::Float64ConstPtr& msg);

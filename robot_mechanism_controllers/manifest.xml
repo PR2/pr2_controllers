@@ -18,6 +18,7 @@
   <depend package="diagnostic_msgs" />
   <depend package="trajectory_msgs" />
 
+  <depend package="pr2_controllers_msgs" />
   <depend package="pr2_controller_interface" />
   <depend package="pr2_controller_manager" />
   <depend package="kdl_parser"/>

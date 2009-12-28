@@ -9,8 +9,8 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-rosbuild_genmsg()
-rosbuild_gensrv()
+#rosbuild_genmsg()
+#rosbuild_gensrv()
 rosbuild_add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
     src/cartesian_twist_controller.cpp

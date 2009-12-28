@@ -224,7 +224,7 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
   recorder_.init(node_);
 
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointTrajectoryControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointTrajectoryControllerState>
     (node_, "state", 1));
   controller_state_publisher_->lock();
   for (size_t j = 0; j < joints_.size(); ++j)
@@ -567,8 +567,8 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
 }
 
 bool JointSplineTrajectoryController::queryStateService(
-  robot_mechanism_controllers::QueryTrajectoryState::Request &req,
-  robot_mechanism_controllers::QueryTrajectoryState::Response &resp)
+  pr2_controllers_msgs::QueryTrajectoryState::Request &req,
+  pr2_controllers_msgs::QueryTrajectoryState::Response &resp)
 {
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
   current_trajectory_box_.get(traj_ptr);

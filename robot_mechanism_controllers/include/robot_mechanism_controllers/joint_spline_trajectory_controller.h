@@ -51,8 +51,8 @@
 
 #include "trajectory_msgs/JointTrajectory.h"
 //#include "robot_mechanism_controllers/Trajectory.h"
-#include "robot_mechanism_controllers/QueryTrajectoryState.h"
-#include "robot_mechanism_controllers/JointTrajectoryControllerState.h"
+#include "pr2_controllers_msgs/QueryTrajectoryState.h"
+#include "pr2_controllers_msgs/JointTrajectoryControllerState.h"
 
 namespace controller {
 
@@ -80,13 +80,13 @@ private:
   void commandCB(const trajectory_msgs::JointTrajectoryConstPtr &msg);
   ros::Subscriber sub_command_;
 
-  bool queryStateService(robot_mechanism_controllers::QueryTrajectoryState::Request &req,
-                         robot_mechanism_controllers::QueryTrajectoryState::Response &resp);
+  bool queryStateService(pr2_controllers_msgs::QueryTrajectoryState::Request &req,
+                         pr2_controllers_msgs::QueryTrajectoryState::Response &resp);
   ros::ServiceServer serve_query_state_;
 
   boost::scoped_ptr<
     realtime_tools::RealtimePublisher<
-      robot_mechanism_controllers::JointTrajectoryControllerState> > controller_state_publisher_;
+      pr2_controllers_msgs::JointTrajectoryControllerState> > controller_state_publisher_;
 
 
   // ------ Mechanisms for passing the trajectory into realtime

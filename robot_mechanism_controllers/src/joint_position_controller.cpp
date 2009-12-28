@@ -115,7 +115,7 @@ bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, ros::
     return false;
 
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointControllerState>
     (node_, "state", 1));
 
   sub_command_ = node_.subscribe<std_msgs::Float64>("command", 1, &JointPositionController::setCommandCB, this);
@@ -182,7 +182,8 @@ void JointPositionController::update()
     error = joint_state_->position_ - command_;
   }
 
-  joint_state_->commanded_effort_ = pid_controller_.updatePid(error, dt_);
+  double commanded_effort = pid_controller_.updatePid(error, dt_);
+  joint_state_->commanded_effort_ = commanded_effort;
   //joint_state_->commanded_effort_ = pid_controller_.updatePid(error, joint_state_->velocity_, dt_);
 
   if(loop_count_ % 10 == 0)
@@ -192,8 +193,10 @@ void JointPositionController::update()
       controller_state_publisher_->msg_.header.stamp = time;
       controller_state_publisher_->msg_.set_point = command_;
       controller_state_publisher_->msg_.process_value = joint_state_->position_;
+      controller_state_publisher_->msg_.process_value_dot = joint_state_->velocity_;
       controller_state_publisher_->msg_.error = error;
       controller_state_publisher_->msg_.time_step = dt_.toSec();
+      controller_state_publisher_->msg_.command = commanded_effort;
 
       double dummy;
       getGains(controller_state_publisher_->msg_.p,

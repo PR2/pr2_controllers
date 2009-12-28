@@ -81,7 +81,7 @@ bool Pr2GripperController::init(pr2_mechanism_model::RobotState *robot, ros::Nod
     return false;
 
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointControllerState>
     (node_, "state", 1));
 
   sub_command_ = node_.subscribe<pr2_controllers_msgs::Pr2GripperCommand>(
