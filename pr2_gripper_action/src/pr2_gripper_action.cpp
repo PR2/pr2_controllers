@@ -32,7 +32,7 @@
 #include "ros/ros.h"
 
 #include <actionlib/server/action_server.h>
-#include <robot_mechanism_controllers/JointControllerState.h>
+#include <pr2_controllers_msgs/JointControllerState.h>
 #include <pr2_controllers_msgs/Pr2GripperCommand.h>
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 
@@ -159,8 +159,8 @@ private:
 
 
 
-  robot_mechanism_controllers::JointControllerStateConstPtr last_controller_state_;
-  void controllerStateCB(const robot_mechanism_controllers::JointControllerStateConstPtr &msg)
+  pr2_controllers_msgs::JointControllerStateConstPtr last_controller_state_;
+  void controllerStateCB(const pr2_controllers_msgs::JointControllerStateConstPtr &msg)
   {
     last_controller_state_ = msg;
     ros::Time now = ros::Time::now();
