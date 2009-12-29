@@ -214,15 +214,6 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
   qd.resize(joints_.size());
   qdd.resize(joints_.size());
 
-  char buf[64];
-  for (size_t i = 0; i < q.size(); ++i)
-  {
-    sprintf(buf, "q%d", i);   recorder_.channel(QS + 3*i + 0, buf);
-    sprintf(buf, "qd%d", i);  recorder_.channel(QS + 3*i + 1, buf);
-    sprintf(buf, "qdd%d", i); recorder_.channel(QS + 3*i + 2, buf);
-  }
-  recorder_.init(node_);
-
   controller_state_publisher_.reset(
     new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointTrajectoryControllerState>
     (node_, "state", 1));
@@ -298,13 +289,6 @@ void JointSplineTrajectoryController::update()
     sampleSplineWithTimeBounds(traj[seg].splines[i].coef, traj[seg].duration,
                                time.toSec() - traj[seg].start_time,
                                q[i], qd[i], qdd[i]);
-  }
-
-  for (size_t i = 0; i < q.size(); ++i)
-  {
-    recorder_.record(QS + 3*i + 0, q[i]);
-    recorder_.record(QS + 3*i + 1, qd[i]);
-    recorder_.record(QS + 3*i + 2, qdd[i]);
   }
 
   // ------ Trajectory Following

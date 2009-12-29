@@ -43,9 +43,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <ros/node_handle.h>
 #include <control_toolbox/pid.h>
-#include <realtime_recorder/recorder.h>
 #include <pr2_controller_interface/controller.h>
-#include <realtime_infuser/realtime_infuser.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <realtime_tools/realtime_box.h>
 
@@ -117,9 +115,6 @@ private:
   //boost::recursive_mutex current_trajectory_lock_RT_;
 
   std::vector<double> q, qd, qdd;  // Preallocated in init
-
-  enum { QS };
-  realtime_tools::Recorder recorder_;
 
   // Samples, but handling time bounds.  When the time is past the end
   // of the spline duration, the position is the last valid position,
