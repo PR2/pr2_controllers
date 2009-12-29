@@ -62,6 +62,7 @@ public:
     ros::NodeHandle pn("~");
     pn.param("pan_link", pan_link_, std::string("head_pan_link"));
     pn.param("tilt_link", tilt_link_, std::string("head_tilt_link"));
+    pn.param("success_angle_threshold", success_angle_threshold_, 0.1);
 
     // \todo Need to actually look these joints up
     pan_joint_ = "head_pan_joint";
@@ -83,7 +84,6 @@ public:
   }
 
 
-  //void pointHeadCB(const geometry_msgs::PointStampedConstPtr &msg)
   void goalCB(GoalHandle gh)
   {
     // Before we do anything, we need to know that name of the pan_link's parent.
@@ -112,7 +112,7 @@ public:
 
     // Transforms the target point into the pan and tilt links.
     const geometry_msgs::PointStamped &target = gh.getGoal()->target;
-    bool ret1, ret2;
+    bool ret1 = false, ret2 = false;
     try {
       ros::Time now = ros::Time::now();
       std::string error_msg;
@@ -218,6 +218,7 @@ private:
   GoalHandle active_goal_;
   tf::Stamped<tf::Point> target_in_pan_;
   std::string pan_parent_;
+  double success_angle_threshold_;
 
   void watchdog(const ros::TimerEvent &e)
   {
@@ -291,6 +292,12 @@ private:
       feedback.pointing_angle_error =
         (forward - origin).angle(target_in_pan_ - origin);
       active_goal_.publishFeedback(feedback);
+
+      if (feedback.pointing_angle_error < success_angle_threshold_)
+      {
+        active_goal_.setSucceeded();
+        has_active_goal_ = false;
+      }
     }
     catch(const tf::TransformException &ex)
     {
