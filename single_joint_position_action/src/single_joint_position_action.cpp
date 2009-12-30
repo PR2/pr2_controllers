@@ -219,7 +219,7 @@ private:
     feedback.error = msg->error.positions[0];
     active_goal_.publishFeedback(feedback);
 
-    if (fabs(msg->error.positions[0]) < goal_threshold_)
+    if (fabs(msg->actual.positions[0] - active_goal_.getGoal()->position) < goal_threshold_)
     {
       active_goal_.setSucceeded();
       has_active_goal_ = false;
