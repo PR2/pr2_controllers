@@ -187,6 +187,17 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
     joints_.push_back(j);
   }
 
+  // Ensures that all the joints are calibrated.
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    if (!joints_[i]->calibrated_)
+    {
+      ROS_ERROR("Joint %s was not calibrated (namespace: %s)",
+                joints_[i]->joint_->name.c_str(), node_.getNamespace().c_str());
+      return false;
+    }
+  }
+
   // Sets up pid controllers for all of the joints
   std::string gains_ns;
   if (!node_.getParam("gains", gains_ns))
