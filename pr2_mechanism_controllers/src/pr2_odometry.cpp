@@ -42,11 +42,6 @@ PLUGINLIB_REGISTER_CLASS(Pr2Odometry, controller::Pr2Odometry, pr2_controller_in
 
 namespace controller {
 
-  OdomMatrix16x3  cbv_lhs_, fit_lhs_;
-  OdomMatrix16x1  cbv_rhs_, fit_residual_, odometry_residual_;
-  OdomMatrix16x1  fit_rhs_;
-  OdomMatrix16x16 weight_matrix_, w_fit;
-  OdomMatrix3x1   cbv_soln_, fit_soln_;
 
   const static double ODOMETRY_THRESHOLD = 1e-4;
   const static double MAX_ALLOWABLE_SVD_TIME = 3e-4;
@@ -133,6 +128,8 @@ namespace controller {
 
   bool Pr2Odometry::isInputValid()
   {
+    return true;
+
     for(int i=0; i < base_kin_.num_wheels_; i++)
       if(isnan(base_kin_.wheel_[i].joint_->velocity_) || isnan(base_kin_.wheel_[i].joint_->velocity_))
         return false;
@@ -204,6 +201,8 @@ namespace controller {
     odom_.x += odom_delta_x;
     odom_.y += odom_delta_y;
     odom_.z += odom_delta_th;
+
+    ROS_DEBUG("Odometry:: Position: %f, %f, %f",odom_.x,odom_.y,odom_.z);
 
     odometer_distance_ += sqrt(odom_delta_x * odom_delta_x + odom_delta_y * odom_delta_y);
     odometer_angle_ += fabs(odom_delta_th);
@@ -304,6 +303,7 @@ namespace controller {
         costh = cos(steer_angle);
         sinth = sin(steer_angle);
         wheel_speed = getCorrectedWheelSpeed(i);
+        ROS_DEBUG("Odometry:: Wheel: %s, angle: %f, speed: %f",base_kin_.wheel_[i].link_name_.c_str(),steer_angle,wheel_speed);
         cbv_rhs_(i * 2, 0) = base_kin_.wheel_radius_ * base_kin_.wheel_[i].wheel_radius_scaler_ * wheel_speed;
         cbv_rhs_(i * 2 + 1, 0) = 0;
 
@@ -318,7 +318,8 @@ namespace controller {
 
     odometry_residual_ = cbv_lhs_ * cbv_soln_ - cbv_rhs_;
     odometry_residual_max_ = odometry_residual_.cwise().abs().maxCoeff();
-
+    ROS_DEBUG("Odometry:: base velocity: %f, %f, %f",cbv_soln_(0,0), cbv_soln_(1,0), cbv_soln_(2,0));
+    ROS_DEBUG("Odometry:: odometry residual: %f",odometry_residual_max_);
     odom_vel_.linear.x = cbv_soln_(0, 0);
     odom_vel_.linear.y = cbv_soln_(1, 0);
     odom_vel_.angular.z = cbv_soln_(2, 0);
@@ -353,6 +354,9 @@ namespace controller {
           tmp_start = ros::Time::now();
         Eigen::SVD<Eigen::MatrixXf> svdOfFit(fit_lhs_);
         svdOfFit.solve(fit_rhs_, &fit_soln_);
+
+        ROS_DEBUG("Odometry:: fit_soln_: %f %f %f",fit_soln_(0,0), fit_soln_(1,0), fit_soln_(2,0));
+
         if(verbose_)
           {
             svd_time = (ros::Time::now()-tmp_start).toSec();
@@ -377,7 +381,10 @@ namespace controller {
 
         fit_residual_ = rhs - lhs * fit_soln_;
         if(odometry_residual_.cwise().abs().maxCoeff() <= ODOMETRY_THRESHOLD)
+        {
+          ROS_DEBUG("Breaking out since odometry looks good");
           break;
+        }
         for(int j = 0; j < base_kin_.num_wheels_; j++)
           {
             int fw = 2 * j;

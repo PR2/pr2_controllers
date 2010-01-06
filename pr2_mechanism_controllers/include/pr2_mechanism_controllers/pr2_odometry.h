@@ -270,5 +270,12 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     bool verbose_, publish_odom_;
 
     double odom_publish_rate_;
+
+  OdomMatrix16x3  cbv_lhs_, fit_lhs_;
+  OdomMatrix16x1  cbv_rhs_, fit_residual_, odometry_residual_;
+  OdomMatrix16x1  fit_rhs_;
+  OdomMatrix16x16 weight_matrix_, w_fit;
+  OdomMatrix3x1   cbv_soln_, fit_soln_;
+
   };
 }
