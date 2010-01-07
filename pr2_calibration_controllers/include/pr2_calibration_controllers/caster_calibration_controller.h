@@ -70,7 +70,7 @@ protected:
   enum { INITIALIZED, BEGINNING, MOVING, CALIBRATED };
   int state_;
 
-  double search_velocity_;
+  double search_velocity_, reference_position_;
   bool original_switch_state_;
 
   ros::Time beginning_;
