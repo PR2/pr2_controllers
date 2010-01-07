@@ -513,7 +513,10 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
       else
       {
         seg.splines[j].coef[0] = prev_positions[j];
-        seg.splines[j].coef[1] = (positions[j] - prev_positions[j]) / durations[i];
+        if (durations[i] == 0.0)
+          seg.splines[j].coef[1] = 0.0;
+        else
+          seg.splines[j].coef[1] = (positions[j] - prev_positions[j]) / durations[i];
         seg.splines[j].coef[2] = 0.0;
         seg.splines[j].coef[3] = 0.0;
         seg.splines[j].coef[4] = 0.0;
