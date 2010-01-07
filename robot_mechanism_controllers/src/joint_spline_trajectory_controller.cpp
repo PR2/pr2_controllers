@@ -248,6 +248,9 @@ void JointSplineTrajectoryController::starting()
 {
   last_time_ = robot_->getTime();
 
+  for (size_t i = 0; i < pids_.size(); ++i)
+    pids_[i].reset();
+
   // Creates a "hold current position" trajectory.
   boost::shared_ptr<SpecifiedTrajectory> hold_ptr(new SpecifiedTrajectory(1));
   SpecifiedTrajectory &hold = *hold_ptr;
