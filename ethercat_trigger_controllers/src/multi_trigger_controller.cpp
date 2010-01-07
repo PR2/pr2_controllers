@@ -55,12 +55,20 @@ MultiTriggerController::~MultiTriggerController()
 
 void MultiTriggerController::update()
 {
+  int maxloops = 10; // @todo Workaround to avoid breaking realtime in response to #3274. Need to revamp things to fix this better.
+  
   if (!config_.transitions.empty() && config_mutex_.try_lock())
   { // If we missed the lock, then hold current value for now.
     ros::Time cur_time = robot_->getTime();
 
     while (cur_time.toSec() >= transition_time_) // Usually only happens at most once per update.
     {
+      if (!maxloops--)
+      {
+        //ROS_ERROR("MultiTriggerController exceeded iteration limit. Please report this to Blaise."); // @todo remove this
+        break;
+      }
+
       //ROS_INFO("hit %f %f %i", cur_time.toSec(), transition_time_, config_.transitions[transition_index_].value);
       // Do the transition
       digital_out_command_->data_ = config_.transitions[transition_index_].value;
