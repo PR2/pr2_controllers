@@ -56,7 +56,24 @@ bool Wheel::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &
     ROS_ERROR("Could not find link with name %s",link_name.c_str());
     return false;
   }
-  ROS_DEBUG("wheel name: %s",link_name.c_str());
+  
+  if(!link->collision)
+  {
+    ROS_ERROR("Link %s does not have collision description. Add collision description for link to urdf.",link_name.c_str());
+    return false;
+  }
+  if(!link->collision->geometry)
+  {
+    ROS_ERROR("Link %s does not have collision geometry description. Add collision geometry description for link to urdf.",link_name.c_str());
+    return false;
+  }
+  if(link->collision->geometry->type != urdf::Geometry::CYLINDER)
+  {
+    ROS_ERROR("Link %s does not have cylinder geometry",link_name.c_str());
+    return false;
+  }
+  wheel_radius_ = (dynamic_cast<urdf::Cylinder*>(link->collision->geometry.get()))->radius;
+  ROS_DEBUG("wheel name: %s, radius: %f",link_name.c_str(),wheel_radius_);
   link_name_ = link_name;
   joint_name_ = link->parent_joint->name;
 
@@ -70,7 +87,7 @@ bool Wheel::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &
   offset_.x = offset.x;
   offset_.y = offset.y;
   offset_.z = offset.z;
-  node.param<double> ("wheel_radius_scaler", wheel_radius_scaler_, 1.0);
+//  node.param<double> ("wheel_radius_scaler", wheel_radius_scaler_, 1.0);
   ROS_DEBUG("Loading wheel: %s",link_name_.c_str());
   ROS_DEBUG("offset_.x: %f, offset_.y: %f, offset_.z: %f", offset_.x, offset_.y, offset_.z);
   return true;
@@ -158,21 +175,20 @@ bool BaseKinematics::init(pr2_mechanism_model::RobotState *robot_state, ros::Nod
     }
     num_casters_++;
   }
+
+  //  node.param<double> ("wheel_radius", wheel_radius_, 0.074792);
+  double multiplier;
+  node.param<double> ("wheel_radius_multiplier", multiplier, 1.0);
   int wheel_counter = 0;
   for(int j = 0; j < num_casters_; j++)
   {
     for(int i = 0; i < caster_[j].num_children_; i++)
     {
       wheel_[wheel_counter].parent_ = &(caster_[j]);
+      wheel_[wheel_counter].wheel_radius_*=multiplier;
       wheel_counter++;
     }
   }
-
-  node.param<double> ("wheel_radius", wheel_radius_, 0.074792);
-  double multiplier;
-  node.param<double> ("wheel_radius_multiplier", multiplier, 1.0);
-  wheel_radius_ = wheel_radius_ * multiplier;
-
   return true;
 }
 

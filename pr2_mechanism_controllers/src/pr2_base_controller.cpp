@@ -158,12 +158,6 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   return true;
 }
 
-bool Pr2BaseController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  ros::NodeHandle n(config->Attribute("name"));
-  return init(robot, n);
-}
-
 // Set the base velocity command
 void Pr2BaseController::setCommand(const geometry_msgs::Twist &cmd_vel)
 {
@@ -423,7 +417,7 @@ void Pr2BaseController::computeDesiredWheelSpeeds()
 
     wheel_point_velocity_projected.linear.x = costh * wheel_point_velocity.linear.x - sinth * wheel_point_velocity.linear.y;
     wheel_point_velocity_projected.linear.y = sinth * wheel_point_velocity.linear.x + costh * wheel_point_velocity.linear.y;
-    base_kin_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x + wheel_caster_steer_component.linear.x) / (base_kin_.wheel_radius_ * base_kin_.wheel_[i].wheel_radius_scaler_);
+    base_kin_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x + wheel_caster_steer_component.linear.x) / (base_kin_.wheel_[i].wheel_radius_);
   }
 }
 

@@ -120,7 +120,7 @@ namespace controller
       /*!
        * \brief wheel radius scale (based on the default wheel radius in Basekinematics)
        */
-      double wheel_radius_scaler_;
+      double wheel_radius_;
 
       /*!
        * \brief Loads wheel's information from the xml description file and param server
@@ -277,11 +277,6 @@ namespace controller
        * \brief vector of every caster attached to the base
        */
       std::vector<Caster> caster_;
-
-      /*!
-       * \brief default radius of each wheel
-       */
-      double wheel_radius_;
 
       /*!
        * \brief the name of the casters in the xml file

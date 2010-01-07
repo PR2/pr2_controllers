@@ -74,14 +74,6 @@ namespace controller
 
       bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
-      /*!
-       * \brief Loads controller's information from the xml description file and param server
-       * @param robot_state The robot's current state
-       * @param config Tiny xml element pointing to this controller
-       * @return Successful init
-       */
-      bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
-
       /*
        * \brief callback function for setting the desired velocity using a topic
        * @param cmd_vel Velocity command of the base in m/s and rad/s

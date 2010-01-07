@@ -35,6 +35,7 @@
 #include <Eigen/Array>
 #include <Eigen/SVD>
 #include <nav_msgs/Odometry.h>
+#include <pr2_mechanism_controllers/Odometer.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <tf/tfMessage.h>
 #include <tf/tf.h>
@@ -76,14 +77,6 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     ~Pr2Odometry();
 
     /*!
-    * \brief Loads Odometry's information from the xml description file and param server
-    * @param robot_state The robot's current state
-    * @param config Tiny xml element pointing to this controller
-    * @return Successful init
-    */
-    bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
-
-    /*!
     * \brief Initializes and loads odometry information from the param server
     * @param robot_state The robot's current state
     * @param config Tiny xml element pointing to this controller
@@ -108,6 +101,11 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     * \brief Publishes the currently computed odometry information
     */
     void publish();
+
+    /*!
+    * \brief Publishes the currently computed odometer information
+    */
+    void publishOdometer();
 
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -237,14 +235,29 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     ros::Time last_publish_time_;
 
     /*!
+    * \brief The last time the odometry information was published
+    */
+    ros::Time last_odometer_publish_time_;
+
+    /*!
     * \brief The time that the odometry is expected to be published next
     */
     double expected_publish_time_;
 
     /*!
+    * \brief The time that the odometry is expected to be published next
+    */
+    double expected_odometer_publish_time_;
+
+    /*!
     * \brief The RealtimePublisher that does the realtime publishing of the odometry
     */
     boost::scoped_ptr<realtime_tools::RealtimePublisher <nav_msgs::Odometry> > odometry_publisher_ ;  
+
+    /*!
+    * \brief The RealtimePublisher that does the realtime publishing of the odometry
+    */
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::Odometer> > odometer_publisher_ ;  
 
     /*!
     * \brief Publishes the transform between the odometry frame and the base frame
@@ -267,9 +280,13 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
 
     bool isInputValid();
 
-    bool verbose_, publish_odom_;
+    bool verbose_, publish_odom_, publish_odometer_;
 
     double odom_publish_rate_;
+
+    double odometer_publish_rate_;
+
+    double caster_calibration_multiplier_;
 
   OdomMatrix16x3  cbv_lhs_, fit_lhs_;
   OdomMatrix16x1  cbv_rhs_, fit_residual_, odometry_residual_;

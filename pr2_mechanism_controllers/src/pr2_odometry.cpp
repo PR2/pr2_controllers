@@ -58,29 +58,31 @@ namespace controller {
   bool Pr2Odometry::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node)
   {
     node_ = node;
-    node.param("odometer/distance", odometer_distance_, 0.0);
-    node.param("odometer/angle", odometer_angle_, 0.0);
-    node.param("odom/x", odom_.x, 0.0);
-    node.param("odom/y", odom_.y, 0.0);
-    node.param("odom/z", odom_.z, 0.0);
+    node.param("odometer/initial_distance", odometer_distance_, 0.0);
+    node.param("odometer/initial_angle", odometer_angle_, 0.0);
+    node.param("odom/initial_x", odom_.x, 0.0);
+    node.param("odom/initial_y", odom_.y, 0.0);
+    node.param("odom/initial_yaw", odom_.z, 0.0);
 
     node.param<std::string> ("ils_weight_type", ils_weight_type_, "Gaussian");
     node.param<int> ("ils_max_iterations", ils_max_iterations_, 3);
     node.param<std::string> ("odom_frame", odom_frame_, "odom");
     node.param<std::string> ("base_footprint_frame", base_footprint_frame_, "base_footprint");
     node.param<std::string> ("base_link_frame", base_link_frame_, "base_link");
-    node.param<double> ("base_link_floor_z_offset",  base_link_floor_z_offset_, 0.051);
+    //    node.param<double> ("base_link_floor_z_offset",  base_link_floor_z_offset_, 0.051);
 
-    node.param<double> ("sigma_x", sigma_x_, 0.002);
-    node.param<double> ("sigma_y", sigma_y_, 0.002);
-    node.param<double> ("sigma_theta", sigma_theta_, 0.017);
+    node.param<double> ("x_stddev", sigma_x_, 0.002);
+    node.param<double> ("y_stddev", sigma_y_, 0.002);
+    node.param<double> ("rotation_stddev", sigma_theta_, 0.017);
 
-    node.param<double> ("cov_x_y", cov_x_y_, 0.0);
-    node.param<double> ("cov_x_theta", cov_x_theta_, 0.0);
-    node.param<double> ("cov_y_theta", cov_y_theta_, 0.0);
+    node.param<double> ("cov_xy", cov_x_y_, 0.0);
+    node.param<double> ("cov_xrotation", cov_x_theta_, 0.0);
+    node.param<double> ("cov_yrotation", cov_y_theta_, 0.0);
     node.param<bool> ("verbose", verbose_, false);
 
     node.param("odom_publish_rate", odom_publish_rate_, 30.0);
+    node.param("odometer_publish_rate", odometer_publish_rate_, 1.0);
+    node.param("caster_calibration_multiplier", caster_calibration_multiplier_, 1.0);
 
     if(odom_publish_rate_ <= 0.0)
       {
@@ -92,8 +94,31 @@ namespace controller {
         expected_publish_time_ = 1.0/odom_publish_rate_;
         publish_odom_ = true;
       }
+
+    if(odometer_publish_rate_ <= 0.0)
+      {
+        expected_odometer_publish_time_ = 0.0;
+        publish_odometer_ = false;
+      }
+    else
+      {
+        expected_odometer_publish_time_ = 1.0/odometer_publish_rate_;
+        publish_odometer_ = true;
+      }
+
+
+
     if(!base_kin_.init(robot_state, node_))
       return false;
+
+    for(int i = 0; i < base_kin_.num_casters_; ++i)
+    {
+      if(!base_kin_.caster_[i].joint_->calibrated_)
+      {
+        ROS_ERROR("The Base odometry could not start because the casters were not calibrated. Relaunch the odometry after you see the caster calibration finish.");
+        return false; // Casters are not calibrated
+      }
+    }
 
     cbv_rhs_.setZero();
     cbv_lhs_.setZero();
@@ -113,17 +138,12 @@ namespace controller {
         matrix_publisher_->msg_.set_m_size(48);
       }
 
+    odometer_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::Odometer>(node_,"odometer", 1));
     odometry_publisher_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(node_,odom_frame_, 1));
     transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(node_,"/tf", 1));
-    transform_publisher_->msg_.set_transforms_size(2);
+    transform_publisher_->msg_.set_transforms_size(1);
 
     return true;
-  }
-
-  bool Pr2Odometry::initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config)
-  {
-    ros::NodeHandle n(config->Attribute("name"));
-    return init(robot_state, n);
   }
 
   bool Pr2Odometry::isInputValid()
@@ -146,6 +166,7 @@ namespace controller {
     current_time_ = base_kin_.robot_state_->getTime();
     last_time_ = base_kin_.robot_state_->getTime();
     last_publish_time_ = base_kin_.robot_state_->getTime();
+    last_odometer_publish_time_ = base_kin_.robot_state_->getTime();
   }
 
   void Pr2Odometry::update()
@@ -154,6 +175,7 @@ namespace controller {
       {
         if(verbose_)
           debug_publisher_->msg_.input_valid = false;
+        ROS_DEBUG("Odometry:: Input velocities are invalid");
         return;
       }
     else      
@@ -169,6 +191,9 @@ namespace controller {
     ros::Time publish_start = ros::Time::now();
     if(publish_odom_)
       publish();
+    if(publish_odometer_)
+      publishOdometer();
+
     double publish_time = (ros::Time::now()-publish_start).toSec();
     if(verbose_)
       {
@@ -304,7 +329,7 @@ namespace controller {
         sinth = sin(steer_angle);
         wheel_speed = getCorrectedWheelSpeed(i);
         ROS_DEBUG("Odometry:: Wheel: %s, angle: %f, speed: %f",base_kin_.wheel_[i].link_name_.c_str(),steer_angle,wheel_speed);
-        cbv_rhs_(i * 2, 0) = base_kin_.wheel_radius_ * base_kin_.wheel_[i].wheel_radius_scaler_ * wheel_speed;
+        cbv_rhs_(i * 2, 0) = base_kin_.wheel_[i].wheel_radius_ * wheel_speed;
         cbv_rhs_(i * 2 + 1, 0) = 0;
 
         cbv_lhs_(i * 2, 0) = costh;
@@ -330,10 +355,9 @@ namespace controller {
     double wheel_speed;
     geometry_msgs::Twist caster_local_vel;
     geometry_msgs::Twist wheel_local_vel;
-    caster_local_vel.angular.z = base_kin_.wheel_[index].parent_->joint_->velocity_;
-    //    caster_local_vel.angular.z = 1.0/0.0;
+    caster_local_vel.angular.z = base_kin_.wheel_[index].parent_->joint_->velocity_*caster_calibration_multiplier_;
     wheel_local_vel = base_kin_.pointVel2D(base_kin_.wheel_[index].offset_, caster_local_vel);
-    wheel_speed = base_kin_.wheel_[index].joint_->velocity_ - wheel_local_vel.linear.x / (base_kin_.wheel_radius_ * base_kin_.wheel_[index].wheel_radius_scaler_);
+    wheel_speed = base_kin_.wheel_[index].joint_->velocity_ - wheel_local_vel.linear.x / (base_kin_.wheel_[index].wheel_radius_);
     return wheel_speed;
   }
 
@@ -452,10 +476,24 @@ namespace controller {
     return w_fit;
   }
 
+  void Pr2Odometry::publishOdometer()
+  {
+    if(fabs((last_odometer_publish_time_ - current_time_).toSec()) < expected_odometer_publish_time_)
+      return;
+    if(odometer_publisher_->trylock())
+    {
+      odometer_publisher_->msg_.distance = odometer_distance_;
+      odometer_publisher_->msg_.angle = odometer_angle_;
+      odometer_publisher_->unlockAndPublish();
+    }
+    last_odometer_publish_time_ = current_time_;
+  }
+
   void Pr2Odometry::publish()
   {
     if(fabs((last_publish_time_ - current_time_).toSec()) < expected_publish_time_)
       return;
+
     if(odometry_publisher_->trylock())
       {
         getOdometryMessage(odometry_publisher_->msg_);
@@ -482,7 +520,7 @@ namespace controller {
         out.transform.rotation.z = quat_trans.z();
         out.transform.rotation.w = quat_trans.w();
 
-        geometry_msgs::TransformStamped &out2 = transform_publisher_->msg_.transforms[1];
+        /*        geometry_msgs::TransformStamped &out2 = transform_publisher_->msg_.transforms[1];
         out2.header.stamp = current_time_;
         out2.header.frame_id = base_footprint_frame_;
         out2.child_frame_id = base_link_frame_;
@@ -496,7 +534,7 @@ namespace controller {
         out2.transform.rotation.y = 0;
         out2.transform.rotation.z = 0;
         out2.transform.rotation.w = 1;
-
+        */
         transform_publisher_->unlockAndPublish();
       }
     last_publish_time_ = current_time_;
