@@ -37,12 +37,13 @@ int main( int argc, char** argv )
 
 
   /*********** Load the controller file ************/
+  #error Broken because the base controller does not have initXml anymore
   char *xml_control_file = argv[2];
   TiXmlDocument xml_control(xml_control_file);   // Load robot description
   xml_control.LoadFile();
   TiXmlElement *root_control = xml_control.FirstChildElement("controllers");
-  TiXmlElement *root_controller = root_control->FirstChildElement("controller");  
-  bc.initXml(robot_state,root_controller);
+  TiXmlElement *root_controller = root_control->FirstChildElement("controller");
+  //bc.initXml(robot_state,root_controller);
 
 
   /************ Testing the odometry calculations themselves ******************/
@@ -74,8 +75,8 @@ int main( int argc, char** argv )
 
   xfit = bc.c_->iterativeLeastSquares(A,B,"Gaussian",10);
   cout << "done" << xfit << endl;
-*/  
-  
+*/
+
   delete robot_model;
   delete robot_state;
 }

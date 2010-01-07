@@ -50,6 +50,7 @@ JointPositionController::JointPositionController()
 
 JointPositionController::~JointPositionController()
 {
+  sub_command_.shutdown();
 }
 
 bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, const std::string &joint_name,
@@ -64,6 +65,11 @@ bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, const
   {
     ROS_ERROR("JointPositionController could not find joint named \"%s\"\n",
               joint_name.c_str());
+    return false;
+  }
+  if (!joint_state_->calibrated_)
+  {
+    ROS_ERROR("Joint %s not calibrated for JointPositionController", joint_name.c_str());
     return false;
   }
 

@@ -127,7 +127,6 @@ namespace controller
        * @param robot_state The robot's current state
        * @param config Tiny xml element pointing to this wheel
        */
-//      void initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
       bool init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node, std::string link_name);
 
       /*!
@@ -215,12 +214,6 @@ namespace controller
        */
       int caster_stuck_;
 
-      /*!
-       * \brief Loads caster's information from the xml description file and param server
-       * @param robot_state The robot's current state
-       * @param config Tiny xml element pointing to this caster
-       */
-//      void initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
       bool init(pr2_mechanism_model::RobotState *robot_state,  ros::NodeHandle &node, std::string link_name);
   };
 
@@ -237,7 +230,6 @@ namespace controller
        * @param config Tiny xml element pointing to its controller
        * @return Successful init
        */
-//      bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
     bool init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node);
 
       /*!

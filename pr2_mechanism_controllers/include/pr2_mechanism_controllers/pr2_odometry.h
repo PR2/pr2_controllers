@@ -129,7 +129,7 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     * @param msg The nav_msgs::Odometry into which the odometry values are placed
     */
     void getOdometryMessage(nav_msgs::Odometry &msg);
-    
+
     /*!
     * \brief Takes the current odometery information and stores it into the six double parameters
     * @param x X component of the current odom position
@@ -163,7 +163,7 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     * \brief Function used to compute the most likely solution to the odometry using iterative least squares
     */
     OdomMatrix3x1 iterativeLeastSquares(const OdomMatrix16x3 &lhs, const OdomMatrix16x1 &rhs, const std::string &weight_type, const int &max_iter);
-    
+
     /*!
     * \brief Finds the weight matrix from the iterative least squares residuals
     */
@@ -252,7 +252,7 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     /*!
     * \brief The RealtimePublisher that does the realtime publishing of the odometry
     */
-    boost::scoped_ptr<realtime_tools::RealtimePublisher <nav_msgs::Odometry> > odometry_publisher_ ;  
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <nav_msgs::Odometry> > odometry_publisher_ ;
 
     /*!
     * \brief The RealtimePublisher that does the realtime publishing of the odometry
@@ -262,7 +262,7 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     /*!
     * \brief Publishes the transform between the odometry frame and the base frame
     */
-    boost::scoped_ptr<realtime_tools::RealtimePublisher <tf::tfMessage> > transform_publisher_ ;  
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <tf::tfMessage> > transform_publisher_ ;
 
     double sigma_x_,sigma_y_,sigma_theta_,cov_x_y_,cov_x_theta_,cov_y_theta_;
 

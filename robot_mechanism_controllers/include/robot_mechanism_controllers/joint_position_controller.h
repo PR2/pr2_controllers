@@ -78,7 +78,6 @@ public:
   JointPositionController();
   ~JointPositionController();
 
-  bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, const std::string &joint_name,const control_toolbox::Pid &pid);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 

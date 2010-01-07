@@ -56,20 +56,6 @@ CartesianTwistController::~CartesianTwistController()
 }
 
 
-
-bool CartesianTwistController::initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config)
-{
-  // get the controller name from xml file
-  std::string controller_name = config->Attribute("name") ? config->Attribute("name") : "";
-  if (controller_name == ""){
-    ROS_ERROR("CartesianTwistController: No controller name given in xml file");
-    return false;
-  }
-
-  ros::NodeHandle n(controller_name);
-  return init(robot_state, n);
-}
-
 bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &n)
 {
   node_ = n;
@@ -94,6 +80,11 @@ bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state
   // create robot chain from root to tip
   if (!chain_.init(robot_state, root_name, tip_name))
     return false;
+  if (!chain_.allCalibrated())
+  {
+    ROS_ERROR("Not all joints in the chain are calibrated (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
   chain_.toKDL(kdl_chain_);
 
   // create solver

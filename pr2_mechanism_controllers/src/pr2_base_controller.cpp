@@ -67,6 +67,8 @@ Pr2BaseController::Pr2BaseController()
 
 Pr2BaseController::~Pr2BaseController()
 {
+  cmd_sub_.shutdown();
+  cmd_sub_deprecated_.shutdown();
 }
 
 bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
@@ -125,6 +127,12 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
     if(!caster_controller_[i]->init(base_kin_.robot_state_, base_kin_.caster_[i].joint_name_, p_i_d))
     {
       ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
+      return false;
+    }
+    if (!caster_controller_[i]->joint_state_->calibrated_)
+    {
+      ROS_ERROR("Caster joint \"%s\" not calibrated (namespace: %s)",
+                base_kin_.caster_[i].joint_name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
   }
@@ -301,7 +309,7 @@ void Pr2BaseController::publishState(const ros::Time &time)
   {
     return;
   }
-  
+
   if(state_publisher_->trylock())
   {
     state_publisher_->msg_.command.linear.x  = cmd_vel_.linear.x;
@@ -332,7 +340,7 @@ void Pr2BaseController::publishState(const ros::Time &time)
     }
     state_publisher_->unlockAndPublish();
     last_publish_time_ = time;
-  }  
+  }
 }
 
 void Pr2BaseController::computeJointCommands()

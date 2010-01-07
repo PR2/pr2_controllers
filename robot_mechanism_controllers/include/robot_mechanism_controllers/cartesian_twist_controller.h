@@ -81,7 +81,6 @@ public:
   CartesianTwistController();
   ~CartesianTwistController();
 
-  bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   void starting();

@@ -83,6 +83,11 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
   // create robot chain from root to tip
   if (!chain_.init(robot_state_, root_name_, tip_name))
     return false;
+  if (!chain_.allCalibrated())
+  {
+    ROS_ERROR("Not all joints in the chain are calibrated (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
   chain_.toKDL(kdl_chain_);
 
   // create solver

@@ -67,7 +67,6 @@ public:
   JointEffortController();
   ~JointEffortController();
 
-  bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, const std::string &joint_name);
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 

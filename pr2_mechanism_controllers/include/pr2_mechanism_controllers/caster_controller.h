@@ -78,7 +78,6 @@ public:
             const std::string &caster_joint,
             const std::string &wheel_l_joint, const std::string &wheel_r_joint,
             const control_toolbox::Pid &caster_pid, const control_toolbox::Pid &wheel_pid);
-  bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   void update();

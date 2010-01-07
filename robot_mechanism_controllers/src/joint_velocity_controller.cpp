@@ -71,33 +71,6 @@ bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, const
   return true;
 }
 
-bool JointVelocityController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  assert(robot);
-  robot_ = robot;
-
-  TiXmlElement *j = config->FirstChildElement("joint");
-  if (!j)
-  {
-    ROS_ERROR("JointVelocityController was not given a joint\n");
-    return false;
-  }
-
-  const char *jn = j->Attribute("name");
-  std::string joint_name = jn ? jn : "";
-
-  TiXmlElement *p = j->FirstChildElement("pid");
-  control_toolbox::Pid pid;
-  if (p)
-  {
-    pid.initXml(p);
-  }
-  else
-    ROS_ERROR("JointVelocityController's config did not specify the default pid parameters.\n");
-
-  return init(robot, joint_name, pid);
-}
-
 bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   assert(robot);

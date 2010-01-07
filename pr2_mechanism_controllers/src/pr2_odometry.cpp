@@ -178,7 +178,7 @@ namespace controller {
         ROS_DEBUG("Odometry:: Input velocities are invalid");
         return;
       }
-    else      
+    else
       {
         if(verbose_)
           debug_publisher_->msg_.input_valid = true;
@@ -398,7 +398,7 @@ namespace controller {
             if(pub_matrix)
               {
                 if(matrix_publisher_->trylock())
-                  matrix_publisher_->unlockAndPublish();        
+                  matrix_publisher_->unlockAndPublish();
                 break;
               }
           }

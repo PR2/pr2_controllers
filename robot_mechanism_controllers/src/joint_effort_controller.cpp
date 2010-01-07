@@ -69,28 +69,6 @@ bool JointEffortController::init(pr2_mechanism_model::RobotState *robot, const s
   return true;
 }
 
-bool JointEffortController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  if (!robot)
-  {
-    ROS_ERROR("The given robot was NULL");
-    return false;
-  }
-
-  TiXmlElement *j = config->FirstChildElement("joint");
-  if (!j || !j->Attribute("name"))
-  {
-    ROS_ERROR("JointEffortController was not given a joint");
-    return false;
-  }
-
-  const char *jn = j->Attribute("name");
-  std::string joint_name = jn ? jn : "";
-
-  return init(robot, joint_name);
-
-}
-
 bool JointEffortController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   assert(robot);
