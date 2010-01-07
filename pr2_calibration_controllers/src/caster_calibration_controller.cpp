@@ -90,7 +90,6 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
     if (search_velocity_ < 0){
       search_velocity_ *= -1;
       ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", joint_name.c_str());
-      return false;
     }
     if (joint_->joint_->calibration->falling){
       reference_position_ = *(joint_->joint_->calibration->falling);

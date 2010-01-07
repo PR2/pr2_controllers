@@ -115,7 +115,6 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     if (roll_search_velocity_ < 0){
       roll_search_velocity_ *= -1;
       ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", roll_joint_name.c_str());
-      return false;
     }
     if (roll_joint_->joint_->calibration->falling){
       roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
@@ -150,7 +149,6 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     if (flex_search_velocity_ < 0){
       flex_search_velocity_ *= -1;
       ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", flex_joint_name.c_str());
-      return false;
     }
     if (flex_joint_->joint_->calibration->falling){
       flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
