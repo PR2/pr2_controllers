@@ -82,6 +82,7 @@ namespace controller {
 
     node.param("odom_publish_rate", odom_publish_rate_, 30.0);
     node.param("odometer_publish_rate", odometer_publish_rate_, 1.0);
+    node.param("state_publish_rate", state_publish_rate_, 1.0);
     node.param("caster_calibration_multiplier", caster_calibration_multiplier_, 1.0);
 
     if(odom_publish_rate_ <= 0.0)
@@ -104,6 +105,17 @@ namespace controller {
       {
         expected_odometer_publish_time_ = 1.0/odometer_publish_rate_;
         publish_odometer_ = true;
+      }
+
+    if(state_publish_rate_ <= 0.0)
+      {
+        expected_state_publish_time_ = 0.0;
+        publish_state_ = false;
+      }
+    else
+      {
+        expected_state_publish_time_ = 1.0/state_publish_rate_;
+        publish_state_ = true;
       }
 
 
@@ -138,11 +150,15 @@ namespace controller {
         matrix_publisher_->msg_.set_m_size(48);
       }
 
+    state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseOdometryState>(node_,"state", 1));
     odometer_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::Odometer>(node_,"odometer", 1));
     odometry_publisher_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(node_,odom_frame_, 1));
     transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(node_,"/tf", 1));
     transform_publisher_->msg_.set_transforms_size(1);
 
+    state_publisher_->msg_.set_wheel_link_names_size(base_kin_.num_wheels_);
+    state_publisher_->msg_.set_drive_constraint_errors_size(base_kin_.num_wheels_);
+    state_publisher_->msg_.set_longitudinal_slip_constraint_errors_size(base_kin_.num_wheels_);
     return true;
   }
 
@@ -166,6 +182,8 @@ namespace controller {
     current_time_ = base_kin_.robot_state_->getTime();
     last_time_ = base_kin_.robot_state_->getTime();
     last_publish_time_ = base_kin_.robot_state_->getTime();
+    last_transform_publish_time_ = base_kin_.robot_state_->getTime();
+    last_state_publish_time_ = base_kin_.robot_state_->getTime();
     last_odometer_publish_time_ = base_kin_.robot_state_->getTime();
   }
 
@@ -193,7 +211,9 @@ namespace controller {
       publish();
     if(publish_odometer_)
       publishOdometer();
-
+    if(publish_state_)
+      publishState();
+    publishTransform();
     double publish_time = (ros::Time::now()-publish_start).toSec();
     if(verbose_)
       {
@@ -485,8 +505,26 @@ namespace controller {
       odometer_publisher_->msg_.distance = odometer_distance_;
       odometer_publisher_->msg_.angle = odometer_angle_;
       odometer_publisher_->unlockAndPublish();
+      last_odometer_publish_time_ = current_time_;
     }
-    last_odometer_publish_time_ = current_time_;
+  }
+
+  void Pr2Odometry::publishState()
+  {
+    if(fabs((last_state_publish_time_ - current_time_).toSec()) < expected_state_publish_time_)
+      return;
+    if(state_publisher_->trylock())
+    {
+      for(int i=0; i < base_kin_.num_wheels_; i++)
+      {
+        state_publisher_->msg_.wheel_link_names[i] = base_kin_.wheel_[i].link_name_;
+        state_publisher_->msg_.drive_constraint_errors[i] = odometry_residual_(2*i,0);
+        state_publisher_->msg_.longitudinal_slip_constraint_errors[i] = odometry_residual_(2*i+1,0);
+      }
+      state_publisher_->msg_.velocity = odom_vel_;
+      state_publisher_->unlockAndPublish();
+      last_state_publish_time_ = current_time_;
+    }
   }
 
   void Pr2Odometry::publish()
@@ -498,45 +536,51 @@ namespace controller {
       {
         getOdometryMessage(odometry_publisher_->msg_);
         odometry_publisher_->unlockAndPublish();
+        last_publish_time_ = current_time_;
       }
+  }
+
+  void Pr2Odometry::publishTransform()
+  {
+    if(fabs((last_transform_publish_time_ - current_time_).toSec()) < expected_publish_time_)
+      return;
     if(transform_publisher_->trylock())
-      {
+    {
+      double x(0.), y(0.0), yaw(0.0), vx(0.0), vy(0.0), vyaw(0.0);
+      this->getOdometry(x, y, yaw, vx, vy, vyaw);
 
-        double x(0.), y(0.0), yaw(0.0), vx(0.0), vy(0.0), vyaw(0.0);
-        this->getOdometry(x, y, yaw, vx, vy, vyaw);
+      geometry_msgs::TransformStamped &out = transform_publisher_->msg_.transforms[0];
+      out.header.stamp = current_time_;
+      out.header.frame_id =  base_footprint_frame_;
+      out.child_frame_id = odom_frame_;
+      out.transform.translation.x = -x * cos(yaw) - y * sin(yaw);
+      out.transform.translation.y = +x * sin(yaw) - y * cos(yaw);
+      out.transform.translation.z = 0;
+      btQuaternion quat_trans;
+      quat_trans.setRPY(0.0, 0.0, -yaw);
 
-        geometry_msgs::TransformStamped &out = transform_publisher_->msg_.transforms[0];
-        out.header.stamp = current_time_;
-        out.header.frame_id =  base_footprint_frame_;
-        out.child_frame_id = odom_frame_;
-        out.transform.translation.x = -x * cos(yaw) - y * sin(yaw);
-        out.transform.translation.y = +x * sin(yaw) - y * cos(yaw);
-        out.transform.translation.z = 0;
-        btQuaternion quat_trans;
-        quat_trans.setRPY(0.0, 0.0, -yaw);
+      out.transform.rotation.x = quat_trans.x();
+      out.transform.rotation.y = quat_trans.y();
+      out.transform.rotation.z = quat_trans.z();
+      out.transform.rotation.w = quat_trans.w();
 
-        out.transform.rotation.x = quat_trans.x();
-        out.transform.rotation.y = quat_trans.y();
-        out.transform.rotation.z = quat_trans.z();
-        out.transform.rotation.w = quat_trans.w();
+    /*        geometry_msgs::TransformStamped &out2 = transform_publisher_->msg_.transforms[1];
+              out2.header.stamp = current_time_;
+              out2.header.frame_id = base_footprint_frame_;
+              out2.child_frame_id = base_link_frame_;
+              out2.transform.translation.x = 0;
+              out2.transform.translation.y = 0;
 
-        /*        geometry_msgs::TransformStamped &out2 = transform_publisher_->msg_.transforms[1];
-        out2.header.stamp = current_time_;
-        out2.header.frame_id = base_footprint_frame_;
-        out2.child_frame_id = base_link_frame_;
-        out2.transform.translation.x = 0;
-        out2.transform.translation.y = 0;
+              // FIXME: this is the offset between base_link origin and the ideal floor
+              out2.transform.translation.z = base_link_floor_z_offset_; // FIXME: this is hardcoded, considering we are deprecating base_footprint soon, I will not get this from URDF.
 
-        // FIXME: this is the offset between base_link origin and the ideal floor
-        out2.transform.translation.z = base_link_floor_z_offset_; // FIXME: this is hardcoded, considering we are deprecating base_footprint soon, I will not get this from URDF.
-
-        out2.transform.rotation.x = 0;
-        out2.transform.rotation.y = 0;
-        out2.transform.rotation.z = 0;
-        out2.transform.rotation.w = 1;
-        */
-        transform_publisher_->unlockAndPublish();
-      }
-    last_publish_time_ = current_time_;
+              out2.transform.rotation.x = 0;
+              out2.transform.rotation.y = 0;
+              out2.transform.rotation.z = 0;
+              out2.transform.rotation.w = 1;
+    */
+      transform_publisher_->unlockAndPublish();
+      last_transform_publish_time_ = current_time_;
+    }
   }
 } // namespace
