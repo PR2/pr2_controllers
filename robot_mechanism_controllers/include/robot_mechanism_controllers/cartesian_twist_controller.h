@@ -103,9 +103,9 @@ private:
   // kdl stuff for kinematics
   KDL::Chain             kdl_chain_;
   boost::scoped_ptr<KDL::ChainFkSolverVel> jnt_to_twist_solver_;
+  boost::scoped_ptr<KDL::ChainJntToJacSolver> jac_solver_;
   KDL::JntArrayVel       jnt_posvel_;
   KDL::JntArray       jnt_eff_;
-  boost::scoped_ptr<KDL::ChainJntToJacSolver> jac_solver_;
   KDL::Jacobian jacobian_;
   KDL::Wrench wrench_out_;
 

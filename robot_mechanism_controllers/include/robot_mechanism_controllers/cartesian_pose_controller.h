@@ -124,7 +124,10 @@ private:
   // kdl stuff for kinematics
   KDL::Chain             kdl_chain_;
   boost::scoped_ptr<KDL::ChainFkSolverPos> jnt_to_pose_solver_;
+  boost::scoped_ptr<KDL::ChainJntToJacSolver> jac_solver_;
   KDL::JntArray          jnt_pos_;
+  KDL::JntArray       jnt_eff_;
+  KDL::Jacobian jacobian_;
 
   // reatltime publisher
   boost::scoped_ptr<realtime_tools::RealtimePublisher<geometry_msgs::Twist> > state_error_publisher_;
@@ -133,9 +136,6 @@ private:
 
   tf::TransformListener tf_;
   boost::scoped_ptr<tf::MessageNotifier<geometry_msgs::PoseStamped> > command_notifier_;
-
-  // twist controller
-  CartesianTwistController* twist_controller_;
 };
 
 } // namespace
