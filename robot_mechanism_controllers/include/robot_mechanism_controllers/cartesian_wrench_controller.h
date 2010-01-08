@@ -95,15 +95,6 @@ private:
   KDL::JntArray jnt_pos_, jnt_eff_;
   KDL::Jacobian jacobian_;
 
-  struct joint_constraint{
-    int joint;
-    double soft_limit;
-    double hard_limit;
-    double stiffness;
-  };
-
-  joint_constraint constraint_;
-
 };
 
 } // namespace

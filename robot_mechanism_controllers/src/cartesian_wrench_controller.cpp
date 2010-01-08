@@ -76,16 +76,6 @@ bool CartesianWrenchController::init(pr2_mechanism_model::RobotState *robot, ros
     return false;
   }
 
-  // get the joint constraint from the parameter server
-  node_.param("constraint/joint", constraint_.joint, -1);
-  node_.param("constraint/soft_limit", constraint_.soft_limit, 0.0);
-  node_.param("constraint/hard_limit", constraint_.hard_limit, 0.0);
-  node_.param("constraint/stiffness", constraint_.stiffness, 0.0);
-
-  ROS_INFO("Using joint %i, low limit %f, high limit %f and stiffness %f",
-	   constraint_.joint, constraint_.soft_limit, constraint_.hard_limit, constraint_.stiffness);
-
-
   // create robot chain from root to tip
   if (!chain_.init(robot_state_, root_name, tip_name)){
     ROS_ERROR("Initializing chain from %s to %s failed", root_name.c_str(), tip_name.c_str());
@@ -138,15 +128,6 @@ void CartesianWrenchController::update()
     jnt_eff_(i) = 0;
     for (unsigned int j=0; j<6; j++)
       jnt_eff_(i) += (jacobian_(j,i) * wrench_desi_(j));
-  }
-
-  // apply joint constraint
-  if (constraint_.joint >= 0 && constraint_.joint < (int)(kdl_chain_.getNrOfJoints())){
-    double sgn = sign(constraint_.hard_limit - constraint_.soft_limit);
-    if (sgn*(constraint_.hard_limit-jnt_pos_(constraint_.joint)) < 0)
-      jnt_eff_(constraint_.joint) = constraint_.stiffness * (constraint_.soft_limit-jnt_pos_(constraint_.joint));
-    else if (sgn*(constraint_.soft_limit-jnt_pos_(constraint_.joint)) < 0)
-      jnt_eff_(constraint_.joint) += constraint_.stiffness * (constraint_.soft_limit-jnt_pos_(constraint_.joint));
   }
 
   // set effort to joints
