@@ -26,8 +26,7 @@
   <depend package="control_toolbox" />
   <depend package="realtime_tools" />
 
-  <url>http://pr.willowgarage.com</url>
-  <repository>http://pr.willowgarage.com/repos</repository>
+  <url>http://ros.org/wiki/robot_mechanism_controllers</url>
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
 	 lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lrobot_mechanism_controllers" />

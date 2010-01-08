@@ -5,8 +5,7 @@
   <author>Melonee Wise, Sachin Chitta, John Hsu, Timothy Hunter</author>
   <license>BSD</license>
   <review status="unreviewed" notes="API review in progress (Melonee)"/>
-  <url>http://pr.willowgarage.com</url>
-  <repository>http://pr.willowgarage.com/repos</repository>
+  <url>http://ros.org/wiki/control_toolbox</url>
   <depend package="tinyxml" />
   <depend package="rosconsole" />
   <depend package="tf" />
