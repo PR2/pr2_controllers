@@ -49,9 +49,6 @@
 
    @param fb_rot The gains for the PID loop around angular velocity.  See: control_toolbox::Pid
 
-   @param output The name of the CartesianWrenchController which will
-   achieve the desired wrench computed by this controller.
-
    Subscribes to:
 
    - @b command (geometry_msgs::Twist) : The desired twist to
@@ -90,9 +87,6 @@ public:
   KDL::Twist twist_desi_, twist_meas_;
 
 private:
-  // output of the controller
-  KDL::Wrench wrench_out_;
-
   ros::NodeHandle node_;
   ros::Subscriber sub_command_;
   void command(const geometry_msgs::TwistConstPtr& twist_msg);
@@ -110,9 +104,10 @@ private:
   KDL::Chain             kdl_chain_;
   boost::scoped_ptr<KDL::ChainFkSolverVel> jnt_to_twist_solver_;
   KDL::JntArrayVel       jnt_posvel_;
-
-  // wrench controller
-  CartesianWrenchController* wrench_controller_;
+  KDL::JntArray       jnt_eff_;
+  boost::scoped_ptr<KDL::ChainJntToJacSolver> jac_solver_;
+  KDL::Jacobian jacobian_;
+  KDL::Wrench wrench_out_;
 
   geometry_msgs::Twist twist_msg_;
 };
