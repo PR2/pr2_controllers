@@ -48,7 +48,8 @@ public:
     node_(n),
     action_server_(node_, "joint_trajectory_action",
                    boost::bind(&JointTrajectoryExecuter::goalCB, this, _1),
-                   boost::bind(&JointTrajectoryExecuter::cancelCB, this, _1)),
+                   boost::bind(&JointTrajectoryExecuter::cancelCB, this, _1),
+                   false),
     has_active_goal_(false)
   {
     using namespace XmlRpc;
@@ -98,6 +99,21 @@ public:
       node_.subscribe("state", 1, &JointTrajectoryExecuter::controllerStateCB, this);
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &JointTrajectoryExecuter::watchdog, this);
+
+    ros::Time started_waiting_for_controller = ros::Time::now();
+    while (ros::ok() && !last_controller_state_)
+    {
+      ros::spinOnce();
+      if (started_waiting_for_controller != ros::Time(0) &&
+          ros::Time::now() > started_waiting_for_controller + ros::Duration(30.0))
+      {
+        ROS_WARN("Waited for the controller for 30 seconds, but it never showed up.");
+        started_waiting_for_controller = ros::Time(0);
+      }
+      ros::Duration(0.1).sleep();
+    }
+
+    action_server_.start();
   }
 
   ~JointTrajectoryExecuter()
