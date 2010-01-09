@@ -25,7 +25,9 @@
   <depend package="pr2_mechanism_model" />
   <depend package="control_toolbox" />
   <depend package="realtime_tools" />
-
+  <depend package="message_notifier" />
+  
+  
   <url>http://ros.org/wiki/robot_mechanism_controllers</url>
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
