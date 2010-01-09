@@ -299,6 +299,10 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
 
     double base_link_floor_z_offset_;
 
+    /// enable or disable tf publishing
+    bool publish_tf_;
+
+
     /*!
     * \brief populate the covariance part of the odometry message
     */

@@ -64,6 +64,8 @@ namespace controller {
     node.param("odom/initial_y", odom_.y, 0.0);
     node.param("odom/initial_yaw", odom_.z, 0.0);
 
+    node.param("publish_tf", publish_tf_, true);
+
     node.param<std::string> ("ils_weight_type", ils_weight_type_, "Gaussian");
     node.param<int> ("ils_max_iterations", ils_max_iterations_, 3);
     node.param<std::string> ("odom_frame", odom_frame_, "odom");
@@ -213,7 +215,8 @@ namespace controller {
       publishOdometer();
     if(publish_state_)
       publishState();
-    publishTransform();
+    if(publish_tf_)
+      publishTransform();
     double publish_time = (ros::Time::now()-publish_start).toSec();
     if(verbose_)
       {
