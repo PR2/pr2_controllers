@@ -331,5 +331,7 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     OdomMatrix16x16 weight_matrix_, w_fit;
     OdomMatrix3x1   cbv_soln_, fit_soln_;
 
+    std::string tf_prefix_;
+
   };
 }

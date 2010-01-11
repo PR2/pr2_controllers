@@ -58,6 +58,11 @@ namespace controller {
   bool Pr2Odometry::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node)
   {
     node_ = node;
+
+    std::string prefix_param;
+    node.searchParam("tf_prefix", prefix_param);
+    node.getParam(prefix_param, tf_prefix_);
+
     node.param("odometer/initial_distance", odometer_distance_, 0.0);
     node.param("odometer/initial_angle", odometer_angle_, 0.0);
     node.param("odom/initial_x", odom_.x, 0.0);
@@ -554,8 +559,8 @@ namespace controller {
 
       geometry_msgs::TransformStamped &out = transform_publisher_->msg_.transforms[0];
       out.header.stamp = current_time_;
-      out.header.frame_id =  base_footprint_frame_;
-      out.child_frame_id = odom_frame_;
+      out.header.frame_id =  tf::resolve(tf_prefix_,base_footprint_frame_);
+      out.child_frame_id = tf::resolve(tf_prefix_,odom_frame_);
       out.transform.translation.x = -x * cos(yaw) - y * sin(yaw);
       out.transform.translation.y = +x * sin(yaw) - y * cos(yaw);
       out.transform.translation.z = 0;
