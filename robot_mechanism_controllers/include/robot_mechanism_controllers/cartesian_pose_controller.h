@@ -70,17 +70,25 @@
 #define CARTESIAN_POSE_CONTROLLER_H
 
 #include <vector>
-#include <kdl/chain.hpp>
-#include <kdl/frames.hpp>
-#include <tf/transform_listener.h>
-#include <tf/message_notifier.h>
+#include <boost/scoped_ptr.hpp>
+
 #include <ros/node_handle.h>
+
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
+
+#include <control_toolbox/pid.h>
+#include <kdl/chainfksolver.hpp>
+#include <kdl/chain.hpp>
+#include <kdl/chainjnttojacsolver.hpp>
+#include <kdl/frames.hpp>
+#include <message_filters/subscriber.h>
 #include <pr2_controller_interface/controller.h>
+#include <pr2_mechanism_model/chain.h>
 #include <realtime_tools/realtime_publisher.h>
-#include <boost/scoped_ptr.hpp>
-#include "robot_mechanism_controllers/cartesian_twist_controller.h"
+#include <tf/message_filter.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
 
 
 namespace controller {
@@ -95,7 +103,7 @@ public:
   void starting();
   void update();
 
-  void command(const tf::MessageNotifier<geometry_msgs::PoseStamped>::MessagePtr& pose_msg);
+  void command(const geometry_msgs::PoseStamped::ConstPtr& pose_msg);
 
   // input of the controller
   KDL::Frame pose_desi_, pose_meas_;
@@ -106,9 +114,6 @@ public:
 
 private:
   KDL::Frame getPose();
-
-  void poseToFrame(const tf::Pose& pose, KDL::Frame& frame);
-  void frameToPose(const KDL::Frame& frame, tf::Pose& pose);
 
   ros::NodeHandle node_;
   std::string controller_name_, root_name_;
@@ -135,7 +140,9 @@ private:
   unsigned int loop_count_;
 
   tf::TransformListener tf_;
-  boost::scoped_ptr<tf::MessageNotifier<geometry_msgs::PoseStamped> > command_notifier_;
+  message_filters::Subscriber<geometry_msgs::PoseStamped> sub_command_;
+  boost::scoped_ptr<tf::MessageFilter<geometry_msgs::PoseStamped> > command_filter_;
+  //boost::scoped_ptr<tf::MessageNotifier<geometry_msgs::PoseStamped> > command_notifier_;
 };
 
 } // namespace

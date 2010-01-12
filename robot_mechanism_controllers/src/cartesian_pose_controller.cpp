@@ -49,15 +49,13 @@ PLUGINLIB_REGISTER_CLASS(CartesianPoseController, controller::CartesianPoseContr
 namespace controller {
 
 CartesianPoseController::CartesianPoseController()
-: robot_state_(NULL),
-  jnt_to_pose_solver_(NULL),
-  state_error_publisher_(NULL),
-  state_pose_publisher_(NULL),
-  command_notifier_(NULL)
+: robot_state_(NULL)
 {}
 
 CartesianPoseController::~CartesianPoseController()
-{}
+{
+  command_filter_.reset();
+}
 
 
 bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &n)
@@ -108,10 +106,10 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
     pid_controller_.push_back(pid_controller);
 
   // subscribe to pose commands
-  command_notifier_.reset(new MessageNotifier<geometry_msgs::PoseStamped>(
-                            tf_,
-                            boost::bind(&CartesianPoseController::command, this, _1),
-                            node_.getNamespace() + "/command", root_name_, 10));
+  sub_command_.subscribe(node_, "command", 10);
+  command_filter_.reset(new tf::MessageFilter<geometry_msgs::PoseStamped>(
+                          sub_command_, tf_, root_name_, 10, node_));
+  command_filter_->registerCallback(boost::bind(&CartesianPoseController::command, this, _1));
 
   // realtime publisher for control state
   state_error_publisher_.reset(new realtime_tools::RealtimePublisher<geometry_msgs::Twist>(node_, "state/error", 1));
@@ -203,7 +201,7 @@ Frame CartesianPoseController::getPose()
   return result;
 }
 
-void CartesianPoseController::command(const tf::MessageNotifier<geometry_msgs::PoseStamped>::MessagePtr& pose_msg)
+void CartesianPoseController::command(const geometry_msgs::PoseStamped::ConstPtr& pose_msg)
 {
   // convert message to transform
   Stamped<Pose> pose_stamped;
