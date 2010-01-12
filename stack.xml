@@ -9,11 +9,11 @@
   <depend stack="common" /> <!-- actionlib, filters, tinyxml, pluginlib -->
   <depend stack="common_msgs" /> <!-- nav_msgs, sensor_msgs, actionlib_msgs, geometry_msgs, diagnostic_msgs -->
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
-  <depend stack="geometry" /> <!-- tf, tf_conversions, kdl, eigen, angles -->
+  <depend stack="geometry" /> <!-- tf, kdl, tf_conversions, angles, eigen -->
   <depend stack="pr2_common" /> <!-- pr2_msgs -->
-  <depend stack="pr2_mechanism" /> <!-- pr2_controller_manager, pr2_mechanism_msgs, pr2_mechanism_model, realtime_tools, pr2_controller_interface -->
+  <depend stack="pr2_mechanism" /> <!-- pr2_mechanism_msgs, pr2_controller_manager, pr2_mechanism_model, realtime_tools, pr2_controller_interface -->
   <depend stack="robot_model" /> <!-- kdl_parser -->
-  <depend stack="ros" /> <!-- std_msgs, rosconsole, rospy, roscpp, message_filters -->
+  <depend stack="ros" /> <!-- std_msgs, rospy, roscpp, message_filters, rosconsole -->
   <depend stack="visualization_common" /> <!-- visualization_msgs -->
 
 </stack>
