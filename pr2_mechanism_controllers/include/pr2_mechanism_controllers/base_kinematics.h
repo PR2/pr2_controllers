@@ -120,14 +120,13 @@ namespace controller
       /*!
        * \brief wheel radius scale (based on the default wheel radius in Basekinematics)
        */
-      double wheel_radius_scaler_;
+      double wheel_radius_;
 
       /*!
        * \brief Loads wheel's information from the xml description file and param server
        * @param robot_state The robot's current state
        * @param config Tiny xml element pointing to this wheel
        */
-//      void initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
       bool init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node, std::string link_name);
 
       /*!
@@ -215,12 +214,6 @@ namespace controller
        */
       int caster_stuck_;
 
-      /*!
-       * \brief Loads caster's information from the xml description file and param server
-       * @param robot_state The robot's current state
-       * @param config Tiny xml element pointing to this caster
-       */
-//      void initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
       bool init(pr2_mechanism_model::RobotState *robot_state,  ros::NodeHandle &node, std::string link_name);
   };
 
@@ -237,7 +230,6 @@ namespace controller
        * @param config Tiny xml element pointing to its controller
        * @return Successful init
        */
-//      bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
     bool init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &node);
 
       /*!
@@ -277,11 +269,6 @@ namespace controller
        * \brief vector of every caster attached to the base
        */
       std::vector<Caster> caster_;
-
-      /*!
-       * \brief default radius of each wheel
-       */
-      double wheel_radius_;
 
       /*!
        * \brief the name of the casters in the xml file

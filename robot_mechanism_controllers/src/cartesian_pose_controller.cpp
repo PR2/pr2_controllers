@@ -37,6 +37,7 @@
 #include <algorithm>
 #include "kdl/chainfksolverpos_recursive.hpp"
 #include "pluginlib/class_list_macros.h"
+#include "tf_conversions/tf_kdl.h"
 
 
 using namespace KDL;
@@ -48,15 +49,13 @@ PLUGINLIB_REGISTER_CLASS(CartesianPoseController, controller::CartesianPoseContr
 namespace controller {
 
 CartesianPoseController::CartesianPoseController()
-: robot_state_(NULL),
-  jnt_to_pose_solver_(NULL),
-  state_error_publisher_(NULL),
-  state_pose_publisher_(NULL),
-  command_notifier_(NULL)
+: robot_state_(NULL)
 {}
 
 CartesianPoseController::~CartesianPoseController()
-{}
+{
+  command_filter_.reset();
+}
 
 
 bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &n)
@@ -83,33 +82,35 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
   // create robot chain from root to tip
   if (!chain_.init(robot_state_, root_name_, tip_name))
     return false;
+  if (!chain_.allCalibrated())
+  {
+    ROS_ERROR("Not all joints in the chain are calibrated (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
   chain_.toKDL(kdl_chain_);
 
   // create solver
   jnt_to_pose_solver_.reset(new ChainFkSolverPos_recursive(kdl_chain_));
+  jac_solver_.reset(new ChainJntToJacSolver(kdl_chain_));
   jnt_pos_.resize(kdl_chain_.getNrOfJoints());
+  jnt_eff_.resize(kdl_chain_.getNrOfJoints());
+  jacobian_.resize(kdl_chain_.getNrOfJoints());
 
-  // create 6 identical pid controllers for x, y and z translation, and x, y, z rotation
+  // create pid controller for the translation and for the rotation
   control_toolbox::Pid pid_controller;
-  if (!pid_controller.init(ros::NodeHandle(node_,"pid"))) return false;
-  for (unsigned int i=0; i<6; i++)
+  if (!pid_controller.init(ros::NodeHandle(node_,"fb_trans"))) return false;
+  for (unsigned int i = 0; i < 3; i++)
+    pid_controller_.push_back(pid_controller);
+  if (!pid_controller.init(ros::NodeHandle(node_,"fb_rot"))) return false;
+  for (unsigned int i = 0; i < 3; i++)
     pid_controller_.push_back(pid_controller);
 
-  // get a pointer to the twist controller
-  string output;
-  if (!node_.getParam("output", output)){
-    ROS_ERROR("No ouptut name found on parameter server (namespace: %s)", node_.getNamespace().c_str());
-    return false;
-  }
-  if (!getController<CartesianTwistController>(output, AFTER_ME, twist_controller_)){
-    ROS_ERROR("Could not connect to twist controller \"%s\"", output.c_str());
-    return false;
-  }
-
   // subscribe to pose commands
-  command_notifier_.reset(new MessageNotifier<geometry_msgs::PoseStamped>(tf_,
-                                                                       boost::bind(&CartesianPoseController::command, this, _1),
-                                                                       node_.getNamespace() + "/command", root_name_, 10));
+  sub_command_.subscribe(node_, "command", 10);
+  command_filter_.reset(new tf::MessageFilter<geometry_msgs::PoseStamped>(
+                          sub_command_, tf_, root_name_, 10, node_));
+  command_filter_->registerCallback(boost::bind(&CartesianPoseController::command, this, _1));
+
   // realtime publisher for control state
   state_error_publisher_.reset(new realtime_tools::RealtimePublisher<geometry_msgs::Twist>(node_, "state/error", 1));
   state_pose_publisher_.reset(new realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped>(node_, "state/pose", 1));
@@ -145,12 +146,23 @@ void CartesianPoseController::update()
 
   // pose feedback into twist
   twist_error_ = diff(pose_desi_, pose_meas_);
-  Twist twist_fb;
+  KDL::Wrench wrench_desi;
   for (unsigned int i=0; i<6; i++)
-    twist_fb(i) = pid_controller_[i].updatePid(twist_error_(i), dt);
+    wrench_desi(i) = pid_controller_[i].updatePid(twist_error_(i), dt);
 
-  // send feedback twist and feedforward twist to twist controller
-  twist_controller_->twist_desi_ = twist_fb + twist_ff_;
+  // get the chain jacobian
+  jac_solver_->JntToJac(jnt_pos_, jacobian_);
+
+  // Converts the wrench into joint efforts with a jacbobian-transpose
+  for (unsigned int i = 0; i < kdl_chain_.getNrOfJoints(); i++){
+    jnt_eff_(i) = 0;
+    for (unsigned int j=0; j<6; j++)
+      jnt_eff_(i) += (jacobian_(j,i) * wrench_desi(j));
+  }
+
+  // set effort to joints
+  chain_.addEfforts(jnt_eff_);
+
 
   if (++loop_count_ % 100 == 0){
     if (state_error_publisher_){
@@ -167,7 +179,7 @@ void CartesianPoseController::update()
     if (state_pose_publisher_){
       if (state_pose_publisher_->trylock()){
 	Pose tmp;
-	frameToPose(pose_meas_, tmp);
+        tf::PoseKDLToTF(pose_meas_, tmp);
 	poseStampedTFToMsg(Stamped<Pose>(tmp, ros::Time::now(), root_name_), state_pose_publisher_->msg_);
         state_pose_publisher_->unlockAndPublish();
       }
@@ -189,7 +201,7 @@ Frame CartesianPoseController::getPose()
   return result;
 }
 
-void CartesianPoseController::command(const tf::MessageNotifier<geometry_msgs::PoseStamped>::MessagePtr& pose_msg)
+void CartesianPoseController::command(const geometry_msgs::PoseStamped::ConstPtr& pose_msg)
 {
   // convert message to transform
   Stamped<Pose> pose_stamped;
@@ -197,35 +209,8 @@ void CartesianPoseController::command(const tf::MessageNotifier<geometry_msgs::P
 
   // convert to reference frame of root link of the controller chain
   tf_.transformPose(root_name_, pose_stamped, pose_stamped);
-  poseToFrame(pose_stamped, pose_desi_);
+  tf::PoseTFToKDL(pose_stamped, pose_desi_);
 }
-
-
-void CartesianPoseController::poseToFrame(const Pose& pose, Frame& frame)
-{
-  frame.p(0) = pose.getOrigin().x();
-  frame.p(1) = pose.getOrigin().y();
-  frame.p(2) = pose.getOrigin().z();
-
-  double Rz, Ry, Rx;
-  pose.getBasis().getEulerZYX(Rz, Ry, Rx);
-  frame.M = Rotation::EulerZYX(Rz, Ry, Rx);
-}
-
-
-void CartesianPoseController::frameToPose(const Frame& frame, Pose& pose)
-{
-  pose.getOrigin()[0] = frame.p(0);
-  pose.getOrigin()[1] = frame.p(1);
-  pose.getOrigin()[2] = frame.p(2);
-
-  double Rz, Ry, Rx;
-  frame.M.GetEulerZYX(Rz, Ry, Rx);
-  pose.setRotation( Quaternion(Rz, Ry, Rx));
-}
-
-
-
 
 } // namespace
 

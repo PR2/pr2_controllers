@@ -75,7 +75,6 @@ public:
   CartesianWrenchController();
   ~CartesianWrenchController();
 
-  bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   void starting();
@@ -95,15 +94,6 @@ private:
   boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
   KDL::JntArray jnt_pos_, jnt_eff_;
   KDL::Jacobian jacobian_;
-
-  struct joint_constraint{
-    int joint;
-    double soft_limit;
-    double hard_limit;
-    double stiffness;
-  };
-
-  joint_constraint constraint_;
 
 };
 

@@ -55,21 +55,6 @@ CartesianWrenchController::~CartesianWrenchController()
 }
 
 
-
-
-bool CartesianWrenchController::initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config)
-{
-  // get the controller name from xml file
-  std::string controller_name = config->Attribute("name") ? config->Attribute("name") : "";
-  if (controller_name == ""){
-    ROS_ERROR("CartesianWrenchController: No controller name given in xml file");
-    return false;
-  }
-
-  ros::NodeHandle n(controller_name);
-  return init(robot_state, n);
-}
-
 bool CartesianWrenchController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   // test if we got robot pointer
@@ -91,19 +76,14 @@ bool CartesianWrenchController::init(pr2_mechanism_model::RobotState *robot, ros
     return false;
   }
 
-  // get the joint constraint from the parameter server
-  node_.param("constraint/joint", constraint_.joint, -1);
-  node_.param("constraint/soft_limit", constraint_.soft_limit, 0.0);
-  node_.param("constraint/hard_limit", constraint_.hard_limit, 0.0);
-  node_.param("constraint/stiffness", constraint_.stiffness, 0.0);
-
-  ROS_INFO("Using joint %i, low limit %f, high limit %f and stiffness %f",
-	   constraint_.joint, constraint_.soft_limit, constraint_.hard_limit, constraint_.stiffness);
-
-
   // create robot chain from root to tip
   if (!chain_.init(robot_state_, root_name, tip_name)){
     ROS_ERROR("Initializing chain from %s to %s failed", root_name.c_str(), tip_name.c_str());
+    return false;
+  }
+  if (!chain_.allCalibrated())
+  {
+    ROS_ERROR("Not all joints in the chain are calibrated (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
   chain_.toKDL(kdl_chain_);
@@ -148,15 +128,6 @@ void CartesianWrenchController::update()
     jnt_eff_(i) = 0;
     for (unsigned int j=0; j<6; j++)
       jnt_eff_(i) += (jacobian_(j,i) * wrench_desi_(j));
-  }
-
-  // apply joint constraint
-  if (constraint_.joint >= 0 && constraint_.joint < (int)(kdl_chain_.getNrOfJoints())){
-    double sgn = sign(constraint_.hard_limit - constraint_.soft_limit);
-    if (sgn*(constraint_.hard_limit-jnt_pos_(constraint_.joint)) < 0)
-      jnt_eff_(constraint_.joint) = constraint_.stiffness * (constraint_.soft_limit-jnt_pos_(constraint_.joint));
-    else if (sgn*(constraint_.soft_limit-jnt_pos_(constraint_.joint)) < 0)
-      jnt_eff_(constraint_.joint) += constraint_.stiffness * (constraint_.soft_limit-jnt_pos_(constraint_.joint));
   }
 
   // set effort to joints

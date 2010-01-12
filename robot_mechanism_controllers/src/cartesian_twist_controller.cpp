@@ -56,20 +56,6 @@ CartesianTwistController::~CartesianTwistController()
 }
 
 
-
-bool CartesianTwistController::initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config)
-{
-  // get the controller name from xml file
-  std::string controller_name = config->Attribute("name") ? config->Attribute("name") : "";
-  if (controller_name == ""){
-    ROS_ERROR("CartesianTwistController: No controller name given in xml file");
-    return false;
-  }
-
-  ros::NodeHandle n(controller_name);
-  return init(robot_state, n);
-}
-
 bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &n)
 {
   node_ = n;
@@ -94,11 +80,19 @@ bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state
   // create robot chain from root to tip
   if (!chain_.init(robot_state, root_name, tip_name))
     return false;
+  if (!chain_.allCalibrated())
+  {
+    ROS_ERROR("Not all joints in the chain are calibrated (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
   chain_.toKDL(kdl_chain_);
 
   // create solver
   jnt_to_twist_solver_.reset(new KDL::ChainFkSolverVel_recursive(kdl_chain_));
+  jac_solver_.reset(new ChainJntToJacSolver(kdl_chain_));
   jnt_posvel_.resize(kdl_chain_.getNrOfJoints());
+  jnt_eff_.resize(kdl_chain_.getNrOfJoints());
+  jacobian_.resize(kdl_chain_.getNrOfJoints());
 
   // constructs 3 identical pid controllers: for the x,y and z translations
   control_toolbox::Pid pid_controller;
@@ -114,19 +108,6 @@ bool CartesianTwistController::init(pr2_mechanism_model::RobotState *robot_state
   // get parameters
   node_.param("ff_trans", ff_trans_, 0.0) ;
   node_.param("ff_rot", ff_rot_, 0.0) ;
-
-  // get a pointer to the wrench controller
-  std::string output;
-  if (!node_.getParam("output", output)){
-    ROS_ERROR("CartesianTwistController: No ouptut name found on parameter server (namespace: %s)",
-              node_.getNamespace().c_str());
-    return false;
-  }
-  if (!getController<CartesianWrenchController>(output, AFTER_ME, wrench_controller_)){
-    ROS_ERROR("CartesianTwistController: could not connect to wrench controller %s (namespace: %s)",
-              output.c_str(), node_.getNamespace().c_str());
-    return false;
-  }
 
   // subscribe to twist commands
   sub_command_ = node_.subscribe<geometry_msgs::Twist>
@@ -170,6 +151,9 @@ void CartesianTwistController::update()
   twist_meas_ = twist.deriv();
   Twist error = twist_meas_ - twist_desi_;
 
+  // get the chain jacobian
+  jac_solver_->JntToJac(jnt_posvel_.q, jacobian_);
+
   // pid feedback
   for (unsigned int i=0; i<3; i++)
     wrench_out_.force(i) = (twist_desi_.vel(i) * ff_trans_) + fb_pid_controller_[i].updatePid(error.vel(i), dt);
@@ -177,8 +161,15 @@ void CartesianTwistController::update()
   for (unsigned int i=0; i<3; i++)
     wrench_out_.torque(i) = (twist_desi_.rot(i) * ff_rot_) + fb_pid_controller_[i+3].updatePid(error.rot(i), dt);
 
-  // send wrench to wrench controller
-  wrench_controller_->wrench_desi_ = wrench_out_;
+  // Converts the wrench into joint efforts with a jacbobian-transpose
+  for (unsigned int i = 0; i < kdl_chain_.getNrOfJoints(); i++){
+    jnt_eff_(i) = 0;
+    for (unsigned int j=0; j<6; j++)
+      jnt_eff_(i) += (jacobian_(j,i) * wrench_out_(j));
+  }
+
+  // set effort to joints
+  chain_.addEfforts(jnt_eff_);
 }
 
 

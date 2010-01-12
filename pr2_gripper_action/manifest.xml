@@ -13,6 +13,7 @@
   <depend package="actionlib"/>
   <depend package="pr2_mechanism_controllers"/>
   <depend package="robot_mechanism_controllers" />
+  <depend package="pr2_controllers_msgs" />
 
   <export>
     <cpp cflags="-I${prefix}/msg/cpp" />

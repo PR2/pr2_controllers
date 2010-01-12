@@ -49,9 +49,6 @@
 
    @param fb_rot The gains for the PID loop around angular velocity.  See: control_toolbox::Pid
 
-   @param output The name of the CartesianWrenchController which will
-   achieve the desired wrench computed by this controller.
-
    Subscribes to:
 
    - @b command (geometry_msgs::Twist) : The desired twist to
@@ -62,16 +59,21 @@
 #define CARTESIAN_TWIST_CONTROLLER_H
 
 #include <vector>
-#include <kdl/chain.hpp>
-#include <kdl/chainfksolver.hpp>
-#include <kdl/frames.hpp>
+#include <boost/scoped_ptr.hpp>
+
 #include <ros/node_handle.h>
 #include <geometry_msgs/Twist.h>
-#include <pr2_controller_interface/controller.h>
-#include <tf/transform_datatypes.h>
-#include <robot_mechanism_controllers/cartesian_wrench_controller.h>
+
 #include <control_toolbox/pid.h>
-#include <boost/scoped_ptr.hpp>
+#include <kdl/chainfksolver.hpp>
+#include <kdl/chain.hpp>
+#include <kdl/chainjnttojacsolver.hpp>
+#include <kdl/frames.hpp>
+#include <pr2_controller_interface/controller.h>
+#include <pr2_mechanism_model/chain.h>
+#include <realtime_tools/realtime_publisher.h>
+#include <tf/transform_datatypes.h>
+
 
 namespace controller {
 
@@ -81,7 +83,6 @@ public:
   CartesianTwistController();
   ~CartesianTwistController();
 
-  bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
   bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
   void starting();
@@ -91,9 +92,6 @@ public:
   KDL::Twist twist_desi_, twist_meas_;
 
 private:
-  // output of the controller
-  KDL::Wrench wrench_out_;
-
   ros::NodeHandle node_;
   ros::Subscriber sub_command_;
   void command(const geometry_msgs::TwistConstPtr& twist_msg);
@@ -110,10 +108,11 @@ private:
   // kdl stuff for kinematics
   KDL::Chain             kdl_chain_;
   boost::scoped_ptr<KDL::ChainFkSolverVel> jnt_to_twist_solver_;
+  boost::scoped_ptr<KDL::ChainJntToJacSolver> jac_solver_;
   KDL::JntArrayVel       jnt_posvel_;
-
-  // wrench controller
-  CartesianWrenchController* wrench_controller_;
+  KDL::JntArray       jnt_eff_;
+  KDL::Jacobian jacobian_;
+  KDL::Wrench wrench_out_;
 
   geometry_msgs::Twist twist_msg_;
 };

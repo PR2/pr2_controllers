@@ -35,6 +35,7 @@
 #include <Eigen/Array>
 #include <Eigen/SVD>
 #include <nav_msgs/Odometry.h>
+#include <pr2_mechanism_controllers/Odometer.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <tf/tfMessage.h>
 #include <tf/tf.h>
@@ -43,13 +44,22 @@
 
 #include <boost/scoped_ptr.hpp>
 
+#include <std_msgs/Float64.h>
+#include <pr2_mechanism_controllers/OdometryMatrix.h>
+#include <pr2_mechanism_controllers/DebugInfo.h>
+
+#include <std_msgs/Bool.h>
+#include <pr2_mechanism_controllers/BaseOdometryState.h>
+
+namespace controller
+{
+
 typedef Eigen::Matrix<float, 3, 1> OdomMatrix3x1;
 typedef Eigen::Matrix<float, 16, 1> OdomMatrix16x1;
 typedef Eigen::Matrix<float, 16, 3> OdomMatrix16x3;
 typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
 
-namespace controller
-{
+
   /*! \class
   \brief This class inherits from Controller and computes the base odometry
   */
@@ -66,14 +76,6 @@ namespace controller
     * \brief Destructor for the odometry
     */
     ~Pr2Odometry();
-
-    /*!
-    * \brief Loads Odometry's information from the xml description file and param server
-    * @param robot_state The robot's current state
-    * @param config Tiny xml element pointing to this controller
-    * @return Successful init
-    */
-    bool initXml(pr2_mechanism_model::RobotState *robot_state, TiXmlElement *config);
 
     /*!
     * \brief Initializes and loads odometry information from the param server
@@ -101,6 +103,21 @@ namespace controller
     */
     void publish();
 
+    /*!
+    * \brief Publishes the currently computed odometry information to tf
+    */
+    void publishTransform();
+
+    /*!
+    * \brief Publishes the currently computed odometer information
+    */
+    void publishOdometer();
+
+    /*!
+    * \brief Publishes the odometry state information
+    */
+    void publishState();
+
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -123,7 +140,7 @@ namespace controller
     * @param msg The nav_msgs::Odometry into which the odometry values are placed
     */
     void getOdometryMessage(nav_msgs::Odometry &msg);
-    
+
     /*!
     * \brief Takes the current odometery information and stores it into the six double parameters
     * @param x X component of the current odom position
@@ -151,17 +168,17 @@ namespace controller
     * \brief Computes the wheel's speed adjusted for the attached caster's rotational velocity
     * @param index The index of the wheel
     */
-    double getCorrectedWheelSpeed(int index);
+    double getCorrectedWheelSpeed(const int &index);
 
     /*!
     * \brief Function used to compute the most likely solution to the odometry using iterative least squares
     */
-    Eigen::MatrixXf iterativeLeastSquares(Eigen::MatrixXf lhs, Eigen::MatrixXf rhs, std::string weight_type, int max_iter);
-    
+    OdomMatrix3x1 iterativeLeastSquares(const OdomMatrix16x3 &lhs, const OdomMatrix16x1 &rhs, const std::string &weight_type, const int &max_iter);
+
     /*!
     * \brief Finds the weight matrix from the iterative least squares residuals
     */
-    Eigen::MatrixXf findWeightMatrix(Eigen::MatrixXf residual, std::string weight_type);
+    OdomMatrix16x16 findWeightMatrix(const OdomMatrix16x1 &residual, const std::string &weight_type);
 
     /*!
     * \brief Total distance traveled by the base as computed by the odometer
@@ -181,7 +198,7 @@ namespace controller
     /*!
     * \brief Matricies used in the computation of the iterative least squares and related functions
     */
-    Eigen::MatrixXf cbv_rhs_, fit_rhs_, fit_residual_, odometry_residual_, cbv_lhs_, fit_lhs_, cbv_soln_,fit_soln_,  weight_matrix_;
+    //    Eigen::MatrixXf cbv_rhs_, fit_rhs_, fit_residual_, odometry_residual_, cbv_lhs_, fit_lhs_, cbv_soln_,fit_soln_,  weight_matrix_;
 
     /*!
     * \brief Point that stores the current translational position (x,y) and angular position (z)
@@ -229,28 +246,92 @@ namespace controller
     ros::Time last_publish_time_;
 
     /*!
+    * \brief The last time the odometry information was published
+    */
+    ros::Time last_transform_publish_time_;
+
+    /*!
+    * \brief The last time the odometry information was published
+    */
+    ros::Time last_odometer_publish_time_;
+
+    /*!
+    * \brief The last time the odometry information was published
+    */
+    ros::Time last_state_publish_time_;
+
+    /*!
     * \brief The time that the odometry is expected to be published next
     */
     double expected_publish_time_;
 
     /*!
+    * \brief The time that the odometry is expected to be published next
+    */
+    double expected_odometer_publish_time_;
+
+    /*!
+    * \brief The time that the odometry is expected to be published next
+    */
+    double expected_state_publish_time_;
+
+    /*!
     * \brief The RealtimePublisher that does the realtime publishing of the odometry
     */
-    boost::scoped_ptr<realtime_tools::RealtimePublisher <nav_msgs::Odometry> > odometry_publisher_ ;  
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <nav_msgs::Odometry> > odometry_publisher_ ;
+
+    /*!
+    * \brief The RealtimePublisher that does the realtime publishing of the odometry
+    */
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::Odometer> > odometer_publisher_ ;  
+
+    /*!
+    * \brief The RealtimePublisher that does the realtime publishing of the odometry state
+    */
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::BaseOdometryState> > state_publisher_ ;  
 
     /*!
     * \brief Publishes the transform between the odometry frame and the base frame
     */
-    boost::scoped_ptr<realtime_tools::RealtimePublisher <tf::tfMessage> > transform_publisher_ ;  
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <tf::tfMessage> > transform_publisher_ ;
 
     double sigma_x_,sigma_y_,sigma_theta_,cov_x_y_,cov_x_theta_,cov_y_theta_;
 
     double base_link_floor_z_offset_;
 
+    /// enable or disable tf publishing
+    bool publish_tf_;
+
+
     /*!
     * \brief populate the covariance part of the odometry message
     */
-    void populateCovariance(double residual, nav_msgs::Odometry &msg);
+    void populateCovariance(const double &residual, nav_msgs::Odometry &msg);
+
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::OdometryMatrix> > matrix_publisher_;
+    boost::scoped_ptr<realtime_tools::RealtimePublisher <pr2_mechanism_controllers::DebugInfo> > debug_publisher_;
+
+    int sequence_;
+
+    bool isInputValid();
+
+    bool verbose_, publish_odom_, publish_odometer_, publish_state_;
+
+    double odom_publish_rate_;
+
+    double odometer_publish_rate_;
+
+    double state_publish_rate_;
+
+    double caster_calibration_multiplier_;
+
+    OdomMatrix16x3  cbv_lhs_, fit_lhs_;
+    OdomMatrix16x1  cbv_rhs_, fit_residual_, odometry_residual_;
+    OdomMatrix16x1  fit_rhs_;
+    OdomMatrix16x16 weight_matrix_, w_fit;
+    OdomMatrix3x1   cbv_soln_, fit_soln_;
+
+    std::string tf_prefix_;
 
   };
 }

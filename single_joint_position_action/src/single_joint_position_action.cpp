@@ -45,8 +45,8 @@
 class SingleJointPositionNode
 {
 private:
-  typedef actionlib::ActionServer<pr2_controllers_msgs::SingleJointPositionAction> PHAS;
-  typedef PHAS::GoalHandle GoalHandle;
+  typedef actionlib::ActionServer<pr2_controllers_msgs::SingleJointPositionAction> SJPAS;
+  typedef SJPAS::GoalHandle GoalHandle;
 public:
   SingleJointPositionNode(const ros::NodeHandle &n)
     : node_(n),
@@ -62,6 +62,7 @@ public:
       exit(1);
     }
 
+    pn.param("goal_threshold", goal_threshold_, 0.1);
     pn.param("max_acceleration", max_accel_, -1.0);
 
     // Connects to the controller
@@ -84,7 +85,9 @@ public:
     traj_state.request.time = ros::Time::now() + ros::Duration(0.01);
     if (!cli_query_traj_.call(traj_state))
     {
-      ROS_ERROR("Service call to query controller trajectory failed.");
+      ROS_ERROR("Service call to query controller trajectory failed.  Service: (%s)",
+                cli_query_traj_.getService().c_str());
+      gh.setRejected();
       return;
     }
 
@@ -138,6 +141,7 @@ public:
 private:
   std::string joint_;
   double max_accel_;
+  double goal_threshold_;
 
   ros::NodeHandle node_;
   ros::Publisher pub_controller_command_;
@@ -146,7 +150,7 @@ private:
   ros::ServiceClient cli_query_traj_;
   ros::Timer watchdog_timer_;
 
-  PHAS action_server_;
+  SJPAS action_server_;
   bool has_active_goal_;
   GoalHandle active_goal_;
 
@@ -214,6 +218,12 @@ private:
     feedback.velocity = msg->actual.velocities[0];
     feedback.error = msg->error.positions[0];
     active_goal_.publishFeedback(feedback);
+
+    if (fabs(msg->actual.positions[0] - active_goal_.getGoal()->position) < goal_threshold_)
+    {
+      active_goal_.setSucceeded();
+      has_active_goal_ = false;
+    }
   }
 
 };

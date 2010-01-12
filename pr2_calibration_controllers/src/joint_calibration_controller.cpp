@@ -113,6 +113,34 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
     return false;
   }
 
+  // deprecated: support for old case without rising or falling edge
+  if (!joint_->joint_->calibration->falling && !joint_->joint_->calibration->rising){
+    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", joint_name.c_str());
+    reference_position_ = joint_->joint_->calibration->reference_position;
+  }
+
+  // new: rising or falling edge
+  else{
+    if (search_velocity_ < 0){
+      search_velocity_ *= -1;
+      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->falling){
+      reference_position_ = *(joint_->joint_->calibration->falling);
+      search_velocity_ *= -1.0;
+      ROS_DEBUG("Using negative search velocity for joint %s", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->rising){
+      reference_position_ = *(joint_->joint_->calibration->rising);
+      ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
+      ROS_ERROR("Both rising and falling edge are specified for joint %s", joint_name.c_str());
+      return false;
+    }
+  }
+
+
   // Contained velocity controller
 
   if (!vc_.init(robot, node_))
@@ -176,7 +204,7 @@ void JointCalibrationController::update()
 
       // What is the actuator position at the joint's zero?
       assert(joint_->joint_->calibration);
-      fake_j[0]->position_ = fake_j[0]->position_ - joint_->joint_->calibration->reference_position;
+      fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
       transmission_->propagatePositionBackwards(fake_j, fake_a);
 
       actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;

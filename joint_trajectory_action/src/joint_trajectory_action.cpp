@@ -32,9 +32,9 @@
 #include <ros/ros.h>
 #include <actionlib/server/action_server.h>
 
-#include <robot_mechanism_controllers/JointTrajectoryControllerState.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
+#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 const double DEFAULT_GOAL_THRESHOLD = 0.1;
 
@@ -48,7 +48,8 @@ public:
     node_(n),
     action_server_(node_, "joint_trajectory_action",
                    boost::bind(&JointTrajectoryExecuter::goalCB, this, _1),
-                   boost::bind(&JointTrajectoryExecuter::cancelCB, this, _1)),
+                   boost::bind(&JointTrajectoryExecuter::cancelCB, this, _1),
+                   false),
     has_active_goal_(false)
   {
     using namespace XmlRpc;
@@ -79,6 +80,7 @@ public:
       joint_names_.push_back((std::string)name_value);
     }
 
+    pn.param("constraints/goal_time", goal_time_constraint_, 0.0);
 
     // Gets the constraints for each joint.
     for (size_t i = 0; i < joint_names_.size(); ++i)
@@ -97,6 +99,21 @@ public:
       node_.subscribe("state", 1, &JointTrajectoryExecuter::controllerStateCB, this);
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &JointTrajectoryExecuter::watchdog, this);
+
+    ros::Time started_waiting_for_controller = ros::Time::now();
+    while (ros::ok() && !last_controller_state_)
+    {
+      ros::spinOnce();
+      if (started_waiting_for_controller != ros::Time(0) &&
+          ros::Time::now() > started_waiting_for_controller + ros::Duration(30.0))
+      {
+        ROS_WARN("Waited for the controller for 30 seconds, but it never showed up.");
+        started_waiting_for_controller = ros::Time(0);
+      }
+      ros::Duration(0.1).sleep();
+    }
+
+    action_server_.start();
   }
 
   ~JointTrajectoryExecuter()
@@ -223,11 +240,10 @@ private:
   std::vector<std::string> joint_names_;
   std::map<std::string,double> goal_constraints_;
   std::map<std::string,double> trajectory_constraints_;
+  double goal_time_constraint_;
 
-  std::map<std::string,double> goal_thresholds_;
-
-  robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr last_controller_state_;
-  void controllerStateCB(const robot_mechanism_controllers::JointTrajectoryControllerStateConstPtr &msg)
+  pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr last_controller_state_;
+  void controllerStateCB(const pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr &msg)
   {
     last_controller_state_ = msg;
     ros::Time now = ros::Time::now();
@@ -284,14 +300,21 @@ private:
       }
 
       if (inside_goal_constraints)
+      {
         active_goal_.setSucceeded();
+        has_active_goal_ = false;
+      }
+      else if (now < end_time + ros::Duration(goal_time_constraint_))
+      {
+        // Still have some time left to make it.
+      }
       else
       {
         ROS_WARN("Aborting because we wound up outside the goal constraints");
         active_goal_.setAborted();
+        has_active_goal_ = false;
       }
 
-      has_active_goal_ = false;
     }
   }
 };

@@ -55,19 +55,27 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   node_ = n;
   robot_ = robot;
 
-  if (!node_.getParam("roll_velocity", roll_search_velocity_))
-  {
-    ROS_ERROR("No roll_velocity given (namespace: %s)", node_.getNamespace().c_str());
-    return false;
-  }
-
-  if (!node_.getParam("flex_velocity", flex_search_velocity_))
-  {
-    ROS_ERROR("No flex_velocity given (namespace: %s)", node_.getNamespace().c_str());
-    return false;
-  }
-
   // Joints
+
+  std::string roll_joint_name;
+  if (!node_.getParam("roll_joint", roll_joint_name))
+  {
+    ROS_ERROR("No roll joint given (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
+  if (!(roll_joint_ = robot->getJointState(roll_joint_name)))
+  {
+    ROS_ERROR("Could not find roll joint \"%s\" (namespace: %s)",
+              roll_joint_name.c_str(), node_.getNamespace().c_str());
+    return false;
+  }
+  if (!roll_joint_->joint_->calibration)
+  {
+    ROS_ERROR("Joint \"%s\" has no calibration reference position specified (namespace: %s)",
+              roll_joint_name.c_str(), node_.getNamespace().c_str());
+    return false;
+  }
+
 
   std::string flex_joint_name;
   if (!node_.getParam("flex_joint", flex_joint_name))
@@ -89,24 +97,75 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   }
 
 
-  std::string roll_joint_name;
-  if (!node_.getParam("roll_joint", roll_joint_name))
+
+
+  if (!node_.getParam("roll_velocity", roll_search_velocity_))
   {
-    ROS_ERROR("No roll joint given (namespace: %s)", node_.getNamespace().c_str());
+    ROS_ERROR("No roll_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
-  if (!(roll_joint_ = robot->getJointState(roll_joint_name)))
+  // deprecated: support for old case without rising or falling edge
+  if (!roll_joint_->joint_->calibration->falling && !roll_joint_->joint_->calibration->rising){
+    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", roll_joint_name.c_str());
+    roll_reference_position_ = roll_joint_->joint_->calibration->reference_position;
+  }
+
+  // new: rising or falling edge
+  else{
+    if (roll_search_velocity_ < 0){
+      roll_search_velocity_ *= -1;
+      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", roll_joint_name.c_str());
+    }
+    if (roll_joint_->joint_->calibration->falling){
+      roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
+      roll_search_velocity_ *= -1.0;
+      ROS_DEBUG("Using negative search velocity for joint %s", roll_joint_name.c_str());
+    }
+    if (roll_joint_->joint_->calibration->rising){
+      roll_reference_position_ = *(roll_joint_->joint_->calibration->rising);
+      ROS_DEBUG("Using positive search velocity for joint %s", roll_joint_name.c_str());
+    }
+    if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising){
+      ROS_ERROR("Both rising and falling edge are specified for joint %s", roll_joint_name.c_str());
+      return false;
+    }
+  }
+
+
+
+  if (!node_.getParam("flex_velocity", flex_search_velocity_))
   {
-    ROS_ERROR("Could not find roll joint \"%s\" (namespace: %s)",
-              roll_joint_name.c_str(), node_.getNamespace().c_str());
+    ROS_ERROR("No flex_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
-  if (!roll_joint_->joint_->calibration)
-  {
-    ROS_ERROR("Joint \"%s\" has no calibration reference position specified (namespace: %s)",
-              roll_joint_name.c_str(), node_.getNamespace().c_str());
-    return false;
+  // deprecated: support for old case without rising or falling edge
+  if (!flex_joint_->joint_->calibration->falling && !flex_joint_->joint_->calibration->rising){
+    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", flex_joint_name.c_str());
+    flex_reference_position_ = flex_joint_->joint_->calibration->reference_position;
   }
+
+  // new: rising or falling edge
+  else{
+    if (flex_search_velocity_ < 0){
+      flex_search_velocity_ *= -1;
+      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", flex_joint_name.c_str());
+    }
+    if (flex_joint_->joint_->calibration->falling){
+      flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
+      flex_search_velocity_ *= -1.0;
+      ROS_DEBUG("Using negative search velocity for joint %s", flex_joint_name.c_str());
+    }
+    if (flex_joint_->joint_->calibration->rising){
+      flex_reference_position_ = *(flex_joint_->joint_->calibration->rising);
+      ROS_DEBUG("Using positive search velocity for joint %s", flex_joint_name.c_str());
+    }
+    if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising){
+      ROS_ERROR("Both rising and falling edge are specified for joint %s", flex_joint_name.c_str());
+      return false;
+    }
+  }
+
+
 
   // Actuators
 
@@ -212,7 +271,13 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (flex_switch_l_ - prev_actuator_l_position_) / dl;
-      assert(0 <= k && k <= 1);
+      if ( !(0 <= k && k <= 1) )
+      {
+        // Break realtime and crash.
+        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
+        sleep(2);
+        abort();
+      }
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
       original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
@@ -235,7 +300,13 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (roll_switch_r_ - prev_actuator_r_position_) / dr;
-      assert(0 <= k && k <= 1);
+      if ( !(0 <= k && k <= 1) )
+      {
+        // Break realtime and crash.
+        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
+        sleep(2);
+        abort();
+      }
       roll_switch_l_ =  k * dl + prev_actuator_l_position_;
 
 
@@ -276,8 +347,8 @@ void WristCalibrationController::update()
       double roll_joint_switch_ = fake_js[ROLL_JOINT]->position_;
 
       // Finds the (uncalibrated) joint position at the desired zero
-      fake_js[FLEX_JOINT]->position_ = flex_joint_switch_ - flex_joint_->joint_->calibration->reference_position;
-      fake_js[ROLL_JOINT]->position_ = roll_joint_switch_ - roll_joint_->joint_->calibration->reference_position;
+      fake_js[FLEX_JOINT]->position_ = flex_joint_switch_ - flex_reference_position_;
+      fake_js[ROLL_JOINT]->position_ = roll_joint_switch_ - roll_reference_position_;
 
       // Determines the actuator zero position from the desired joint zero positions
       transmission_->propagatePositionBackwards(fake_js, fake_as);

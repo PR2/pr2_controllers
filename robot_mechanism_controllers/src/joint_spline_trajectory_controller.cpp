@@ -187,6 +187,17 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
     joints_.push_back(j);
   }
 
+  // Ensures that all the joints are calibrated.
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    if (!joints_[i]->calibrated_)
+    {
+      ROS_ERROR("Joint %s was not calibrated (namespace: %s)",
+                joints_[i]->joint_->name.c_str(), node_.getNamespace().c_str());
+      return false;
+    }
+  }
+
   // Sets up pid controllers for all of the joints
   std::string gains_ns;
   if (!node_.getParam("gains", gains_ns))
@@ -196,6 +207,16 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
     if (!pids_[i].init(ros::NodeHandle(gains_ns + "/" + joints_[i]->joint_->name)))
       return false;
 
+  // Creates a dummy trajectory
+  boost::shared_ptr<SpecifiedTrajectory> traj_ptr(new SpecifiedTrajectory(1));
+  SpecifiedTrajectory &traj = *traj_ptr;
+  traj[0].start_time = robot_->getTime().toSec();
+  traj[0].duration = 0.0;
+  traj[0].splines.resize(joints_.size());
+  for (size_t j = 0; j < joints_.size(); ++j)
+    traj[0].splines[j].coef[0] = 0.0;
+  current_trajectory_box_.set(traj_ptr);
+
   sub_command_ = node_.subscribe("command", 1, &JointSplineTrajectoryController::commandCB, this);
   serve_query_state_ = node_.advertiseService(
     "query_state", &JointSplineTrajectoryController::queryStateService, this);
@@ -204,17 +225,8 @@ bool JointSplineTrajectoryController::init(pr2_mechanism_model::RobotState *robo
   qd.resize(joints_.size());
   qdd.resize(joints_.size());
 
-  char buf[64];
-  for (size_t i = 0; i < q.size(); ++i)
-  {
-    sprintf(buf, "q%d", i);   recorder_.channel(QS + 3*i + 0, buf);
-    sprintf(buf, "qd%d", i);  recorder_.channel(QS + 3*i + 1, buf);
-    sprintf(buf, "qdd%d", i); recorder_.channel(QS + 3*i + 2, buf);
-  }
-  recorder_.init(node_);
-
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointTrajectoryControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointTrajectoryControllerState>
     (node_, "state", 1));
   controller_state_publisher_->lock();
   for (size_t j = 0; j < joints_.size(); ++j)
@@ -236,10 +248,13 @@ void JointSplineTrajectoryController::starting()
 {
   last_time_ = robot_->getTime();
 
+  for (size_t i = 0; i < pids_.size(); ++i)
+    pids_[i].reset();
+
   // Creates a "hold current position" trajectory.
   boost::shared_ptr<SpecifiedTrajectory> hold_ptr(new SpecifiedTrajectory(1));
   SpecifiedTrajectory &hold = *hold_ptr;
-  hold[0].start_time = last_time_.toSec();
+  hold[0].start_time = last_time_.toSec() - 0.001;
   hold[0].duration = 0.0;
   hold[0].splines.resize(joints_.size());
   for (size_t j = 0; j < joints_.size(); ++j)
@@ -277,7 +292,7 @@ void JointSplineTrajectoryController::update()
     if (traj.size() == 0)
       ROS_ERROR("No segments in the trajectory");
     else
-      ROS_ERROR("First segment starts at %.3lf (now = %.3lf)", traj[0].start_time, time.toSec());
+      ROS_ERROR("No earlier segments.  First segment starts at %.3lf (now = %.3lf)", traj[0].start_time, time.toSec());
     return;
   }
 
@@ -290,36 +305,12 @@ void JointSplineTrajectoryController::update()
                                q[i], qd[i], qdd[i]);
   }
 
-  for (size_t i = 0; i < q.size(); ++i)
-  {
-    recorder_.record(QS + 3*i + 0, q[i]);
-    recorder_.record(QS + 3*i + 1, qd[i]);
-    recorder_.record(QS + 3*i + 2, qdd[i]);
-  }
-
   // ------ Trajectory Following
 
   std::vector<double> error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    error[i] = 0.0;
-    switch (joints_[i]->joint_->type)
-    {
-    case urdf::Joint::REVOLUTE:
-      angles::shortest_angular_distance_with_limits(
-        q[i], joints_[i]->position_,
-        joints_[i]->joint_->limits->lower, joints_[i]->joint_->limits->upper, error[i]);
-      break;
-    case urdf::Joint::CONTINUOUS:
-      error[i] = angles::shortest_angular_distance(q[i], joints_[i]->position_);
-      break;
-    case urdf::Joint::PRISMATIC:
-      error[i] = joints_[i]->position_ - q[i];
-      break;
-    default:
-      ROS_FATAL("Joint type: %d", joints_[i]->joint_->type);
-    }
-
+    error[i] = joints_[i]->position_ - q[i];
     joints_[i]->commanded_effort_ += pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
   }
 
@@ -525,7 +516,10 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
       else
       {
         seg.splines[j].coef[0] = prev_positions[j];
-        seg.splines[j].coef[1] = (positions[j] - prev_positions[j]) / durations[i];
+        if (durations[i] == 0.0)
+          seg.splines[j].coef[1] = 0.0;
+        else
+          seg.splines[j].coef[1] = (positions[j] - prev_positions[j]) / durations[i];
         seg.splines[j].coef[2] = 0.0;
         seg.splines[j].coef[3] = 0.0;
         seg.splines[j].coef[4] = 0.0;
@@ -574,8 +568,8 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
 }
 
 bool JointSplineTrajectoryController::queryStateService(
-  robot_mechanism_controllers::QueryTrajectoryState::Request &req,
-  robot_mechanism_controllers::QueryTrajectoryState::Response &resp)
+  pr2_controllers_msgs::QueryTrajectoryState::Request &req,
+  pr2_controllers_msgs::QueryTrajectoryState::Response &resp)
 {
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
   current_trajectory_box_.get(traj_ptr);

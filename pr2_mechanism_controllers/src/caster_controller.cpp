@@ -73,55 +73,6 @@ bool CasterController::init(
   return true;
 }
 
-bool CasterController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  TiXmlElement *jel = config->FirstChildElement("joints");
-  if (!jel)
-  {
-    fprintf(stderr, "Error: CasterController could not find joints element\n");
-    return false;
-  }
-
-  const char *caster_joint = jel->Attribute("caster");
-  const char *wheel_l_joint = jel->Attribute("wheel_l");
-  const char *wheel_r_joint = jel->Attribute("wheel_r");
-  if (!caster_joint)
-  {
-    fprintf(stderr, "Error: CasterController was not given a caster joint\n");
-    return false;
-  }
-  if (!wheel_l_joint)
-  {
-    fprintf(stderr, "Error: CasterController was not given a wheel_l joint\n");
-    return false;
-  }
-  if (!wheel_r_joint)
-  {
-    fprintf(stderr, "Error: CasterController was not given a wheel_r joint\n");
-    return false;
-  }
-
-  control_toolbox::Pid caster_pid, wheel_pid;
-  TiXmlElement *cpel = config->FirstChildElement("caster_pid");
-  TiXmlElement *wpel = config->FirstChildElement("wheel_pid");
-  if (!cpel)
-  {
-    fprintf(stderr, "Error: CasterController was not given a caster_pid element\n");
-    return false;
-  }
-  if (!caster_pid.initXml(cpel))
-    return false;
-  if (!wpel)
-  {
-    fprintf(stderr, "Error: CasterController was not given a wheel_pid element\n");
-    return false;
-  }
-  if (!wheel_pid.initXml(wpel))
-    return false;
-
-  return init(robot, caster_joint, wheel_l_joint, wheel_r_joint, caster_pid, wheel_pid);
-}
-
 bool CasterController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   node_ = n;

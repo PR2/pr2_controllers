@@ -74,19 +74,11 @@ namespace controller
 
       bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 
-      /*!
-       * \brief Loads controller's information from the xml description file and param server
-       * @param robot_state The robot's current state
-       * @param config Tiny xml element pointing to this controller
-       * @return Successful init
-       */
-      bool initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config);
-
       /*
        * \brief callback function for setting the desired velocity using a topic
        * @param cmd_vel Velocity command of the base in m/s and rad/s
        */
-      void setCommand(geometry_msgs::Twist cmd_vel);
+      void setCommand(const geometry_msgs::Twist &cmd_vel);
 
       /*!
        * \brief Returns the current position command
@@ -125,7 +117,11 @@ namespace controller
 
       ros::NodeHandle node_;
 
+      ros::NodeHandle root_handle_;
+
       ros::Subscriber cmd_sub_;
+
+      ros::Subscriber cmd_sub_deprecated_;
 
       /*!
        * \brief timeout specifying time that the controller waits before setting the current velocity command to zero
@@ -174,39 +170,14 @@ namespace controller
       geometry_msgs::Twist max_accel_;
 
       /*!
-       * \brief gain specifying the amount of help given by the wheels to the caster steer degree of freedom
-       */
-      double kp_wheel_steer_;
-
-      /*!
-       * \brief the minimum speed that counts as being unstalled
-       */
-      double caster_speed_threshold_;
-
-      /*!
-       * \brief the minimum difference between desired and actual position that constitutes a stall
-       */
-      double caster_position_error_threshold_;
-
-      /*!
-       * \brief the minimum effort being applied to the castor that would allow for a stall (a motor with no torque being applied shouldn't be labeled as stalling)
-       */
-      double caster_effort_threshold_;
-
-      /*!
-       * \brief the minimum speed that counts as being unstalled
-       */
-      double wheel_speed_threshold_;
-
-      /*!
-       * \brief the minimum effort being applied to the castor that would allow for a stall (a motor with no torque being applied shouldn't be labeled as stalling)
-       */
-      double wheel_effort_threshold_;
-
-      /*!
        * \brief maximum translational velocity magnitude allowable
        */
-      double max_trans_vel_magnitude_;
+      double max_translational_velocity_;
+
+      /*!
+       * \brief maximum rotational velocity magnitude allowable
+       */
+      double max_rotational_velocity_;
 
       /*!
        * \brief local gain used for speed control of the caster (to achieve resultant position control)
@@ -234,14 +205,9 @@ namespace controller
       boost::scoped_ptr<realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState> > state_publisher_;
 
       /*!
-       * \brief Computes if there is a stall on the motors
-       */
-      void computeStall();
-
-      /*!
        * \brief computes the desired caster steers and wheel speeds
        */
-      void computeJointCommands();
+      void computeJointCommands(const double &dT);
 
       /*!
        * \brief tells the wheel and caster controllers to update their speeds
@@ -251,7 +217,7 @@ namespace controller
       /*!
        * \brief computes the desired caster speeds given the desired base speed
        */
-      void computeDesiredCasterSteer();
+      void computeDesiredCasterSteer(const double &dT);
 
       /*!
        * \brief computes the desired wheel speeds given the desired base speed
@@ -266,12 +232,12 @@ namespace controller
       /*!
        * \brief interpolates velocities within a given time based on maximum accelerations
        */
-      geometry_msgs::Twist interpolateCommand(geometry_msgs::Twist start, geometry_msgs::Twist end, geometry_msgs::Twist max_rate, double dT);
+      geometry_msgs::Twist interpolateCommand(const geometry_msgs::Twist &start, const geometry_msgs::Twist &end, const geometry_msgs::Twist &max_rate, const double &dT);
 
       /*!
-       * \brief deal with cmd_vel command from 2dnav stack
+       * \brief deal with Twist commands
        */
-      void CmdBaseVelReceived(const geometry_msgs::TwistConstPtr& msg);
+      void commandCallback(const geometry_msgs::TwistConstPtr& msg);
 
       /*!
        * \brief callback message, used to remember where the base is commanded to go
@@ -291,7 +257,7 @@ namespace controller
       /*!
        * \brief Time interval between state publishing
        */
-      double state_publish_time_;
+      double state_publish_time_,state_publish_rate_;
 
       /*!
        * \brief Time interval between state publishing
@@ -303,15 +269,18 @@ namespace controller
        */
       double cmd_vel_trans_eps_;
 
-      /*!
-       * \brief The name of the topic on which commands are sent to the base controller (default is "cmd_vel")
-       */
-      std::string cmd_topic_;
 
       /*!
        * \brief Publish the state
        */
-      void publishState(ros::Time current_time);
+      void publishState(const ros::Time &current_time);
+
+      bool publish_state_;
+
+      /*!
+       * \brief The pid controllers for caster position
+       */
+      std::vector<control_toolbox::Pid> caster_position_pid_;
 
   };
 

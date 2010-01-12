@@ -70,8 +70,11 @@ protected:
   enum { INITIALIZED, BEGINNING, MOVING, CALIBRATED };
   int state_;
 
-  double search_velocity_;
+  double search_velocity_, reference_position_;
   bool original_switch_state_;
+
+  ros::Time beginning_;
+  int unstick_iter_;
 
   pr2_hardware_interface::Actuator *actuator_;
   pr2_mechanism_model::JointState *joint_, *wheel_l_joint_, *wheel_r_joint_;

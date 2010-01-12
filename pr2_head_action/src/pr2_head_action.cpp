@@ -62,6 +62,7 @@ public:
     ros::NodeHandle pn("~");
     pn.param("pan_link", pan_link_, std::string("head_pan_link"));
     pn.param("tilt_link", tilt_link_, std::string("head_tilt_link"));
+    pn.param("success_angle_threshold", success_angle_threshold_, 0.1);
 
     // \todo Need to actually look these joints up
     pan_joint_ = "head_pan_joint";
@@ -80,20 +81,38 @@ public:
       node_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("query_state");
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &ControlHead::watchdog, this);
-
-    // Retrieves the name of pan_link's parent link
-    tf_.getParent(pan_link_, ros::Time(), pan_parent_);
   }
 
 
-  //void pointHeadCB(const geometry_msgs::PointStampedConstPtr &msg)
   void goalCB(GoalHandle gh)
   {
+    // Before we do anything, we need to know that name of the pan_link's parent.
+    if (pan_parent_.empty())
+    {
+      for (int i = 0; i < 10; ++i)
+      {
+        try {
+          tf_.getParent(pan_link_, ros::Time(), pan_parent_);
+          break;
+        }
+        catch (const tf::TransformException &ex) {}
+        ros::Duration(0.5).sleep();
+      }
+
+      if (pan_parent_.empty())
+      {
+        ROS_ERROR("Could not get parent of %s in the TF tree", pan_link_.c_str());
+        gh.setRejected();
+        return;
+      }
+    }
+
+
     std::vector<double> q_goal(2);  // [pan, tilt]
 
     // Transforms the target point into the pan and tilt links.
     const geometry_msgs::PointStamped &target = gh.getGoal()->target;
-    bool ret1, ret2;
+    bool ret1 = false, ret2 = false;
     try {
       ros::Time now = ros::Time::now();
       std::string error_msg;
@@ -199,6 +218,7 @@ private:
   GoalHandle active_goal_;
   tf::Stamped<tf::Point> target_in_pan_;
   std::string pan_parent_;
+  double success_angle_threshold_;
 
   void watchdog(const ros::TimerEvent &e)
   {
@@ -272,6 +292,12 @@ private:
       feedback.pointing_angle_error =
         (forward - origin).angle(target_in_pan_ - origin);
       active_goal_.publishFeedback(feedback);
+
+      if (feedback.pointing_angle_error < success_angle_threshold_)
+      {
+        active_goal_.setSucceeded();
+        has_active_goal_ = false;
+      }
     }
     catch(const tf::TransformException &ex)
     {

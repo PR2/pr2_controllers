@@ -50,6 +50,7 @@ JointPositionController::JointPositionController()
 
 JointPositionController::~JointPositionController()
 {
+  sub_command_.shutdown();
 }
 
 bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, const std::string &joint_name,
@@ -66,37 +67,15 @@ bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, const
               joint_name.c_str());
     return false;
   }
+  if (!joint_state_->calibrated_)
+  {
+    ROS_ERROR("Joint %s not calibrated for JointPositionController", joint_name.c_str());
+    return false;
+  }
 
   pid_controller_ = pid;
 
   return true;
-}
-
-bool JointPositionController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  initialized_ = false;
-  assert(robot);
-
-  TiXmlElement *j = config->FirstChildElement("joint");
-  if (!j)
-  {
-    ROS_ERROR("JointPositionController was not given a joint\n");
-    return false;
-  }
-
-  const char *jn = j->Attribute("name");
-  std::string joint_name = jn ? jn : "";
-
-  TiXmlElement *p = j->FirstChildElement("pid");
-  control_toolbox::Pid pid;
-  if (p)
-  {
-    pid.initXml(p);
-  }
-  else
-    ROS_ERROR("JointPositionController's config did not specify the default pid parameters.\n");
-
-  return init(robot, joint_name, pid);
 }
 
 bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
@@ -115,7 +94,7 @@ bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, ros::
     return false;
 
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointControllerState>
     (node_, "state", 1));
 
   sub_command_ = node_.subscribe<std_msgs::Float64>("command", 1, &JointPositionController::setCommandCB, this);
@@ -182,7 +161,8 @@ void JointPositionController::update()
     error = joint_state_->position_ - command_;
   }
 
-  joint_state_->commanded_effort_ = pid_controller_.updatePid(error, dt_);
+  double commanded_effort = pid_controller_.updatePid(error, dt_);
+  joint_state_->commanded_effort_ = commanded_effort;
   //joint_state_->commanded_effort_ = pid_controller_.updatePid(error, joint_state_->velocity_, dt_);
 
   if(loop_count_ % 10 == 0)
@@ -192,8 +172,10 @@ void JointPositionController::update()
       controller_state_publisher_->msg_.header.stamp = time;
       controller_state_publisher_->msg_.set_point = command_;
       controller_state_publisher_->msg_.process_value = joint_state_->position_;
+      controller_state_publisher_->msg_.process_value_dot = joint_state_->velocity_;
       controller_state_publisher_->msg_.error = error;
       controller_state_publisher_->msg_.time_step = dt_.toSec();
+      controller_state_publisher_->msg_.command = commanded_effort;
 
       double dummy;
       getGains(controller_state_publisher_->msg_.p,

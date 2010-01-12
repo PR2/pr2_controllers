@@ -43,16 +43,14 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <ros/node_handle.h>
 #include <control_toolbox/pid.h>
-#include <realtime_recorder/recorder.h>
 #include <pr2_controller_interface/controller.h>
-#include <realtime_infuser/realtime_infuser.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <realtime_tools/realtime_box.h>
 
 #include "trajectory_msgs/JointTrajectory.h"
 //#include "robot_mechanism_controllers/Trajectory.h"
-#include "robot_mechanism_controllers/QueryTrajectoryState.h"
-#include "robot_mechanism_controllers/JointTrajectoryControllerState.h"
+#include "pr2_controllers_msgs/QueryTrajectoryState.h"
+#include "pr2_controllers_msgs/JointTrajectoryControllerState.h"
 
 namespace controller {
 
@@ -80,13 +78,13 @@ private:
   void commandCB(const trajectory_msgs::JointTrajectoryConstPtr &msg);
   ros::Subscriber sub_command_;
 
-  bool queryStateService(robot_mechanism_controllers::QueryTrajectoryState::Request &req,
-                         robot_mechanism_controllers::QueryTrajectoryState::Response &resp);
+  bool queryStateService(pr2_controllers_msgs::QueryTrajectoryState::Request &req,
+                         pr2_controllers_msgs::QueryTrajectoryState::Response &resp);
   ros::ServiceServer serve_query_state_;
 
   boost::scoped_ptr<
     realtime_tools::RealtimePublisher<
-      robot_mechanism_controllers::JointTrajectoryControllerState> > controller_state_publisher_;
+      pr2_controllers_msgs::JointTrajectoryControllerState> > controller_state_publisher_;
 
 
   // ------ Mechanisms for passing the trajectory into realtime
@@ -117,9 +115,6 @@ private:
   //boost::recursive_mutex current_trajectory_lock_RT_;
 
   std::vector<double> q, qd, qdd;  // Preallocated in init
-
-  enum { QS };
-  realtime_tools::Recorder recorder_;
 
   // Samples, but handling time bounds.  When the time is past the end
   // of the spline duration, the position is the last valid position,

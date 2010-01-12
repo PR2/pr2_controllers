@@ -42,6 +42,8 @@ PLUGINLIB_REGISTER_CLASS(Pr2BaseController, controller::Pr2BaseController, pr2_c
 
 namespace controller {
 
+  const static double EPS = 1e-5;
+
 Pr2BaseController::Pr2BaseController()
 {
   //init variables
@@ -58,9 +60,6 @@ Pr2BaseController::Pr2BaseController()
   cmd_vel_t_.angular.z = 0;
 
   new_cmd_available_ = false;
-
-//  state_publisher_ = NULL;
-
   last_publish_time_ = ros::Time(0.0);
 
   pthread_mutex_init(&pr2_base_controller_lock_, NULL);
@@ -68,6 +67,8 @@ Pr2BaseController::Pr2BaseController()
 
 Pr2BaseController::~Pr2BaseController()
 {
+  cmd_sub_.shutdown();
+  cmd_sub_deprecated_.shutdown();
 }
 
 bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
@@ -75,58 +76,70 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   if(!base_kin_.init(robot,n))
     return false;
   node_ = n;
-//  if(state_publisher_ != NULL)// Make sure that we don't memory leak if initXml gets called twice
-//    delete state_publisher_;
   state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(n, base_kin_.name_ + "/state", 1));
-  state_publisher_->msg_.set_joint_name_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_stall_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_speed_error_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_speed_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_speed_filtered_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_commanded_effort_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
-  state_publisher_->msg_.set_joint_measured_effort_size(base_kin_.num_wheels_ + base_kin_.num_casters_);
 
-//    joy_sub_ = ros_node_.subscribe(joy_listen_topic, 1, &AntiCollisionBaseController::joyCallBack, this);
+  int num_joints = base_kin_.num_wheels_ + base_kin_.num_casters_;
+  state_publisher_->msg_.set_joint_names_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_measured_size(num_joints);
+  state_publisher_->msg_.set_joint_effort_measured_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_commanded_size(num_joints);
+  state_publisher_->msg_.set_joint_effort_commanded_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_error_size(num_joints);
+  state_publisher_->msg_.set_joint_effort_error_size(num_joints);
 
   //Get params from param server
-  node_.param<double> ("max_vel/vx", max_vel_.linear.x, .5);
-  node_.param<double> ("max_vel/vy", max_vel_.linear.y, .5);
-  node_.param<double> ("max_vel/omegaz", max_vel_.angular.z, 10.0); //0.5
-  node_.param<double> ("max_accel/ax", max_accel_.linear.x, .2);
-  node_.param<double> ("max_accel/ay", max_accel_.linear.y, .2);
-  node_.param<double> ("max_accel/alphaz", max_accel_.linear.z, 10.0); //0.2
-  node_.param<double> ("caster_speed_threshold", caster_speed_threshold_, 0.2);
-  node_.param<double> ("caster_position_error_threshold", caster_position_error_threshold_, 0.05);
-  node_.param<double> ("wheel_speed_threshold", wheel_speed_threshold_, 0.2);
-  node_.param<double> ("caster_effort_threshold", caster_effort_threshold_, 3.45);
-  node_.param<double> ("wheel_effort_threshold", wheel_effort_threshold_, 3.45);
-  node_.param<double> ("kp_wheel_steer_", kp_wheel_steer_, 2.0);
-  node_.param<double> ("alpha_stall", alpha_stall_, 0.5);
-  node_.param<double> ("kp_caster_steer_", kp_caster_steer_, 40.0);
-  node_.param<double> ("timeout", timeout_, 1.0);
-  node_.param<double> ("eps", eps_, 1e-5);
-  node_.param<double> ("cmd_vel_trans_eps", cmd_vel_trans_eps_, 1e-5);
-  node_.param<double> ("cmd_vel_rot_eps", cmd_vel_rot_eps_, 1e-5);
-  node_.param<double> ("state_publish_time", state_publish_time_, 0.5);
+  node_.param<double> ("max_translational_velocity", max_translational_velocity_,0.5);
+  node_.param<double> ("max_rotational_velocity", max_rotational_velocity_, 10.0); //0.5
+  node_.param<double> ("max_translational_acceleration/x", max_accel_.linear.x, .2);
+  node_.param<double> ("max_translational_acceleration/y", max_accel_.linear.y, .2);
+  node_.param<double> ("max_rotational_acceleration", max_accel_.angular.z, 10.0); //0.2
 
-  node_.param<std::string> ("cmd_topic", cmd_topic_, "/cmd_vel");
-  cmd_sub_ = node_.subscribe<geometry_msgs::Twist>(cmd_topic_, 1, &Pr2BaseController::CmdBaseVelReceived, this);
+  node_.param<double> ("kp_caster_steer", kp_caster_steer_, 80.0);
+  node_.param<double> ("timeout", timeout_, 1.0);
+  node_.param<double> ("state_publish_rate", state_publish_rate_,2.0);
+  if(state_publish_rate_ <= 0.0)
+  {
+    publish_state_ = false;
+    state_publish_time_ = 0.0;
+  }
+  else
+  {
+    publish_state_ = true;
+    state_publish_time_ = 1.0/state_publish_rate_;
+  }
+
+  cmd_sub_deprecated_ = root_handle_.subscribe<geometry_msgs::Twist>("cmd_vel", 1, &Pr2BaseController::commandCallback, this);
+  cmd_sub_ = node_.subscribe<geometry_msgs::Twist>("command", 1, &Pr2BaseController::commandCallback, this);
 
   //casters
   caster_controller_.resize(base_kin_.num_casters_);
+  caster_position_pid_.resize(base_kin_.num_casters_);
   for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     control_toolbox::Pid p_i_d;
-    state_publisher_->msg_.joint_name[i] = base_kin_.caster_[i].joint_name_;
-    if(!p_i_d.init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_)))
+    state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
+    if(!p_i_d.init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/velocity_controller")))
     {
       ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
+
+    if(!caster_position_pid_[i].init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/position_controller")))
+    {
+      ROS_ERROR("Could not initialize position pid controller for %s",base_kin_.caster_[i].joint_name_.c_str());
+      return false;
+    }
+
     caster_controller_[i].reset(new JointVelocityController());
     if(!caster_controller_[i]->init(base_kin_.robot_state_, base_kin_.caster_[i].joint_name_, p_i_d))
     {
       ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
+      return false;
+    }
+    if (!caster_controller_[i]->joint_state_->calibrated_)
+    {
+      ROS_ERROR("Caster joint \"%s\" not calibrated (namespace: %s)",
+                base_kin_.caster_[i].joint_name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
   }
@@ -135,7 +148,7 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   for(int j = 0; j < base_kin_.num_wheels_; j++)
   {
     control_toolbox::Pid p_i_d;
-    state_publisher_->msg_.joint_name[j + base_kin_.num_casters_] = base_kin_.wheel_[j].joint_name_;
+    state_publisher_->msg_.joint_names[j + base_kin_.num_casters_] = base_kin_.wheel_[j].joint_name_;
     if(!p_i_d.init(ros::NodeHandle(node_,base_kin_.wheel_[j].joint_name_)))
     {
       ROS_ERROR("Could not initialize pid for %s",base_kin_.wheel_[j].joint_name_.c_str());
@@ -148,7 +161,6 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
       return false;
    }
   }
-
   for(int i = 0; i < base_kin_.num_casters_; ++i)
   {
     if(!base_kin_.caster_[i].joint_->calibrated_)
@@ -161,19 +173,12 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   return true;
 }
 
-bool Pr2BaseController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-//  base_kin_.initXml(robot, config);
-  ros::NodeHandle n(config->Attribute("name"));
-  return init(robot, n);
-}
-
 // Set the base velocity command
-void Pr2BaseController::setCommand(geometry_msgs::Twist cmd_vel)
+void Pr2BaseController::setCommand(const geometry_msgs::Twist &cmd_vel)
 {
   double vel_mag = sqrt(cmd_vel.linear.x * cmd_vel.linear.x + cmd_vel.linear.y * cmd_vel.linear.y);
-  double clamped_vel_mag = filters::clamp(vel_mag, -(max_vel_.linear.x + max_vel_.linear.y) / 2.0, (max_vel_.linear.x + max_vel_.linear.y) / 2.0);
-  if(vel_mag > eps_)
+  double clamped_vel_mag = filters::clamp(vel_mag,-max_translational_velocity_, max_translational_velocity_);
+  if(vel_mag > EPS)
   {
     cmd_vel_t_.linear.x = cmd_vel.linear.x * clamped_vel_mag / vel_mag;
     cmd_vel_t_.linear.y = cmd_vel.linear.y * clamped_vel_mag / vel_mag;
@@ -183,7 +188,7 @@ void Pr2BaseController::setCommand(geometry_msgs::Twist cmd_vel)
     cmd_vel_t_.linear.x = 0.0;
     cmd_vel_t_.linear.y = 0.0;
   }
-  cmd_vel_t_.angular.z = filters::clamp(cmd_vel.angular.z, -max_vel_.angular.z, max_vel_.angular.z);
+  cmd_vel_t_.angular.z = filters::clamp(cmd_vel.angular.z, -max_rotational_velocity_, max_rotational_velocity_);
   cmd_received_timestamp_ = base_kin_.robot_state_->getTime();
 
   ROS_DEBUG("BaseController:: command received: %f %f %f",cmd_vel.linear.x,cmd_vel.linear.y,cmd_vel.angular.z);
@@ -202,7 +207,7 @@ void Pr2BaseController::setCommand(geometry_msgs::Twist cmd_vel)
   new_cmd_available_ = true;
 }
 
-geometry_msgs::Twist Pr2BaseController::interpolateCommand(geometry_msgs::Twist start, geometry_msgs::Twist end, geometry_msgs::Twist max_rate, double dT)
+geometry_msgs::Twist Pr2BaseController::interpolateCommand(const geometry_msgs::Twist &start, const geometry_msgs::Twist &end, const geometry_msgs::Twist &max_rate, const double &dT)
 {
   geometry_msgs::Twist result;
   geometry_msgs::Twist alpha;
@@ -210,21 +215,21 @@ geometry_msgs::Twist Pr2BaseController::interpolateCommand(geometry_msgs::Twist 
 
   delta = end.linear.x - start.linear.x;
   max_delta = max_rate.linear.x * dT;
-  if(fabs(delta) <= max_delta || max_delta < eps_)
+  if(fabs(delta) <= max_delta || max_delta < EPS)
     alpha.linear.x = 1;
   else
     alpha.linear.x = max_delta / fabs(delta);
 
   delta = end.linear.y - start.linear.y;
   max_delta = max_rate.linear.y * dT;
-  if(fabs(delta) <= max_delta || max_delta < eps_)
+  if(fabs(delta) <= max_delta || max_delta < EPS)
     alpha.linear.y = 1;
   else
     alpha.linear.y = max_delta / fabs(delta);
 
   delta = end.angular.z - start.angular.z;
   max_delta = max_rate.angular.z * dT;
-  if(fabs(delta) <= max_delta || max_delta < eps_)
+  if(fabs(delta) <= max_delta || max_delta < EPS)
     alpha.angular.z = 1;
   else
     alpha.angular.z = max_delta / fabs(delta);
@@ -268,7 +273,6 @@ void Pr2BaseController::starting()
 
 void Pr2BaseController::update()
 {
-
   ros::Time current_time = base_kin_.robot_state_->getTime();
   double dT = std::min<double>((current_time - last_time_).toSec(), base_kin_.MAX_DT_);
 
@@ -293,61 +297,64 @@ void Pr2BaseController::update()
   else
     cmd_vel_ = interpolateCommand(cmd_vel_, desired_vel_, max_accel_, dT);
 
-  computeJointCommands();
+  computeJointCommands(dT);
 
   setJointCommands();
 
   updateJointControllers();
 
-  computeStall();
-
-  publishState(current_time);
+  if(publish_state_)
+    publishState(current_time);
 
   last_time_ = current_time;
 
 }
 
-void Pr2BaseController::publishState(ros::Time time)
+void Pr2BaseController::publishState(const ros::Time &time)
 {
-
   if((time - last_publish_time_).toSec()  < state_publish_time_)
   {
     return;
   }
+
   if(state_publisher_->trylock())
   {
-    state_publisher_->msg_.command_vx = cmd_vel_.linear.x;
-    state_publisher_->msg_.command_vy = cmd_vel_.linear.y;
-    state_publisher_->msg_.command_vw = cmd_vel_.angular.z;
+    state_publisher_->msg_.command.linear.x  = cmd_vel_.linear.x;
+    state_publisher_->msg_.command.linear.y  = cmd_vel_.linear.y;
+    state_publisher_->msg_.command.angular.z = cmd_vel_.angular.z;
+
     for(int i = 0; i < base_kin_.num_casters_; i++)
     {
-      state_publisher_->msg_.joint_speed[i] = base_kin_.caster_[i].caster_speed_;
-      state_publisher_->msg_.joint_speed_filtered[i] = base_kin_.caster_[i].caster_speed_filtered_;
-      state_publisher_->msg_.joint_speed_error[i] = base_kin_.caster_[i].caster_speed_error_;
-      state_publisher_->msg_.joint_stall[i] = base_kin_.caster_[i].caster_stuck_;
-      state_publisher_->msg_.joint_commanded_effort[i] = base_kin_.caster_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_measured_effort[i] = base_kin_.caster_[i].joint_->measured_effort_;
+      state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
+      state_publisher_->msg_.joint_velocity_measured[i] = base_kin_.caster_[i].caster_speed_;
+      state_publisher_->msg_.joint_velocity_commanded[i]= base_kin_.caster_[i].caster_speed_error_;
+      state_publisher_->msg_.joint_velocity_error[i]    = base_kin_.caster_[i].steer_velocity_desired_;
+
+      state_publisher_->msg_.joint_effort_measured[i]  = base_kin_.caster_[i].joint_->measured_effort_;
+      state_publisher_->msg_.joint_effort_commanded[i] = base_kin_.caster_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_error[i]     = base_kin_.caster_[i].joint_->measured_effort_ - base_kin_.caster_[i].joint_->commanded_effort_;
     }
     for(int i = 0; i < base_kin_.num_wheels_; i++)
     {
-      state_publisher_->msg_.joint_speed[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_actual_;
-      state_publisher_->msg_.joint_speed_filtered[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_filtered_;
-      state_publisher_->msg_.joint_speed_error[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_error_;
-      state_publisher_->msg_.joint_stall[i + base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_stuck_;
-      state_publisher_->msg_.joint_commanded_effort[i + base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_measured_effort[i + base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->measured_effort_;
-    }
+      state_publisher_->msg_.joint_names[i+base_kin_.num_casters_] = base_kin_.wheel_[i].joint_name_;
+      state_publisher_->msg_.joint_velocity_measured[i+base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_actual_;
+      state_publisher_->msg_.joint_velocity_commanded[i+base_kin_.num_casters_]= base_kin_.wheel_[i].wheel_speed_error_;
+      state_publisher_->msg_.joint_velocity_error[i+base_kin_.num_casters_]    = base_kin_.wheel_[i].wheel_speed_cmd_;
 
+      state_publisher_->msg_.joint_effort_measured[i+base_kin_.num_casters_]  = base_kin_.wheel_[i].joint_->measured_effort_;
+      state_publisher_->msg_.joint_effort_commanded[i+base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_error[i+base_kin_.num_casters_]     = base_kin_.wheel_[i].joint_->measured_effort_ - base_kin_.wheel_[i].joint_->commanded_effort_;
+    }
     state_publisher_->unlockAndPublish();
     last_publish_time_ = time;
   }
 }
 
-void Pr2BaseController::computeJointCommands()
+void Pr2BaseController::computeJointCommands(const double &dT)
 {
   base_kin_.computeWheelPositions();
 
-  computeDesiredCasterSteer();
+  computeDesiredCasterSteer(dT);
 
   computeDesiredWheelSpeeds();
 }
@@ -359,7 +366,7 @@ void Pr2BaseController::setJointCommands()
   setDesiredWheelSpeeds();
 }
 
-void Pr2BaseController::computeDesiredCasterSteer()
+void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
 {
   geometry_msgs::Twist result;
 
@@ -369,7 +376,7 @@ void Pr2BaseController::computeDesiredCasterSteer()
   for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     result = base_kin_.pointVel2D(base_kin_.caster_[i].offset_, cmd_vel_);
-    if(trans_vel < cmd_vel_trans_eps_ && fabs(cmd_vel_.angular.z) < cmd_vel_rot_eps_)
+    if(trans_vel < EPS && fabs(cmd_vel_.angular.z) < EPS)
     {
       steer_angle_desired = base_kin_.caster_[i].steer_angle_stored_;
     }
@@ -387,7 +394,8 @@ void Pr2BaseController::computeDesiredCasterSteer()
       error_steer = error_steer_m_pi;
       steer_angle_desired = steer_angle_desired_m_pi;
     }
-    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
+    //    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
+    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,ros::Duration(dT));
     base_kin_.caster_[i].caster_position_error_ = error_steer;
   }
 }
@@ -415,7 +423,7 @@ void Pr2BaseController::computeDesiredWheelSpeeds()
   for(int i = 0; i < (int) base_kin_.num_wheels_; i++)
   {
     base_kin_.wheel_[i].updatePosition();
-    caster_2d_velocity.angular.z = kp_wheel_steer_ * base_kin_.wheel_[i].parent_->steer_velocity_desired_;
+    caster_2d_velocity.angular.z = base_kin_.wheel_[i].parent_->steer_velocity_desired_;
     steer_angle_actual = base_kin_.wheel_[i].parent_->joint_->position_;
     wheel_point_velocity = base_kin_.pointVel2D(base_kin_.wheel_[i].position_, cmd_vel_);
     wheel_caster_steer_component = base_kin_.pointVel2D(base_kin_.wheel_[i].offset_, caster_2d_velocity);
@@ -425,7 +433,7 @@ void Pr2BaseController::computeDesiredWheelSpeeds()
 
     wheel_point_velocity_projected.linear.x = costh * wheel_point_velocity.linear.x - sinth * wheel_point_velocity.linear.y;
     wheel_point_velocity_projected.linear.y = sinth * wheel_point_velocity.linear.x + costh * wheel_point_velocity.linear.y;
-    base_kin_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x + wheel_caster_steer_component.linear.x) / (base_kin_.wheel_radius_ * base_kin_.wheel_[i].wheel_radius_scaler_);
+    base_kin_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x + wheel_caster_steer_component.linear.x) / (base_kin_.wheel_[i].wheel_radius_);
   }
 }
 
@@ -445,41 +453,7 @@ void Pr2BaseController::updateJointControllers()
     caster_controller_[i]->update();
 }
 
-void Pr2BaseController::computeStall()
-{
-
-  for(int i = 0; i < base_kin_.num_casters_; i++)
-  {
-    base_kin_.caster_[i].caster_speed_error_ = fabs(base_kin_.caster_[i].joint_->velocity_ - base_kin_.caster_[i].steer_velocity_desired_);
-    base_kin_.caster_[i].caster_speed_filtered_ = alpha_stall_ * base_kin_.caster_[i].caster_speed_filtered_ + (1 - alpha_stall_) * base_kin_.caster_[i].joint_->velocity_;//low pass filter
-    base_kin_.caster_[i].caster_speed_ = base_kin_.caster_[i].joint_->velocity_;
-
-    if(fabs(base_kin_.caster_[i].caster_speed_) < caster_speed_threshold_ && fabs(base_kin_.caster_[i].caster_position_error_) > caster_position_error_threshold_ && fabs(base_kin_.caster_[i].joint_->measured_effort_) > caster_effort_threshold_)
-    {
-      base_kin_.caster_[i].caster_stuck_ = 1;
-    }
-    else
-    {
-      base_kin_.caster_[i].caster_stuck_ = 0;
-    }
-  }
-
-  for(int j = 0; j < base_kin_.num_wheels_; j++)
-  {
-    base_kin_.wheel_[j].wheel_speed_error_ = fabs(base_kin_.wheel_[j].joint_->velocity_ - base_kin_.wheel_[j].wheel_speed_cmd_);
-    base_kin_.wheel_[j].wheel_speed_filtered_ = alpha_stall_ * base_kin_.wheel_[j].wheel_speed_filtered_ + (1 - alpha_stall_) * base_kin_.wheel_[j].wheel_speed_actual_;
-    if(fabs(base_kin_.wheel_[j].wheel_speed_filtered_) < wheel_speed_threshold_ && fabs(base_kin_.wheel_[j].joint_->measured_effort_) > wheel_effort_threshold_)
-    {
-      base_kin_.wheel_[j].wheel_stuck_ = 1;
-    }
-    else
-    {
-      base_kin_.wheel_[j].wheel_stuck_ = 0;
-    }
-  }
-}
-
-void Pr2BaseController::CmdBaseVelReceived(const geometry_msgs::TwistConstPtr& msg)
+void Pr2BaseController::commandCallback(const geometry_msgs::TwistConstPtr& msg)
 {
   pthread_mutex_lock(&pr2_base_controller_lock_);
   base_vel_msg_ = *msg;

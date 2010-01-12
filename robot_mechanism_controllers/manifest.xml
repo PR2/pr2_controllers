@@ -18,17 +18,17 @@
   <depend package="diagnostic_msgs" />
   <depend package="trajectory_msgs" />
 
+  <depend package="pr2_controllers_msgs" />
   <depend package="pr2_controller_interface" />
   <depend package="pr2_controller_manager" />
   <depend package="kdl_parser"/>
   <depend package="pr2_mechanism_model" />
   <depend package="control_toolbox" />
   <depend package="realtime_tools" />
-  <depend package="realtime_infuser" />
-  <depend package="realtime_recorder" />
-
-  <url>http://pr.willowgarage.com</url>
-  <repository>http://pr.willowgarage.com/repos</repository>
+  <depend package="message_filters" />
+  
+  
+  <url>http://ros.org/wiki/robot_mechanism_controllers</url>
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
 	 lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lrobot_mechanism_controllers" />

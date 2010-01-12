@@ -32,7 +32,7 @@
 #include "ros/ros.h"
 
 #include <actionlib/server/action_server.h>
-#include <robot_mechanism_controllers/JointControllerState.h>
+#include <pr2_controllers_msgs/JointControllerState.h>
 #include <pr2_controllers_msgs/Pr2GripperCommand.h>
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 
@@ -159,8 +159,8 @@ private:
 
 
 
-  robot_mechanism_controllers::JointControllerStateConstPtr last_controller_state_;
-  void controllerStateCB(const robot_mechanism_controllers::JointControllerStateConstPtr &msg)
+  pr2_controllers_msgs::JointControllerStateConstPtr last_controller_state_;
+  void controllerStateCB(const pr2_controllers_msgs::JointControllerStateConstPtr &msg)
   {
     last_controller_state_ = msg;
     ros::Time now = ros::Time::now();
@@ -177,8 +177,8 @@ private:
       }
       else
       {
-        ROS_ERROR("Aborting: Controller is trying to achieve a different setpoint.");
-        active_goal_.setAborted();
+        ROS_ERROR("Cancelling goal: Controller is trying to achieve a different setpoint.");
+        active_goal_.setCanceled();
         has_active_goal_ = false;
       }
     }
@@ -190,9 +190,19 @@ private:
     feedback.reached_goal = false;
     feedback.stalled = false;
 
+    pr2_controllers_msgs::Pr2GripperCommandResult result;
+    result.position = msg->process_value;
+    result.effort = msg->command;
+    result.reached_goal = false;
+    result.stalled = false;
+
     if (fabs(msg->process_value - active_goal_.getGoal()->command.position) < goal_threshold_)
     {
       feedback.reached_goal = true;
+
+      result.reached_goal = true;
+      active_goal_.setSucceeded(result);
+      has_active_goal_ = false;
     }
     else
     {
@@ -205,6 +215,10 @@ private:
                active_goal_.getGoal()->command.max_effort != 0.0)
       {
         feedback.stalled = true;
+
+        result.stalled = true;
+        active_goal_.setAborted(result);
+        has_active_goal_ = false;
       }
     }
     active_goal_.publishFeedback(feedback);

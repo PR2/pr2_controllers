@@ -71,33 +71,6 @@ bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, const
   return true;
 }
 
-bool JointVelocityController::initXml(pr2_mechanism_model::RobotState *robot, TiXmlElement *config)
-{
-  assert(robot);
-  robot_ = robot;
-
-  TiXmlElement *j = config->FirstChildElement("joint");
-  if (!j)
-  {
-    ROS_ERROR("JointVelocityController was not given a joint\n");
-    return false;
-  }
-
-  const char *jn = j->Attribute("name");
-  std::string joint_name = jn ? jn : "";
-
-  TiXmlElement *p = j->FirstChildElement("pid");
-  control_toolbox::Pid pid;
-  if (p)
-  {
-    pid.initXml(p);
-  }
-  else
-    ROS_ERROR("JointVelocityController's config did not specify the default pid parameters.\n");
-
-  return init(robot, joint_name, pid);
-}
-
 bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
   assert(robot);
@@ -120,7 +93,7 @@ bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, ros::
     return false;
 
   controller_state_publisher_.reset(
-    new realtime_tools::RealtimePublisher<robot_mechanism_controllers::JointControllerState>
+    new realtime_tools::RealtimePublisher<pr2_controllers_msgs::JointControllerState>
     (node_, "state", 1));
 
   sub_command_ = node_.subscribe<std_msgs::Float64>("command", 1, &JointVelocityController::setCommandCB, this);
@@ -164,7 +137,8 @@ void JointVelocityController::update()
 
   double error = joint_state_->velocity_ - command_;
   dt_ = time - last_time_;
-  joint_state_->commanded_effort_ += pid_controller_.updatePid(error, dt_);
+  double command = pid_controller_.updatePid(error, dt_);
+  joint_state_->commanded_effort_ += command;
 
   if(loop_count_ % 10 == 0)
   {
@@ -175,6 +149,7 @@ void JointVelocityController::update()
       controller_state_publisher_->msg_.process_value = joint_state_->velocity_;
       controller_state_publisher_->msg_.error = error;
       controller_state_publisher_->msg_.time_step = dt_.toSec();
+      controller_state_publisher_->msg_.command = command;
 
       double dummy;
       getGains(controller_state_publisher_->msg_.p,

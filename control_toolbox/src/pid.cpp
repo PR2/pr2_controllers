@@ -142,45 +142,40 @@ double Pid::updatePid(double error, ros::Duration dt)
   double p_term, d_term, i_term;
   p_error_ = error; //this is pError = pState-pTarget
 
-  /*
-  if (dt == 0)
+  if (dt == ros::Duration(0.0) || isnan(error) || isinf(error))
+    return 0.0;
+
+  // Calculate proportional contribution to command
+  p_term = p_gain_ * p_error_;
+
+  // Calculate the integral error
+  i_error_ = i_error_ + dt.toSec() * p_error_;
+
+  //Calculate integral contribution to command
+  i_term = i_gain_ * i_error_;
+
+  // Limit i_term so that the limit is meaningful in the output
+  if (i_term > i_max_)
   {
-    throw "dividebyzero"; //TODO: not sure how to deal with this
+    i_term = i_max_;
+    i_error_=i_term/i_gain_;
   }
-  else
-  */
+  else if (i_term < i_min_)
   {
-    // Calculate proportional contribution to command
-    p_term = p_gain_ * p_error_;
-
-    // Calculate the integral error
-    i_error_ = i_error_ + dt.toSec() * p_error_;
-
-    //Calculate integral contribution to command
-    i_term = i_gain_ * i_error_;
-
-    // Limit i_term so that the limit is meaningful in the output
-    if (i_term > i_max_)
-    {
-      i_term = i_max_;
-      i_error_=i_term/i_gain_;
-    }
-    else if (i_term < i_min_)
-    {
-      i_term = i_min_;
-      i_error_=i_term/i_gain_;
-    }
-
-    // Calculate the derivative error
-    if (dt.toSec() != 0)
-    {
-      d_error_ = (p_error_ - p_error_last_) / dt.toSec();
-      p_error_last_ = p_error_;
-    }
-    // Calculate derivative contribution to command
-    d_term = d_gain_ * d_error_;
-    cmd_ = -p_term - i_term - d_term;
+    i_term = i_min_;
+    i_error_=i_term/i_gain_;
   }
+
+  // Calculate the derivative error
+  if (dt.toSec() != 0)
+  {
+    d_error_ = (p_error_ - p_error_last_) / dt.toSec();
+    p_error_last_ = p_error_;
+  }
+  // Calculate derivative contribution to command
+  d_term = d_gain_ * d_error_;
+  cmd_ = -p_term - i_term - d_term;
+
   return cmd_;
 }
 
@@ -190,39 +185,36 @@ double Pid::updatePid(double error, double error_dot, ros::Duration dt)
   double p_term, d_term, i_term;
   p_error_ = error; //this is pError = pState-pTarget
   d_error_ = error_dot;
-  /*
-  if (dt == 0)
+
+  if (dt == ros::Duration(0.0) || isnan(error) || isinf(error) || isnan(error_dot) || isinf(error_dot))
+    return 0.0;
+
+
+  // Calculate proportional contribution to command
+  p_term = p_gain_ * p_error_;
+
+  // Calculate the integral error
+  i_error_ = i_error_ + dt.toSec() * p_error_;
+
+  //Calculate integral contribution to command
+  i_term = i_gain_ * i_error_;
+
+  // Limit i_term so that the limit is meaningful in the output
+  if (i_term > i_max_)
   {
-    throw "dividebyzero"; //TODO: not sure how to deal with this
+    i_term = i_max_;
+    i_error_=i_term/i_gain_;
   }
-  else
-  */
+  else if (i_term < i_min_)
   {
-    // Calculate proportional contribution to command
-    p_term = p_gain_ * p_error_;
-
-    // Calculate the integral error
-    i_error_ = i_error_ + dt.toSec() * p_error_;
-
-    //Calculate integral contribution to command
-    i_term = i_gain_ * i_error_;
-
-    // Limit i_term so that the limit is meaningful in the output
-    if (i_term > i_max_)
-    {
-      i_term = i_max_;
-      i_error_=i_term/i_gain_;
-    }
-    else if (i_term < i_min_)
-    {
-      i_term = i_min_;
-      i_error_=i_term/i_gain_;
-    }
-
-    // Calculate derivative contribution to command
-    d_term = d_gain_ * d_error_;
-    cmd_ = -p_term - i_term - d_term;
+    i_term = i_min_;
+    i_error_=i_term/i_gain_;
   }
+
+  // Calculate derivative contribution to command
+  d_term = d_gain_ * d_error_;
+  cmd_ = -p_term - i_term - d_term;
+
   return cmd_;
 }
 

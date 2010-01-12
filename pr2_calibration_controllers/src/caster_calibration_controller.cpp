@@ -53,12 +53,6 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
   node_ = n;
   robot_ = robot;
 
-  if (!node_.getParam("velocity", search_velocity_))
-  {
-    ROS_ERROR("No velocity given (namespace: %s)", node_.getNamespace().c_str());
-    return false;
-  }
-
   // Joints
 
   std::string joint_name;
@@ -78,6 +72,38 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
     ROS_ERROR("No calibration reference position specified for joint %s (namespace: %s)",
               joint_name.c_str(), node_.getNamespace().c_str());
     return false;
+  }
+  if (!node_.getParam("velocity", search_velocity_))
+  {
+    ROS_ERROR("No velocity given (namespace: %s)", node_.getNamespace().c_str());
+    return false;
+  }
+
+  // deprecated: support for old case without rising or falling edge
+  if (!joint_->joint_->calibration->falling && !joint_->joint_->calibration->rising){
+    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", joint_name.c_str());
+    reference_position_ = joint_->joint_->calibration->reference_position;
+  }
+
+  // new: rising or falling edge
+  else{
+    if (search_velocity_ < 0){
+      search_velocity_ *= -1;
+      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->falling){
+      reference_position_ = *(joint_->joint_->calibration->falling);
+      search_velocity_ *= -1.0;
+      ROS_DEBUG("Using negative search velocity for joint %s", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->rising){
+      reference_position_ = *(joint_->joint_->calibration->rising);
+      ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
+    }
+    if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
+      ROS_ERROR("Both rising and falling edge are specified for joint %s", joint_name.c_str());
+      return false;
+    }
   }
 
   if (!node_.getParam("joints/wheel_l", joint_name))
@@ -153,6 +179,7 @@ void CasterCalibrationController::update()
 {
   assert(joint_);
   assert(actuator_);
+  ros::Time time = robot_->getTime();
 
   switch(state_)
   {
@@ -162,6 +189,7 @@ void CasterCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
+    beginning_ = time;
     original_switch_state_ = actuator_->state_.calibration_reading_ & 1;
     cc_.steer_velocity_ = (original_switch_state_ ? -search_velocity_ : search_velocity_);
     state_ = MOVING;
@@ -185,7 +213,7 @@ void CasterCalibrationController::update()
       transmission_->propagatePosition(fake_a, fake_j);
 
       // What is the actuator position at the joint's zero?
-      fake_j[0]->position_ = fake_j[0]->position_ - joint_->joint_->calibration->reference_position;
+      fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
       transmission_->propagatePositionBackwards(fake_j, fake_a);
 
       actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;
@@ -194,6 +222,22 @@ void CasterCalibrationController::update()
       wheel_r_joint_->calibrated_ = true;
 
       state_ = CALIBRATED;
+    }
+    else
+    {
+      // The caster is not strong enough to consistently move.  The
+      // rest of this block contains the hacks to ensure that
+      // calibration always completes.
+      if (time > beginning_ + ros::Duration(6.0))
+      {
+        if ((unstick_iter_ / 1000) % 2 == 0)
+          cc_.steer_velocity_ = 4.0 * (original_switch_state_ ? -search_velocity_ : search_velocity_);
+        else
+          cc_.steer_velocity_ = 0.0;
+        ++unstick_iter_;
+      }
+      else
+        unstick_iter_ = 0;
     }
     break;
   }

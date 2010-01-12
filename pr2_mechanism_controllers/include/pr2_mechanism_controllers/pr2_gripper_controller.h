@@ -53,7 +53,7 @@
 
    Publishes:
 
-   - @b state (robot_mechanism_controllers::JointControllerState) :
+   - @b state (pr2_controllers_msgs::JointControllerState) :
      Current state of the controller, including pid error and gains.
 
 */
@@ -68,7 +68,7 @@
 #include <realtime_tools/realtime_publisher.h>
 #include <std_msgs/Float64.h>
 
-#include <robot_mechanism_controllers/JointControllerState.h>
+#include <pr2_controllers_msgs/JointControllerState.h>
 #include <pr2_controllers_msgs/Pr2GripperCommand.h>
 
 namespace controller
@@ -109,7 +109,7 @@ private:
 
   boost::scoped_ptr<
     realtime_tools::RealtimePublisher<
-      robot_mechanism_controllers::JointControllerState> > controller_state_publisher_ ;
+      pr2_controllers_msgs::JointControllerState> > controller_state_publisher_ ;
 
   ros::Subscriber sub_command_;
   void commandCB(const pr2_controllers_msgs::Pr2GripperCommandConstPtr& msg);
