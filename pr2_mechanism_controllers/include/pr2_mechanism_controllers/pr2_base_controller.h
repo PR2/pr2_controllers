@@ -207,7 +207,7 @@ namespace controller
       /*!
        * \brief computes the desired caster steers and wheel speeds
        */
-      void computeJointCommands();
+      void computeJointCommands(const double &dT);
 
       /*!
        * \brief tells the wheel and caster controllers to update their speeds
@@ -217,7 +217,7 @@ namespace controller
       /*!
        * \brief computes the desired caster speeds given the desired base speed
        */
-      void computeDesiredCasterSteer();
+      void computeDesiredCasterSteer(const double &dT);
 
       /*!
        * \brief computes the desired wheel speeds given the desired base speed
@@ -276,6 +276,11 @@ namespace controller
       void publishState(const ros::Time &current_time);
 
       bool publish_state_;
+
+      /*!
+       * \brief The pid controllers for caster position
+       */
+      std::vector<control_toolbox::Pid> caster_position_pid_;
 
   };
 

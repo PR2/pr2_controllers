@@ -111,18 +111,25 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   cmd_sub_deprecated_ = root_handle_.subscribe<geometry_msgs::Twist>("cmd_vel", 1, &Pr2BaseController::commandCallback, this);
   cmd_sub_ = node_.subscribe<geometry_msgs::Twist>("command", 1, &Pr2BaseController::commandCallback, this);
 
-
   //casters
   caster_controller_.resize(base_kin_.num_casters_);
+  caster_position_pid_.resize(base_kin_.num_casters_);
   for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     control_toolbox::Pid p_i_d;
     state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
-    if(!p_i_d.init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_)))
+    if(!p_i_d.init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/velocity_controller")))
     {
       ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
+
+    if(!caster_position_pid_[i].init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/position_controller")))
+    {
+      ROS_ERROR("Could not initialize position pid controller for %s",base_kin_.caster_[i].joint_name_.c_str());
+      return false;
+    }
+
     caster_controller_[i].reset(new JointVelocityController());
     if(!caster_controller_[i]->init(base_kin_.robot_state_, base_kin_.caster_[i].joint_name_, p_i_d))
     {
@@ -290,7 +297,7 @@ void Pr2BaseController::update()
   else
     cmd_vel_ = interpolateCommand(cmd_vel_, desired_vel_, max_accel_, dT);
 
-  computeJointCommands();
+  computeJointCommands(dT);
 
   setJointCommands();
 
@@ -343,11 +350,11 @@ void Pr2BaseController::publishState(const ros::Time &time)
   }
 }
 
-void Pr2BaseController::computeJointCommands()
+void Pr2BaseController::computeJointCommands(const double &dT)
 {
   base_kin_.computeWheelPositions();
 
-  computeDesiredCasterSteer();
+  computeDesiredCasterSteer(dT);
 
   computeDesiredWheelSpeeds();
 }
@@ -359,7 +366,7 @@ void Pr2BaseController::setJointCommands()
   setDesiredWheelSpeeds();
 }
 
-void Pr2BaseController::computeDesiredCasterSteer()
+void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
 {
   geometry_msgs::Twist result;
 
@@ -387,7 +394,8 @@ void Pr2BaseController::computeDesiredCasterSteer()
       error_steer = error_steer_m_pi;
       steer_angle_desired = steer_angle_desired_m_pi;
     }
-    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
+    //    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
+    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,ros::Duration(dT));
     base_kin_.caster_[i].caster_position_error_ = error_steer;
   }
 }
