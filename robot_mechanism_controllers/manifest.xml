@@ -5,6 +5,7 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
 
+  <depend package="message_notifier"/>
   <depend package="rospy"/>
   <depend package="roscpp" />
   <depend package="angles" />
