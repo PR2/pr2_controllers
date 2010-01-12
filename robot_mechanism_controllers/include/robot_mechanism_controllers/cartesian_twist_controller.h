@@ -59,16 +59,21 @@
 #define CARTESIAN_TWIST_CONTROLLER_H
 
 #include <vector>
-#include <kdl/chain.hpp>
-#include <kdl/chainfksolver.hpp>
-#include <kdl/frames.hpp>
+#include <boost/scoped_ptr.hpp>
+
 #include <ros/node_handle.h>
 #include <geometry_msgs/Twist.h>
-#include <pr2_controller_interface/controller.h>
-#include <tf/transform_datatypes.h>
-#include <robot_mechanism_controllers/cartesian_wrench_controller.h>
+
 #include <control_toolbox/pid.h>
-#include <boost/scoped_ptr.hpp>
+#include <kdl/chainfksolver.hpp>
+#include <kdl/chain.hpp>
+#include <kdl/chainjnttojacsolver.hpp>
+#include <kdl/frames.hpp>
+#include <pr2_controller_interface/controller.h>
+#include <pr2_mechanism_model/chain.h>
+#include <realtime_tools/realtime_publisher.h>
+#include <tf/transform_datatypes.h>
+
 
 namespace controller {
 

@@ -1,7 +1,8 @@
 <package>
   <description brief="Controllers for triggering from the realtime loop">
     Controllers to operate the digital output of the motor controller
-    boards and the projector board.
+    boards and the projector board. This package has not been reviewed and
+    should be considered unstable.
   </description>
   <author>Blaise Gassend</author>
   <license>BSD</license>
