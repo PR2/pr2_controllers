@@ -108,7 +108,7 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
     state_publish_time_ = 1.0/state_publish_rate_;
   }
 
-  cmd_sub_deprecated_ = root_handle_.subscribe<geometry_msgs::Twist>("cmd_vel", 1, &Pr2BaseController::commandCallback, this);
+  //  cmd_sub_deprecated_ = root_handle_.subscribe<geometry_msgs::Twist>("cmd_vel", 1, &Pr2BaseController::commandCallback, this);
   cmd_sub_ = node_.subscribe<geometry_msgs::Twist>("command", 1, &Pr2BaseController::commandCallback, this);
 
   //casters
