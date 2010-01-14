@@ -44,6 +44,7 @@
 #include <angles/angles.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <filters/transfer_function.h>
 
 namespace controller
 {
@@ -282,6 +283,9 @@ namespace controller
        */
       std::vector<control_toolbox::Pid> caster_position_pid_;
 
+      filters::MultiChannelTransferFunctionFilter<double> caster_vel_filter_;
+      
+      std::vector<double> filtered_velocity_;
   };
 
 }

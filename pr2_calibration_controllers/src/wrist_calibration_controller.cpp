@@ -249,13 +249,13 @@ void WristCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    original_switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
+    original_switch_state_ = actuator_l_->state_.calibration_reading_;
     vc_flex_.setCommand(original_switch_state_ ? -flex_search_velocity_ : flex_search_velocity_);
     vc_roll_.setCommand(0);
     state_ = MOVING_FLEX;
     break;
   case MOVING_FLEX: {
-    bool switch_state_ = actuator_l_->state_.calibration_reading_ & 1;
+    bool switch_state_ = actuator_l_->state_.calibration_reading_;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)
@@ -273,14 +273,15 @@ void WristCalibrationController::update()
       double k = (flex_switch_l_ - prev_actuator_l_position_) / dl;
       if ( !(0 <= k && k <= 1) )
       {
-        // Break realtime and crash.
-        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
-        sleep(2);
-        abort();
+        // This is really serious, so we're going to break realtime to report it.
+        ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
+                  "on the left actuator or the flex joint.  Broke realtime to report (namespace: %s)",
+                  k, node_.getNamespace().c_str());
+        state_ = INITIALIZED;
       }
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
-      original_switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
+      original_switch_state_ = actuator_r_->state_.calibration_reading_;
       vc_flex_.setCommand(0);
       vc_roll_.setCommand(original_switch_state_ ? -roll_search_velocity_ : roll_search_velocity_);
       state_ = MOVING_ROLL;
@@ -288,7 +289,7 @@ void WristCalibrationController::update()
     break;
   }
   case MOVING_ROLL: {
-    bool switch_state_ = actuator_r_->state_.calibration_reading_ & 1;
+    bool switch_state_ = actuator_r_->state_.calibration_reading_;
     if (switch_state_ != original_switch_state_)
     {
       if (switch_state_ == true)
@@ -302,10 +303,11 @@ void WristCalibrationController::update()
       double k = (roll_switch_r_ - prev_actuator_r_position_) / dr;
       if ( !(0 <= k && k <= 1) )
       {
-        // Break realtime and crash.
-        ROS_FATAL("k = %.4lf is outside of [0,1]", k);
-        sleep(2);
-        abort();
+        // This is really serious, so we're going to break realtime to report it.
+        ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
+                  "on the right actuator or the roll joint.  Broke realtime to report (namespace: %s)",
+                  k, node_.getNamespace().c_str());
+        state_ = INITIALIZED;
       }
       roll_switch_l_ =  k * dl + prev_actuator_l_position_;
 

@@ -81,6 +81,25 @@ namespace control_toolbox {
 
     @param i_clamp Min/max bounds for the integral windup
 
+    @section Usage
+
+    To use the Pid class, you should first call some version of init()
+    (in non-realtime) and then call updatePid() at every update step.
+    For example:
+
+\verbatim
+control_toolbox::Pid pid;
+pid.initPid(6.0, 1.0, 2.0, 0.3, -0.3);
+double position_desi_ = 0.5;
+...
+ros::Time last_time = ros::Time::now();
+while (true) {
+  ros::Time time = ros::Time::now();
+  double effort = pid.updatePid(currentPosition() - position_desi_, time - last_time);
+  last_time = time;
+}
+\endverbatim
+
 */
 /***************************************************/
 
