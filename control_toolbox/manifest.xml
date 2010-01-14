@@ -2,7 +2,7 @@
   <description brief="Control Toolbox">
     The control toolbox contains modules that are useful across all controllers.
   </description>
-  <author>Melonee Wise, Sachin Chitta, John Hsu, Timothy Hunter</author>
+  <author>Melonee Wise, Sachin Chitta, John Hsu</author>
   <license>BSD</license>
   <review status="unreviewed" notes="API review in progress (Melonee)"/>
   <url>http://ros.org/wiki/control_toolbox</url>
