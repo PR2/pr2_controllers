@@ -330,9 +330,9 @@ void Pr2BaseController::publishState(const ros::Time &time)
     for(int i = 0; i < base_kin_.num_casters_; i++)
     {
       state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
-      state_publisher_->msg_.joint_velocity_measured[i] = base_kin_.caster_[i].caster_speed_;
-      state_publisher_->msg_.joint_velocity_commanded[i]= base_kin_.caster_[i].caster_speed_error_;
-      state_publisher_->msg_.joint_velocity_error[i]    = base_kin_.caster_[i].steer_velocity_desired_;
+      state_publisher_->msg_.joint_velocity_measured[i] = base_kin_.caster_[i].joint_->velocity_;
+      state_publisher_->msg_.joint_velocity_commanded[i]= base_kin_.caster_[i].steer_velocity_desired_;
+      state_publisher_->msg_.joint_velocity_error[i]    = base_kin_.caster_[i].joint_->velocity_ - base_kin_.caster_[i].steer_velocity_desired_;
 
       state_publisher_->msg_.joint_effort_measured[i]  = base_kin_.caster_[i].joint_->measured_effort_;
       state_publisher_->msg_.joint_effort_commanded[i] = base_kin_.caster_[i].joint_->commanded_effort_;
