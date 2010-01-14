@@ -129,7 +129,6 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
       ROS_ERROR("Could not initialize position pid controller for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
-
     caster_controller_[i].reset(new JointVelocityController());
     if(!caster_controller_[i]->init(base_kin_.robot_state_, base_kin_.caster_[i].joint_name_, p_i_d))
     {
@@ -170,6 +169,11 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
     }
   }
 
+  if (!((filters::MultiChannelFilterBase<double>&)caster_vel_filter_).configure(base_kin_.num_casters_, std::string("caster_velocity_filter"), node_)){
+     ROS_ERROR("BaseController: could not configure velocity filters for casters");
+     return false;
+  }
+  filtered_velocity_.resize(base_kin_.num_casters_);
   return true;
 }
 
@@ -373,6 +377,13 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
   double steer_angle_desired(0.0), steer_angle_desired_m_pi(0.0);
   double error_steer(0.0), error_steer_m_pi(0.0);
   double trans_vel = sqrt(cmd_vel_.linear.x * cmd_vel_.linear.x + cmd_vel_.linear.y * cmd_vel_.linear.y);
+
+  for(int i = 0; i < base_kin_.num_casters_; i++)
+  {  
+    filtered_velocity_[i] = base_kin_.caster_[i].joint_->velocity_;
+  }
+  caster_vel_filter_.update(filtered_velocity_,filtered_velocity_);
+
   for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     result = base_kin_.pointVel2D(base_kin_.caster_[i].offset_, cmd_vel_);
@@ -395,7 +406,7 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
       steer_angle_desired = steer_angle_desired_m_pi;
     }
     //    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
-    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,ros::Duration(dT));
+    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
     base_kin_.caster_[i].caster_position_error_ = error_steer;
   }
 }
