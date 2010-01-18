@@ -291,12 +291,19 @@ private:
     {
       // Checks that we have ended inside the goal constraints
       bool inside_goal_constraints = true;
-      for (size_t i = 0; i < msg->joint_names.size(); ++i)
+      for (size_t i = 0; i < msg->joint_names.size() && inside_goal_constraints; ++i)
       {
         double abs_error = fabs(msg->error.positions[i]);
         double goal_constraint = goal_constraints_[msg->joint_names[i]];
         if (goal_constraint >= 0 && abs_error > goal_constraint)
           inside_goal_constraints = false;
+
+        // It's important to be stopped if that's desired.
+        if (fabs(msg->desired.velocities[i]) < 1e-6)
+        {
+          if (fabs(msg->actual.velocities[i]) > 1e-3)
+            inside_goal_constraints = false;
+        }
       }
 
       if (inside_goal_constraints)
