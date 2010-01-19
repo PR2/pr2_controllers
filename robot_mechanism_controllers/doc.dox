@@ -4,34 +4,5 @@
 
 Generic Robot Controllers
 
-Here are the controllers which are currently implemented:
- \li \ref controller::Pid "Pid"
- \li \ref controller::JointEffortController "Joint Effort Controller"
- \li \ref controller::JointPositionController "Joint Position Controller"
- \li \ref controller::JointVelocityController "Joint Velocity Controller"
- \li \ref controller::RampInputController "Ramp Input Controller"
- \li \ref controller::SineSweepController "Sine Sweep Controller"
-
-
-@section topic PR2 Controllers ROS Topics
- - ROS topics subscribed by controllers
-  - JointPositionControllerNode:
-   - \e left_gripper_commands
-   - \e right_gripper_commands
-   - \e head_pan_commands
-   - \e head_tilt_commands
-
-@section services PR2 Controllers ROS Services
-  - JointPositionControllerNode:
-   - \b torso_controller/set_command
-   - \b torso_controller/get_actual
-   - \b gripper_left_controller/set_command
-   - \b gripper_left_controller/get_actual
-   - \b gripper_right_controller/set_command
-   - \b gripper_right_controller/get_actual
-   - \b head_pan_controller/set_command
-   - \b head_pan_controller/get_actual
-   - \b head_tilt_controller/set_command
-   - \b head_tilt_controller/get_actual
-
+The controllers should be used from their ROS API.
 **/
