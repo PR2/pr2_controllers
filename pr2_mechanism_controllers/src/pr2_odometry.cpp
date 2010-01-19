@@ -70,8 +70,8 @@ namespace controller {
     node.param("odom/initial_yaw", odom_.z, 0.0);
 
     node.param("publish_tf", publish_tf_, true);
-
-    node.param<std::string> ("ils_weight_type", ils_weight_type_, "Gaussian");
+    ils_weight_type_ = "Gaussian";
+    //    node.param<std::string> ("ils_weight_type", ils_weight_type_, "Gaussian");
     node.param<int> ("ils_max_iterations", ils_max_iterations_, 3);
     node.param<std::string> ("odom_frame", odom_frame_, "odom");
     node.param<std::string> ("base_footprint_frame", base_footprint_frame_, "base_footprint");
@@ -462,10 +462,11 @@ namespace controller {
   {
     //    Eigen::MatrixXf w_fit = Eigen::MatrixXf::Identity(16, 16);
     w_fit.setIdentity();
-    double epsilon = 0;
     double g_sigma = 0.1;
 
-    if(weight_type == std::string("BubeLagan"))
+    /*
+    double epsilon = 0;
+      if(weight_type == std::string("BubeLagan"))
       {
         for(int i = 0; i < 2 * base_kin_.num_wheels_; i++)
           {
@@ -473,10 +474,10 @@ namespace controller {
               epsilon = fabs(residual(i, 0));
           }
         epsilon = epsilon / 100.0;
-      }
+        }*/
     for(int i = 0; i < 2 * base_kin_.num_wheels_; i++)
       {
-        if(weight_type == std::string("L1norm"))
+        /*        if(weight_type == std::string("L1norm"))
           {
             w_fit(i, i) = 1.0 / (1 + sqrt(fabs(residual(i, 0))));
           }
@@ -493,13 +494,13 @@ namespace controller {
             w_fit(i, i) = 1.0 / pow((1 + pow((residual(i, 0) / epsilon), 2)), 0.25);
           }
         else if(weight_type == std::string("Gaussian"))
-          {
+        {*/
             w_fit(i, i) = sqrt(exp(-pow(residual(i, 0), 2) / (2 * g_sigma * g_sigma)));
-          }
+            /*          }
         else // default to fair
           {
             w_fit(i, i) = 1.0 / (0.1 + sqrt(fabs(residual(i, 0))));
-          }
+            }*/
       }
     return w_fit;
   }
