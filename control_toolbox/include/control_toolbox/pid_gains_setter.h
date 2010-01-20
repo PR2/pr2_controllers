@@ -51,7 +51,10 @@ namespace control_toolbox {
    namespace, with a type of control_toolbox/SetPidGains.
 
    To use the object, add pids to the gains setter and then call
-   advertise().
+   advertise().  The PidGainsSetter will then update the gains of all
+   the Pid objects when you call the set_gains service.  (If you wish
+   to have Pids with different gains, then you should use multiple
+   PidGainsSetter objects).
 
  \verbatim
  ros::NodeHandle node;
@@ -62,6 +65,11 @@ namespace control_toolbox {
  pid_gains_setter.add(&b).add(&c);
  pid_gains_setter.advertise(node);
  \endverbatim
+
+   ROS API
+
+   - \b set_gains [control_toolbox::SetPidGains] - Updates the gains
+     of all the Pid objects that have been added.
  */
 class PidGainsSetter
 {
