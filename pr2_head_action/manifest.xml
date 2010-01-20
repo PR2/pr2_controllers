@@ -1,7 +1,9 @@
 <package>
   <description brief="pr2_head_action">
 
-     Interface for controlling the head on the PR2
+  The PR2 head action is a node that provides an action interface for
+  pointing the head of the PR2.  It passes trajectory goals to the
+  controller, and reports success when they have finished executing.
 
   </description>
   <author>Stuart Glaser</author>
