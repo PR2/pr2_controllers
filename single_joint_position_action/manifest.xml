@@ -1,7 +1,10 @@
 <package>
   <description brief="single_joint_position_action">
 
-     single_joint_position_action
+  The single joint position action is a node that provides an action
+  interface for commanding a trajectory to move a joint to a particular
+  position. The action reports success when the joint reaches the desired
+  position.
 
   </description>
   <author>Stuart Glaser</author>
