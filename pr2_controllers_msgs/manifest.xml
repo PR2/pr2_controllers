@@ -6,7 +6,7 @@
   </description>
   <author>Stuart Glaser</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_controllers_msgs</url>
 
   <depend package="actionlib_msgs" />

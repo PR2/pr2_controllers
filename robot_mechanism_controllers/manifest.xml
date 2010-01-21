@@ -3,7 +3,7 @@
   </description>
   <author>John Hsu, David Li, Melonee Wise, Stuart Glaser</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="https://code.ros.org/trac/wg-ros-pkg/ticket/3574"/>
 
   <depend package="rospy"/>
   <depend package="roscpp" />

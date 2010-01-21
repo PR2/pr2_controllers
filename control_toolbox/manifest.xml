@@ -4,7 +4,7 @@
   </description>
   <author>Melonee Wise, Sachin Chitta, John Hsu</author>
   <license>BSD</license>
-  <review status="unreviewed" notes="API review in progress (Melonee)"/>
+  <review status="Doc reviewed" notes="http://www.ros.org/wiki/control_toolbox/Reviews/2010-01-12_Doc_Review"/>
   <url>http://ros.org/wiki/control_toolbox</url>
   <depend package="tinyxml" />
   <depend package="rosconsole" />

@@ -9,7 +9,7 @@
   </description>
   <author>Stuart Glaser</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="http://www.ros.org/wiki/pr2_gripper_action/Reviews/2010-01-13_Doc_Review"/>
   <url>http://ros.org/wiki/pr2_gripper_action</url>
   <depend package="roscpp"/>
   <depend package="actionlib_msgs" />
