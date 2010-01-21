@@ -49,30 +49,13 @@
 
 namespace control_toolbox {
 
-Dither::Dither(double i) : amplitude_(0), s_(0), x_(0), idum((long)i)
-{
-}
-
 Dither::Dither() : amplitude_(0), s_(0), x_(0), idum((long)0)
 {
 
 }
 
-
-
 Dither::~Dither()
 {
-}
-
-bool Dither::init(const ros::NodeHandle &n)
-{
-  if (!n.getParam("dither", amplitude_) || amplitude_ < 0.0)
-  {
-    ROS_ERROR("Dither amplitude not set properly. Amplitude must be >0.");
-    return false;
-  }
-  
-  return true;
 }
 
 double Dither::update()

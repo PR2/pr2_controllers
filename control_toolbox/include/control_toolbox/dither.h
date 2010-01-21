@@ -61,11 +61,6 @@ public:
   Dither();
 
   /*!
-   * \brief Constructor
-   */
-  Dither(double seed) __attribute__((deprecated));
-
-  /*!
    * \brief Destructor.
    */
   ~Dither();
@@ -76,13 +71,7 @@ public:
    */
   double update();
 
-  /*!
-   * \brief Loads "dither" parameter, looks for 
-   * \param n NodeHandle to look for parameters with
-   */
-  bool init(const ros::NodeHandle &n) __attribute__((deprecated));
-
-  /*
+   /*
    *\brief Dither gets an amplitude, must be >0 to initialize
    *
    *\param amplitude Amplitude of white noise output
