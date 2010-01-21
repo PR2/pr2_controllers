@@ -104,31 +104,29 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     ROS_ERROR("No roll_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
-  // deprecated: support for old case without rising or falling edge
+  // check if calibration fields are supported by this controller
   if (!roll_joint_->joint_->calibration->falling && !roll_joint_->joint_->calibration->rising){
-    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", roll_joint_name.c_str());
-    roll_reference_position_ = roll_joint_->joint_->calibration->reference_position;
+    ROS_ERROR("No rising or falling edge is specified for calibration of joint %s. Note that the reference_position is not used any more", roll_joint_name.c_str());
+    return false;
+  }
+  if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising){
+    ROS_ERROR("Both rising and falling edge are specified for joint %s. This is not supported.", roll_joint_name.c_str());
+    return false;
+  }
+  if (roll_search_velocity_ < 0){
+    roll_search_velocity_ *= -1;
+    ROS_WARN("Negative search velocity is not supported for joint %s. Making the search velocity positve.", roll_joint_name.c_str());
   }
 
-  // new: rising or falling edge
-  else{
-    if (roll_search_velocity_ < 0){
-      roll_search_velocity_ *= -1;
-      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", roll_joint_name.c_str());
-    }
-    if (roll_joint_->joint_->calibration->falling){
-      roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
-      roll_search_velocity_ *= -1.0;
-      ROS_DEBUG("Using negative search velocity for joint %s", roll_joint_name.c_str());
-    }
-    if (roll_joint_->joint_->calibration->rising){
-      roll_reference_position_ = *(roll_joint_->joint_->calibration->rising);
-      ROS_DEBUG("Using positive search velocity for joint %s", roll_joint_name.c_str());
-    }
-    if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising){
-      ROS_ERROR("Both rising and falling edge are specified for joint %s", roll_joint_name.c_str());
-      return false;
-    }
+  // finds search velocity based on rising or falling edge
+  if (roll_joint_->joint_->calibration->falling){
+    roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
+    roll_search_velocity_ *= -1.0;
+    ROS_DEBUG("Using negative search velocity for joint %s", roll_joint_name.c_str());
+  }
+  if (roll_joint_->joint_->calibration->rising){
+    roll_reference_position_ = *(roll_joint_->joint_->calibration->rising);
+    ROS_DEBUG("Using positive search velocity for joint %s", roll_joint_name.c_str());
   }
 
 
@@ -138,34 +136,30 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     ROS_ERROR("No flex_velocity given (namespace: %s)", node_.getNamespace().c_str());
     return false;
   }
-  // deprecated: support for old case without rising or falling edge
+  // check if calibration fields are supported by this controller
   if (!flex_joint_->joint_->calibration->falling && !flex_joint_->joint_->calibration->rising){
-    ROS_WARN("Using deprecated reference position to calibrate instead of rising/falling for joint %s", flex_joint_name.c_str());
-    flex_reference_position_ = flex_joint_->joint_->calibration->reference_position;
+    ROS_ERROR("No rising or falling edge is specified for calibration of joint %s. Note that the reference_position is not used any more", flex_joint_name.c_str());
+    return false;
+  }
+  if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising){
+    ROS_ERROR("Both rising and falling edge are specified for joint %s. This is not supported.", flex_joint_name.c_str());
+    return false;
+  }
+  if (flex_search_velocity_ < 0){
+    flex_search_velocity_ *= -1;
+    ROS_WARN("Negative search velocity is not supported for joint %s. Making the search velocity positve.", flex_joint_name.c_str());
   }
 
-  // new: rising or falling edge
-  else{
-    if (flex_search_velocity_ < 0){
-      flex_search_velocity_ *= -1;
-      ROS_DEBUG("Search velocity needs to be positive value (joint: %s). Ignoring this during deprecation cycle", flex_joint_name.c_str());
-    }
-    if (flex_joint_->joint_->calibration->falling){
-      flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
-      flex_search_velocity_ *= -1.0;
-      ROS_DEBUG("Using negative search velocity for joint %s", flex_joint_name.c_str());
-    }
-    if (flex_joint_->joint_->calibration->rising){
-      flex_reference_position_ = *(flex_joint_->joint_->calibration->rising);
-      ROS_DEBUG("Using positive search velocity for joint %s", flex_joint_name.c_str());
-    }
-    if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising){
-      ROS_ERROR("Both rising and falling edge are specified for joint %s", flex_joint_name.c_str());
-      return false;
-    }
+  // finds search velocity based on rising or falling edge
+  if (flex_joint_->joint_->calibration->falling){
+    flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
+    flex_search_velocity_ *= -1.0;
+    ROS_DEBUG("Using negative search velocity for joint %s", flex_joint_name.c_str());
   }
-
-
+  if (flex_joint_->joint_->calibration->rising){
+    flex_reference_position_ = *(flex_joint_->joint_->calibration->rising);
+    ROS_DEBUG("Using positive search velocity for joint %s", flex_joint_name.c_str());
+  }
 
   // Actuators
 

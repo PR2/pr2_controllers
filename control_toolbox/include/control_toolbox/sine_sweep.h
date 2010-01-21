@@ -31,6 +31,8 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
+
+
 #ifndef CTRL_TOOLBOX_SINESWEEP_H
 #define CTRL_TOOLBOX_SINESWEEP_H
 
@@ -39,7 +41,7 @@
 namespace control_toolbox {
 /***************************************************/
 /*! \class SineSweep
-    \brief A basic sine sweep class.
+    \brief Generates a sine sweep for frequency analysis of a joint
 
     This class basically calculates the output for
     a sine sweep. Where the signal is a sine wave, 

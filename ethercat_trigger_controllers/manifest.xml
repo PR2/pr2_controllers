@@ -6,7 +6,7 @@
   </description>
   <author>Blaise Gassend</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="http://www.ros.org/wiki/ethercat_trigger_controllers/Reviews/Jan_12_2010_Doc_Review"/>
   <depend package="rospy"/>
   <depend package="pr2_controller_interface" />
   <depend package="realtime_tools" />

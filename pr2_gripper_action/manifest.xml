@@ -1,12 +1,15 @@
 <package>
   <description brief="pr2_gripper_action">
 
-     pr2_gripper_action
+  The pr2_gripper_action provides an action interface for using the
+  gripper. Users can specify what position to move to (while limiting the
+  force) and the action will report success when the position is reached or
+  failure when the gripper cannot move any longer.
 
   </description>
   <author>Stuart Glaser</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="http://www.ros.org/wiki/pr2_gripper_action/Reviews/2010-01-13_Doc_Review"/>
   <url>http://ros.org/wiki/pr2_gripper_action</url>
   <depend package="roscpp"/>
   <depend package="actionlib_msgs" />

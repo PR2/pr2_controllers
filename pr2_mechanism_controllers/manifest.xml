@@ -1,10 +1,11 @@
 <package>
-  <description brief='PR2 Controller Library'>
-    Library for doing controls on the PR2.
+  <description brief="Controllers for the PR2">
+    The pr2_mechanism_controllers package contains realtime
+    controllers that are meant for specific mechanisms of the PR2.
   </description>
-  <author>Sachin Chita, John Hsu, David Li, Jimmy Sastra, Melonee Wise</author>
+  <author>Sachin Chita, John Hsu, Melonee Wise</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="http://www.ros.org/wiki/pr2_mechanism_controllers/Reviews/2010-01-14_Doc_Review https://code.ros.org/trac/wg-ros-pkg/ticket/3574"/>
 
   <!-- ROS Interfaces -->
   <depend package="std_msgs" />
