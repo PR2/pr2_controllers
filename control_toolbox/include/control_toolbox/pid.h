@@ -55,20 +55,20 @@ namespace control_toolbox {
     In particular, this class implements the standard
     pid equation:
 
-    command  = -p_term_ - i_term_ - d_term_
+    \f$command  = -p_{term} - i_{term} - d_{term} \f$
 
     where: <br>
     <UL TYPE="none">
-    <LI>  p_term_  = p_gain_ * p_error_
-    <LI>  i_term_  = i_gain_ * i_error_
-    <LI>  d_term_  = d_gain_ * d_error_
-    <LI>  i_error_ = i_error_ + p_error_ * dt
-    <LI>  d_error_ = (p_error_ - p_error_last_) / dt
+    <LI>  \f$ p_{term}  = p_{gain} * p_{error} \f$
+    <LI>  \f$ i_{term}  = i_{gain} * i_{error} \f$
+    <LI>  \f$ d_{term}  = d_{gain} * d_{error} \f$
+    <LI>  \f$ i_{error} = i_{error} + p_{error} * dt \f$
+    <LI>  \f$ d_{error} = (p_{error} - p_{error last}) / dt \f$
     </UL>
 
     given:<br>
     <UL TYPE="none">
-    <LI>  p_error_ = p_state-p_target.
+    <LI>  \f$ p_{error}  = p_{state} - p_{target} \f$.
     </UL>
 
     @section ROS ROS interface
@@ -79,7 +79,7 @@ namespace control_toolbox {
 
     @param i Integral gain
 
-    @param i_clamp Min/max bounds for the integral windup
+    @param i_clamp Min/max bounds for the integral windup, the clamp is applied to the \f$i_{term}\f$ and not the \f$i_{error}\f$
 
     @section Usage
 
@@ -142,9 +142,19 @@ public:
    * \param I2 The integral lower limit.
    */
   void initPid(double P, double I, double D, double I1, double I2);
-
+  
+  /*!                                                                                                   
+   * \brief Initialize PID with the parameters in a namespace                               
+   *                                                            
+   * \param n  The namespace prefix.
+   */
   bool initParam(const std::string& prefix);
   bool initXml(TiXmlElement *config);
+  /*!                                                                                                      
+   * \brief Initialize PID with the parameters in a NodeHandle namespace
+   *                                                         
+   * \param n  The NodeHandle.                                                                       
+   */
   bool init(const ros::NodeHandle &n);
 
   /*!
@@ -185,13 +195,14 @@ public:
    * \param p  The proportional gain.
    * \param i  The integral gain.
    * \param d  The derivative gain.
-   * \param i_max
-   * \param i_mim
+   * \param i_max The max integral windup.
+   * \param i_mim The min integral windup.
    */
   void getGains(double &p, double &i, double &d, double &i_max, double &i_min);
 
   /*!
-   * \brief Update the Pid loop with nonuniform time step size.
+   * \brief Update the Pid loop with nonuniform time step size. This update call 
+   * allows the user to pass in a precomputed derivative error. 
    *
    * \param error  Error since last call (p_state-p_target)
    * \param error_dot d(Error)/dt since last call
