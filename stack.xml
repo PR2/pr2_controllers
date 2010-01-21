@@ -1,10 +1,10 @@
 <stack>
-  <description brief="pr2_controllers">
+  <description brief="PR2 Controllers">
     Contains the controllers that run in realtime on the PR2 and supporting packages.
   </description>
   <author>Stuart Glaser sglaser@willowgarage.com</author>
   <license>BSD</license>  
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="2010/01/21"/>
   <url>http://ros.org/wiki/pr2_controllers</url>
   <depend stack="common" /> <!-- actionlib, filters, tinyxml, pluginlib -->
   <depend stack="common_msgs" /> <!-- nav_msgs, sensor_msgs, actionlib_msgs, geometry_msgs, diagnostic_msgs -->
