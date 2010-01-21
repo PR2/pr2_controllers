@@ -31,6 +31,9 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
+
+/**< \author Kevin Watts */
+
 #ifndef CTRL_TOOLBOX_DITHER_H
 #define CTRL_TOOLBOX_DITHER_H
 
@@ -40,25 +43,27 @@
 #include <ros/ros.h>
 
 namespace control_toolbox {
+
 /***************************************************/
 /*! \class Dither
-
-  \brief Gives white noise at specified amplitude.
-
-  This class gives white noise at the given amplitude when 
-  update() is called. Gets parameter "amplitude" from namespace.
-
-*/
-/***************************************************/
-
+ *
+ * \brief Gives white noise at specified amplitude.
+ *
+ * This class gives white noise at the given amplitude when 
+ * update() is called. It can be used to vibrate joints or 
+ * to break static friction.
+ *
+ */
 class Dither
 {
 public:
 
+  Dither();
+
   /*!
    * \brief Constructor
    */
-  Dither(double seed);
+  Dither(double seed) __attribute__((deprecated));
 
   /*!
    * \brief Destructor.
@@ -67,17 +72,38 @@ public:
 
   /*!
    * \brief Get next Gaussian white noise point. Called in RT loop.
+   *\return White noise of given amplitude.
    */
   double update();
 
   /*!
-   * \brief Intializes everything and calculates the constants for the sweep.
+   * \brief Loads "dither" parameter, looks for 
    * \param n NodeHandle to look for parameters with
    */
-  bool init(const ros::NodeHandle &n);
+  bool init(const ros::NodeHandle &n) __attribute__((deprecated));
+
+  /*
+   *\brief Dither gets an amplitude, must be >0 to initialize
+   *
+   *\param amplitude Amplitude of white noise output
+   *\param seed Random seed for white noise
+   */
+  bool init(const double &amplitude, const double &seed)
+  {
+    if (amplitude < 0.0)
+    {
+      ROS_ERROR("Dither amplitude not set properly. Amplitude must be >0.");
+      return false;
+    }
+    
+    idum = (long) seed;
+    
+    return true;
+  }
+
 
 private:
-  double amplitude_;                        /**< Amplitude of the sweep. */
+  double amplitude_;   /**< Amplitude of the sweep. */
   double s_;
   double x_;
   long idum; // Random seed

@@ -36,7 +36,7 @@
 
 #include <control_toolbox/dither.h>
 
-
+// Constants to generate white noise
 #define M 714025
 #define IA 1366
 #define IC 150889
@@ -49,13 +49,16 @@
 
 namespace control_toolbox {
 
-Dither::Dither(double i) : s_(0), idum((long)i)
+Dither::Dither(double i) : amplitude_(0), s_(0), x_(0), idum((long)i)
 {
-  amplitude_ = 0;
-  
-  s_ = 0;
-  x_ = 0;
 }
+
+Dither::Dither() : amplitude_(0), s_(0), x_(0), idum((long)0)
+{
+
+}
+
+
 
 Dither::~Dither()
 {
