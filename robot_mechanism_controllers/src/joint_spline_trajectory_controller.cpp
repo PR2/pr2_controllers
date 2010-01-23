@@ -329,7 +329,7 @@ void JointSplineTrajectoryController::update()
         controller_state_publisher_->msg_.actual.positions[j] = joints_[j]->position_;
         controller_state_publisher_->msg_.actual.velocities[j] = joints_[j]->velocity_;
         controller_state_publisher_->msg_.error.positions[j] = error[j];
-        controller_state_publisher_->msg_.error.velocities[j] = joints_[j]->velocity_ - qdd[j];
+        controller_state_publisher_->msg_.error.velocities[j] = joints_[j]->velocity_ - qd[j];
       }
       controller_state_publisher_->unlockAndPublish();
     }
