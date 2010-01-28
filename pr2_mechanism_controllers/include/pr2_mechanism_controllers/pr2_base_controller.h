@@ -91,7 +91,7 @@ namespace controller
        * \brief class where the robot's information is computed and stored
        * @return BaseKinematic instance that is being used by this controller
        */
-      BaseKinematics base_kin_;
+      BaseKinematics base_kinematics_;
 
       /*!
        * \brief mutex lock for setting and getting commands
@@ -223,7 +223,7 @@ namespace controller
       /*!
        * \brief computes the desired wheel speeds given the desired base speed
        */
-      void computeDesiredWheelSpeeds();
+      void computeDesiredWheelSpeeds(const double &dT);
 
       /*!
        * \brief sends the desired wheel speeds to the wheel controllers
@@ -286,6 +286,15 @@ namespace controller
       filters::MultiChannelTransferFunctionFilter<double> caster_vel_filter_;
       
       std::vector<double> filtered_velocity_;
+
+      filters::MultiChannelTransferFunctionFilter<double> wheel_vel_filter_;
+      
+      std::vector<double> filtered_wheel_velocity_;
+
+      /*!
+       * \brief The pid controllers for caster position
+       */
+      std::vector<control_toolbox::Pid> wheel_pid_controllers_;
   };
 
 }
