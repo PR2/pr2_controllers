@@ -250,8 +250,11 @@ void WristCalibrationController::update()
     break;
   case BEGINNING:
     vc_roll_.setCommand(0);
+    // Because of the huge hysteresis on the wrist flex calibration sensor, we want to move towards the
+    // high side for a long period of time, regardless of which side we start on
+    countdown_ = 1000;
     if (actuator_l_->state_.calibration_reading_)
-      state_ = MOVING_FLEX;
+      state_ = MOVING_FLEX_TO_HIGH;
     else
       state_ = MOVING_FLEX_TO_HIGH;
     break;
@@ -264,7 +267,7 @@ void WristCalibrationController::update()
         state_ = MOVING_FLEX;
     }
     else
-      countdown_ = 200;
+      countdown_ = 1000;
     break;
   case MOVING_FLEX: {
     // Calibrates across the falling edge in the positive joint direction.
