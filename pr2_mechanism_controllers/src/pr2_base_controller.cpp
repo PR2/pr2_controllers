@@ -82,9 +82,9 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   state_publisher_->msg_.set_joint_names_size(num_joints);
   state_publisher_->msg_.set_joint_velocity_measured_size(num_joints);
   state_publisher_->msg_.set_joint_effort_measured_size(num_joints);
-  state_publisher_->msg_.set_joint_velocity_commanded_size(num_joints);
+  state_publisher_->msg_.set_joint_command_size(num_joints);
   state_publisher_->msg_.set_joint_effort_commanded_size(num_joints);
-  state_publisher_->msg_.set_joint_velocity_error_size(num_joints);
+  state_publisher_->msg_.set_joint_error_size(num_joints);
   state_publisher_->msg_.set_joint_effort_error_size(num_joints);
 
   //Get params from param server
@@ -337,8 +337,8 @@ void Pr2BaseController::publishState(const ros::Time &time)
     {
       state_publisher_->msg_.joint_names[i] = base_kinematics_.caster_[i].joint_name_;
       state_publisher_->msg_.joint_velocity_measured[i] = base_kinematics_.caster_[i].joint_->velocity_;
-      state_publisher_->msg_.joint_velocity_commanded[i]= base_kinematics_.caster_[i].steer_velocity_desired_;
-      state_publisher_->msg_.joint_velocity_error[i]    = base_kinematics_.caster_[i].joint_->velocity_ - base_kinematics_.caster_[i].steer_velocity_desired_;
+      state_publisher_->msg_.joint_command[i]= base_kinematics_.caster_[i].steer_angle_desired_;
+      state_publisher_->msg_.joint_error[i]  = base_kinematics_.caster_[i].joint_->position_ - base_kinematics_.caster_[i].steer_angle_desired_;
 
       state_publisher_->msg_.joint_effort_measured[i]  = base_kinematics_.caster_[i].joint_->measured_effort_;
       state_publisher_->msg_.joint_effort_commanded[i] = base_kinematics_.caster_[i].joint_->commanded_effort_;
@@ -347,9 +347,9 @@ void Pr2BaseController::publishState(const ros::Time &time)
     for(int i = 0; i < base_kinematics_.num_wheels_; i++)
     {
       state_publisher_->msg_.joint_names[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_name_;
-      state_publisher_->msg_.joint_velocity_measured[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].wheel_speed_actual_;
-      state_publisher_->msg_.joint_velocity_commanded[i+base_kinematics_.num_casters_]= base_kinematics_.wheel_[i].wheel_speed_error_;
-      state_publisher_->msg_.joint_velocity_error[i+base_kinematics_.num_casters_]    = base_kinematics_.wheel_[i].wheel_speed_cmd_;
+      state_publisher_->msg_.joint_velocity_measured[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_->velocity_;
+      state_publisher_->msg_.joint_command[i+base_kinematics_.num_casters_]= base_kinematics_.wheel_[i].joint_->velocity_-base_kinematics_.wheel_[i].wheel_speed_cmd_;
+      state_publisher_->msg_.joint_error[i+base_kinematics_.num_casters_]    = base_kinematics_.wheel_[i].wheel_speed_cmd_;
 
       state_publisher_->msg_.joint_effort_measured[i+base_kinematics_.num_casters_]  = base_kinematics_.wheel_[i].joint_->measured_effort_;
       state_publisher_->msg_.joint_effort_commanded[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_->commanded_effort_;
@@ -411,6 +411,7 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
       error_steer = error_steer_m_pi;
       steer_angle_desired = steer_angle_desired_m_pi;
     }
+    base_kinematics_.caster_[i].steer_angle_desired_ = steer_angle_desired;
     //    base_kinematics_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
     //base_kinematics_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
     double command = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));

@@ -180,6 +180,11 @@ namespace controller
       double steer_angle_actual_;
 
       /*!
+       * \brief actual caster steer angles
+       */
+      double steer_angle_desired_;
+
+      /*!
        * \brief vector of desired caster steer speeds
        */
       double steer_velocity_desired_;
