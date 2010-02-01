@@ -310,19 +310,38 @@ namespace controller {
     */
     double  odom_multiplier = 1.0;
 
+    if(fabs(odom_vel_.linear.x) <= 1e-8 && fabs(odom_vel_.linear.y) <= 1e-8 && fabs(odom_vel_.angular.z) <= 1e-8)
+    {
     //nav_msgs::Odometry has a 6x6 covariance matrix
-    msg.pose.covariance[0] = odom_multiplier*pow(sigma_x_,2);
-    msg.pose.covariance[7] = odom_multiplier*pow(sigma_y_,2);
-    msg.pose.covariance[35] = odom_multiplier*pow(sigma_theta_,2);
+      msg.pose.covariance[0] = 1e-12;
+      msg.pose.covariance[7] = 1e-12;
+      msg.pose.covariance[35] = 1e-12;
 
-    msg.pose.covariance[1] = odom_multiplier*cov_x_y_;
-    msg.pose.covariance[6] = odom_multiplier*cov_x_y_;
+      msg.pose.covariance[1] = 1e-12;
+      msg.pose.covariance[6] = 1e-12;
 
-    msg.pose.covariance[31] = odom_multiplier*cov_y_theta_;
-    msg.pose.covariance[11] = odom_multiplier*cov_y_theta_;
+      msg.pose.covariance[31] = 1e-12;
+      msg.pose.covariance[11] = 1e-12;
 
-    msg.pose.covariance[30] = odom_multiplier*cov_x_theta_;
-    msg.pose.covariance[5] =  odom_multiplier*cov_x_theta_;
+      msg.pose.covariance[30] = 1e-12;
+      msg.pose.covariance[5] =  1e-12;
+    }
+    else
+    {
+    //nav_msgs::Odometry has a 6x6 covariance matrix
+      msg.pose.covariance[0] = odom_multiplier*pow(sigma_x_,2);
+      msg.pose.covariance[7] = odom_multiplier*pow(sigma_y_,2);
+      msg.pose.covariance[35] = odom_multiplier*pow(sigma_theta_,2);
+
+      msg.pose.covariance[1] = odom_multiplier*cov_x_y_;
+      msg.pose.covariance[6] = odom_multiplier*cov_x_y_;
+
+      msg.pose.covariance[31] = odom_multiplier*cov_y_theta_;
+      msg.pose.covariance[11] = odom_multiplier*cov_y_theta_;
+
+      msg.pose.covariance[30] = odom_multiplier*cov_x_theta_;
+      msg.pose.covariance[5] =  odom_multiplier*cov_x_theta_;
+    }
 
     msg.pose.covariance[14] = DBL_MAX;
     msg.pose.covariance[21] = DBL_MAX;
