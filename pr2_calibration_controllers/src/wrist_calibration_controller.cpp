@@ -161,6 +161,10 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     ROS_DEBUG("Using positive search velocity for joint %s", flex_joint_name.c_str());
   }
 
+  // The calibration code has changed to reason about which direction to move.
+  flex_search_velocity_ = fabs(flex_search_velocity_);
+  roll_search_velocity_ = fabs(roll_search_velocity_);
+
   // Actuators
 
   std::string actuator_l_name;
@@ -243,19 +247,29 @@ void WristCalibrationController::update()
     state_ = BEGINNING;
     break;
   case BEGINNING:
-    original_switch_state_ = actuator_l_->state_.calibration_reading_;
-    vc_flex_.setCommand(original_switch_state_ ? -flex_search_velocity_ : flex_search_velocity_);
     vc_roll_.setCommand(0);
-    state_ = MOVING_FLEX;
+    if (actuator_l_->state_.calibration_reading_)
+      state_ = MOVING_FLEX;
+    else
+      state_ = MOVING_FLEX_TO_HIGH;
+    break;
+  case MOVING_FLEX_TO_HIGH:
+    vc_flex_.setCommand(-flex_search_velocity_);
+
+    if (actuator_l_->state_.calibration_reading_)
+    {
+      if (--countdown_ <= 0)
+        state_ = MOVING_FLEX;
+    }
+    else
+      countdown_ = 200;
     break;
   case MOVING_FLEX: {
-    bool switch_state_ = actuator_l_->state_.calibration_reading_;
-    if (switch_state_ != original_switch_state_)
+    // Calibrates across the falling edge in the positive joint direction.
+    vc_flex_.setCommand(flex_search_velocity_);
+    if (actuator_l_->state_.calibration_reading_ == false)
     {
-      if (switch_state_ == true)
-        flex_switch_l_ = actuator_l_->state_.last_calibration_rising_edge_;
-      else
-        flex_switch_l_ = actuator_l_->state_.last_calibration_falling_edge_;
+      flex_switch_l_ = actuator_l_->state_.last_calibration_falling_edge_;
 
       // But where was actuator_r at the transition?  Unfortunately,
       // actuator_r is not connected to the flex joint's optical
@@ -275,21 +289,28 @@ void WristCalibrationController::update()
       }
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
-      original_switch_state_ = actuator_r_->state_.calibration_reading_;
+      //original_switch_state_ = actuator_r_->state_.calibration_reading_;
+
+      // Now we calibrate the roll joint
       vc_flex_.setCommand(0);
-      vc_roll_.setCommand(original_switch_state_ ? -roll_search_velocity_ : roll_search_velocity_);
-      state_ = MOVING_ROLL;
+      if (actuator_r_->state_.calibration_reading_)
+        state_ = MOVING_ROLL_TO_LOW;
+      else
+        state_ = MOVING_ROLL;
     }
     break;
   }
+  case MOVING_ROLL_TO_LOW:
+    vc_roll_.setCommand(roll_search_velocity_);
+    if (actuator_r_->state_.calibration_reading_ == false)
+      state_ = MOVING_ROLL;
+    break;
   case MOVING_ROLL: {
-    bool switch_state_ = actuator_r_->state_.calibration_reading_;
-    if (switch_state_ != original_switch_state_)
+    // Calibrates across the rising edge in the positive joint direction.
+    vc_roll_.setCommand(roll_search_velocity_);
+    if (actuator_r_->state_.calibration_reading_)
     {
-      if (switch_state_ == true)
-        roll_switch_r_ = actuator_r_->state_.last_calibration_rising_edge_;
-      else
-        roll_switch_r_ = actuator_r_->state_.last_calibration_falling_edge_;
+      roll_switch_r_ = actuator_r_->state_.last_calibration_rising_edge_;
 
       // See corresponding comment above.
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
