@@ -242,6 +242,8 @@ void WristCalibrationController::update()
   case INITIALIZED:
     actuator_l_->state_.zero_offset_ = 0;
     actuator_r_->state_.zero_offset_ = 0;
+    flex_joint_->calibrated_ = false;
+    roll_joint_->calibrated_ = false;
     vc_flex_.setCommand(0);
     vc_roll_.setCommand(0);
     state_ = BEGINNING;
