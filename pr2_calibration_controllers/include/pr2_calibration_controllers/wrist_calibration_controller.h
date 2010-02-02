@@ -63,7 +63,9 @@ public:
 
 protected:
 
-  enum { INITIALIZED, BEGINNING, MOVING_FLEX, MOVING_ROLL, CALIBRATED };
+  enum { INITIALIZED, BEGINNING,
+         MOVING_FLEX_TO_HIGH, MOVING_FLEX,
+         MOVING_ROLL_TO_LOW, MOVING_ROLL, CALIBRATED };
   int state_;
 
   pr2_mechanism_model::RobotState *robot_;
@@ -74,6 +76,7 @@ protected:
   double roll_search_velocity_, roll_reference_position_;
   double flex_search_velocity_, flex_reference_position_;
   bool original_switch_state_;
+  int countdown_;
 
   // Tracks the actuator positions for when the optical switch occurred.
   double flex_switch_l_, flex_switch_r_;
