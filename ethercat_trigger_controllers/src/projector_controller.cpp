@@ -58,6 +58,8 @@ void ProjectorController::update()
   double curtime = robot_->getTime().toSec();
   double delta = curtime - start_time_;
   delta -= fmod(delta, 0.001);
+  
+  projector_->command_.current_ = current_setting_;
 
   if (falling != old_falling_)
   {
@@ -88,7 +90,6 @@ void ProjectorController::starting()
   projector_->command_.enable_ = true;
   projector_->command_.pulse_replicator_ = false;
   //projector_->command_.M_ = 0xf;
-  projector_->command_.current_ = current_setting_;
   old_rising_ = projector_->state_.rising_timestamp_us_;
   old_falling_ = projector_->state_.falling_timestamp_us_;
   start_time_ = 0;//robot_->getTime().toSec();
