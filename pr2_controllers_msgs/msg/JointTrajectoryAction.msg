@@ -1,4 +1,0 @@
-
-JointTrajectoryActionGoal action_goal
-JointTrajectoryActionResult action_result
-JointTrajectoryActionFeedback action_feedback
