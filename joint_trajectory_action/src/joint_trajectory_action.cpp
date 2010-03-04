@@ -92,8 +92,10 @@ public:
       goal_constraints_[joint_names_[i]] = g;
       trajectory_constraints_[joint_names_[i]] = t;
     }
+    pn.param("constraints/stopped_velocity_tolerance", stopped_velocity_tolerance_, 0.01);
 
-   pub_controller_command_ =
+
+    pub_controller_command_ =
       node_.advertise<trajectory_msgs::JointTrajectory>("command", 1);
     sub_controller_state_ =
       node_.subscribe("state", 1, &JointTrajectoryExecuter::controllerStateCB, this);
@@ -241,6 +243,7 @@ private:
   std::map<std::string,double> goal_constraints_;
   std::map<std::string,double> trajectory_constraints_;
   double goal_time_constraint_;
+  double stopped_velocity_tolerance_;
 
   pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr last_controller_state_;
   void controllerStateCB(const pr2_controllers_msgs::JointTrajectoryControllerStateConstPtr &msg)
@@ -301,7 +304,7 @@ private:
         // It's important to be stopped if that's desired.
         if (fabs(msg->desired.velocities[i]) < 1e-6)
         {
-          if (fabs(msg->actual.velocities[i]) > 1e-3)
+          if (fabs(msg->actual.velocities[i]) > stopped_velocity_tolerance_)
             inside_goal_constraints = false;
         }
       }
