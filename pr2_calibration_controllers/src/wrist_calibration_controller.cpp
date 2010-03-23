@@ -46,6 +46,10 @@ WristCalibrationController::WristCalibrationController()
 
 WristCalibrationController::~WristCalibrationController()
 {
+  for (size_t i = 0; i < fake_as.size(); ++i)
+    delete fake_as[i];
+  for (size_t i = 0; i < fake_js.size(); ++i)
+    delete fake_js[i];
 }
 
 bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
@@ -223,6 +227,11 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   flex_node.setParam("joint", flex_joint_name);
   flex_node.setParam("pid", pid);
 
+  fake_as.push_back(new pr2_hardware_interface::Actuator);
+  fake_as.push_back(new pr2_hardware_interface::Actuator);
+  fake_js.push_back(new pr2_mechanism_model::JointState);
+  fake_js.push_back(new pr2_mechanism_model::JointState);
+
   if (!vc_roll_.init(robot_, roll_node)) return false;
   if (!vc_flex_.init(robot_, flex_node)) return false;
 
@@ -344,17 +353,6 @@ void WristCalibrationController::update()
       const int RIGHT_MOTOR = pr2_mechanism_model::WristTransmission::RIGHT_MOTOR;
       const int FLEX_JOINT = pr2_mechanism_model::WristTransmission::FLEX_JOINT;
       const int ROLL_JOINT = pr2_mechanism_model::WristTransmission::ROLL_JOINT;
-
-      // Sets up the data structures for passing joint and actuator
-      // positions through the transmission.
-      pr2_hardware_interface::Actuator fake_as_mem[2];  // This way we don't need to delete the objects later
-      pr2_mechanism_model::JointState fake_js_mem[2];
-      std::vector<pr2_hardware_interface::Actuator*> fake_as;
-      std::vector<pr2_mechanism_model::JointState*> fake_js;
-      fake_as.push_back(&fake_as_mem[0]);
-      fake_as.push_back(&fake_as_mem[1]);
-      fake_js.push_back(&fake_js_mem[0]);
-      fake_js.push_back(&fake_js_mem[1]);
 
       // Finds the (uncalibrated) joint position where the flex optical switch triggers
       fake_as[LEFT_MOTOR]->state_.position_ = flex_switch_l_;

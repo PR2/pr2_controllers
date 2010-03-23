@@ -88,6 +88,10 @@ protected:
   pr2_mechanism_model::JointState *flex_joint_, *roll_joint_;
   pr2_mechanism_model::Transmission *transmission_;
 
+  // Preallocated, for use in update()
+  std::vector<pr2_hardware_interface::Actuator*> fake_as;
+  std::vector<pr2_mechanism_model::JointState*> fake_js;
+
   controller::JointVelocityController vc_flex_, vc_roll_;
 };
 
