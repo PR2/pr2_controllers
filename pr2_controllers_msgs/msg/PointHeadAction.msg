@@ -1,4 +1,0 @@
-
-PointHeadActionGoal action_goal
-PointHeadActionResult action_result
-PointHeadActionFeedback action_feedback

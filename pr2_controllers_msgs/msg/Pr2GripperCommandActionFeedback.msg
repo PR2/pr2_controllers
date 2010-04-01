@@ -1,4 +1,0 @@
-
-Header header
-actionlib_msgs/GoalStatus status
-Pr2GripperCommandFeedback feedback

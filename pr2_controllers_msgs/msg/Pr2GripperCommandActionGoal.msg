@@ -1,4 +1,0 @@
-
-Header header
-actionlib_msgs/GoalID goal_id
-Pr2GripperCommandGoal goal

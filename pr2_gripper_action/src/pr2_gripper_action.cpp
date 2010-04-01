@@ -36,8 +36,6 @@
 #include <pr2_controllers_msgs/Pr2GripperCommand.h>
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 
-const double EPS = 1e-6;
-
 class Pr2GripperAction
 {
 private:
@@ -54,6 +52,7 @@ public:
     ros::NodeHandle pn("~");
 
     pn.param("goal_threshold", goal_threshold_, 0.01);
+    pn.param("stall_velocity_threshold", stall_velocity_threshold_, 1e-6);
     pn.param("stall_timeout", stall_timeout_, 0.1);
 
     pub_controller_command_ =
@@ -85,6 +84,7 @@ private:
 
   double min_error_seen_;
   double goal_threshold_;
+  double stall_velocity_threshold_;
   double stall_timeout_;
   ros::Time last_movement_time_;
 
@@ -169,9 +169,9 @@ private:
       return;
 
     // Ensures that the controller is tracking my setpoint.
-    if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > EPS)
+    if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > stall_velocity_threshold_)
     {
-      if (now - goal_received_ < ros::Duration(0.01))
+      if (now - goal_received_ < ros::Duration(1.0))
       {
         return;
       }
@@ -207,7 +207,7 @@ private:
     else
     {
       // Determines if the gripper has stalled.
-      if (fabs(msg->process_value_dot) > EPS)
+      if (fabs(msg->process_value_dot) > stall_velocity_threshold_)
       {
         last_movement_time_ = ros::Time::now();
       }

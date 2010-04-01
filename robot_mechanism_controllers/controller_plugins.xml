@@ -3,6 +3,7 @@
   <class name="JointVelocityController" type="controller::JointVelocityController" base_class_type="pr2_controller_interface::Controller" />  
   <class name="JointPositionController" type="controller::JointPositionController" base_class_type="pr2_controller_interface::Controller" />
   <class name="JointSplineTrajectoryController" type="controller::JointSplineTrajectoryController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="JointTrajectoryActionController" type="controller::JointTrajectoryActionController" base_class_type="pr2_controller_interface::Controller" />
 
   <class name="CartesianWrenchController" type="controller::CartesianWrenchController" base_class_type="pr2_controller_interface::Controller" />
   <class name="CartesianTwistController" type="controller::CartesianTwistController" base_class_type="pr2_controller_interface::Controller" />

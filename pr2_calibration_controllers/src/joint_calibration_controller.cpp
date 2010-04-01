@@ -138,6 +138,10 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
 
+  fake_a.resize(1);
+  fake_j.resize(1);
+
+
 
   // Contained velocity controller
 
@@ -186,10 +190,8 @@ void JointCalibrationController::update()
     {
       pr2_hardware_interface::Actuator a;
       pr2_mechanism_model::JointState j;
-      std::vector<pr2_hardware_interface::Actuator*> fake_a;
-      std::vector<pr2_mechanism_model::JointState*> fake_j;
-      fake_a.push_back(&a);
-      fake_j.push_back(&j);
+      fake_a[0] = &a;
+      fake_j[0] = &j;
 
       fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
       transmission_->propagatePosition(fake_a, fake_j);
