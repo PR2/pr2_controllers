@@ -76,7 +76,7 @@ public:
   GoalHandle gh_;
 
   RTServerGoalHandle(GoalHandle &gh)
-    : gh_(gh), req_abort_(false), req_succeed_(false)
+    : req_abort_(false), req_succeed_(false), gh_(gh)
   {
   }
 

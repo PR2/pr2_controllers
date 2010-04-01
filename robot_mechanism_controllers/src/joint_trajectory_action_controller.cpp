@@ -140,7 +140,7 @@ static void getCubicSplineCoefficients(double start_pos, double start_vel,
 
 
 JointTrajectoryActionController::JointTrajectoryActionController()
-  : loop_count_(0), robot_(NULL)
+  : loop_count_(0), robot_(NULL), has_active_goal_(false)
 {
 }
 
@@ -424,7 +424,7 @@ void JointTrajectoryActionController::commandCB(const trajectory_msgs::JointTraj
 void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::JointTrajectory::ConstPtr &msg,
                                                         boost::shared_ptr<RTGoalHandle> gh)
 {
-  ros::Time time = last_time_;
+  ros::Time time = last_time_ + ros::Duration(0.01);
   ROS_DEBUG("Figuring out new trajectory at %.3lf, with data from %.3lf",
             time.toSec(), msg->header.stamp.toSec());
 
@@ -486,7 +486,9 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   // Useful segments are not going to be completely overwritten by the message's splines.
   int last_useful = -1;
   double msg_start_time;
-  if (msg->points.size() > 0)
+  if (msg->header.stamp == ros::Time(0.0))
+    msg_start_time = (time + msg->points[0].time_from_start).toSec();
+  else if (msg->points.size() > 0)
     msg_start_time = (msg->header.stamp + msg->points[0].time_from_start).toSec();
   else
     msg_start_time = std::max(time.toSec(), msg->header.stamp.toSec());
@@ -522,8 +524,9 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   ROS_DEBUG("Initial conditions for new set of splines:");
   for (size_t i = 0; i < joints_.size(); ++i)
   {
+    double t = msg->header.stamp == ros::Time(0.0) ? time.toSec() : msg->header.stamp.toSec();
     sampleSplineWithTimeBounds(last.splines[i].coef, last.duration,
-                               msg->header.stamp.toSec() - last.start_time,
+                               t,
                                prev_positions[i], prev_velocities[i], prev_accelerations[i]);
     ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)", prev_positions[i], prev_velocities[i],
               prev_accelerations[i], joints_[i]->joint_->name.c_str());
@@ -544,7 +547,10 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   {
     Segment seg;
 
-    seg.start_time = (msg->header.stamp + msg->points[i].time_from_start).toSec() - durations[i];
+    if (msg->header.stamp == ros::Time(0.0))
+      seg.start_time = (time + msg->points[i].time_from_start).toSec() - durations[i];
+    else
+      seg.start_time = (msg->header.stamp + msg->points[i].time_from_start).toSec() - durations[i];
     seg.duration = durations[i];
     seg.gh = gh;
     seg.splines.resize(joints_.size());
