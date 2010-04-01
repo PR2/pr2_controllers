@@ -171,7 +171,7 @@ private:
     // Ensures that the controller is tracking my setpoint.
     if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > EPS)
     {
-      if (now - goal_received_ < ros::Duration(0.01))
+      if (now - goal_received_ < ros::Duration(1.0))
       {
         return;
       }
