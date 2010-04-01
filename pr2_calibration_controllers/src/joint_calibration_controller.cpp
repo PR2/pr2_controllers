@@ -43,7 +43,7 @@ using namespace std;
 namespace controller {
 
 JointCalibrationController::JointCalibrationController()
-: robot_(NULL), last_publish_time_(0), state_(INITIALIZED),
+: robot_(NULL), last_publish_time_(0), 
   actuator_(NULL), joint_(NULL), transmission_(NULL)
 {
 }
@@ -58,7 +58,6 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
   node_ = n;
 
   // Joint
-
   std::string joint_name;
   if (!node_.getParam("joint", joint_name))
   {
@@ -91,9 +90,16 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+  if (actuator_->state_.zero_offset_ != 0){
+    ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
+    state_ = CALIBRATED;
+  }
+  else{
+    ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
+    state_ = INITIALIZED;
+  }
 
   // Transmission
-
   std::string transmission_name;
   if (!node_.getParam("transmission", transmission_name))
   {
@@ -144,15 +150,31 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
 
 
   // Contained velocity controller
-
   if (!vc_.init(robot, node_))
     return false;
 
+  // advertise service to check calibration
+  is_calibrated_srv_ = node_.advertiseService("is_calibrated", &JointCalibrationController::isCalibrated, this);
+
   // "Calibrated" topic
-  pub_calibrated_.reset(
-    new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
+  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
+
 
   return true;
+}
+
+
+void JointCalibrationController::starting()
+{
+  state_ = INITIALIZED; 
+  actuator_->state_.zero_offset_ = 0.0;
+}
+
+
+bool JointCalibrationController::isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp)
+{
+  ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
+  return state_ == CALIBRATED;
 }
 
 
@@ -185,7 +207,7 @@ void JointCalibrationController::update()
     break;
   case MOVING_TO_HIGH: {
     vc_.setCommand(search_velocity_);
-
+    
     if (actuator_->state_.calibration_reading_ & 1)
     {
       pr2_hardware_interface::Actuator a;
@@ -196,8 +218,6 @@ void JointCalibrationController::update()
       fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
       transmission_->propagatePosition(fake_a, fake_j);
 
-
-
       // Where was the joint when the optical switch triggered?
       fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
       transmission_->propagatePosition(fake_a, fake_j);
@@ -206,7 +226,7 @@ void JointCalibrationController::update()
       assert(joint_->joint_->calibration);
       fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
       transmission_->propagatePositionBackwards(fake_j, fake_a);
-
+      
       actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;
       joint_->calibrated_ = true;
 
@@ -216,16 +236,13 @@ void JointCalibrationController::update()
     break;
   }
   case CALIBRATED:
-    if (pub_calibrated_)
-    {
-      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime())
-      {
-        assert(pub_calibrated_);
-        if (pub_calibrated_->trylock())
-        {
-          last_publish_time_ = robot_->getTime();
-          pub_calibrated_->unlockAndPublish();
-        }
+    if (pub_calibrated_) {
+      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime()){
+	assert(pub_calibrated_);
+	if (pub_calibrated_->trylock()) {
+	  last_publish_time_ = robot_->getTime();
+	  pub_calibrated_->unlockAndPublish();
+	}
       }
     }
     break;
@@ -234,5 +251,4 @@ void JointCalibrationController::update()
   if (state_ != CALIBRATED)
     vc_.update();
 }
-
 } // namespace

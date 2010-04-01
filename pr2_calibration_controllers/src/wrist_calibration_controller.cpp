@@ -40,7 +40,7 @@ namespace controller {
 
 
 WristCalibrationController::WristCalibrationController()
-: state_(INITIALIZED), robot_(NULL), last_publish_time_(0)
+: robot_(NULL), last_publish_time_(0)
 {
 }
 
@@ -196,6 +196,16 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
               actuator_r_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+  if (actuator_l_->state_.zero_offset_ != 0 && actuator_l_->state_.zero_offset_ != 0){
+    ROS_INFO("Wrist joints %s and %s are already calibrated", flex_joint_name.c_str(), roll_joint_name.c_str());
+    state_ = CALIBRATED;
+  }
+  else{
+    ROS_INFO("Not both wrist joints %s and %s are are calibrated. Will re-calibrate both of them", flex_joint_name.c_str(), roll_joint_name.c_str());
+    state_ = INITIALIZED;
+  }
+
+
 
   // Transmission
 
@@ -235,11 +245,30 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   if (!vc_roll_.init(robot_, roll_node)) return false;
   if (!vc_flex_.init(robot_, flex_node)) return false;
 
-  pub_calibrated_.reset(
-    new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
+  // advertise service to check calibration
+  is_calibrated_srv_ = node_.advertiseService("is_calibrated", &WristCalibrationController::isCalibrated, this);
+
+  // "Calibrated" topic
+  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
 
   return true;
 }
+
+
+void WristCalibrationController::starting()
+{
+  state_ = INITIALIZED; 
+  actuator_r_->state_.zero_offset_ = 0.0;
+  actuator_l_->state_.zero_offset_ = 0.0;
+}
+
+
+bool WristCalibrationController::isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp)
+{
+  ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
+  return state_ == CALIBRATED;
+}
+
 
 void WristCalibrationController::update()
 {
@@ -386,19 +415,15 @@ void WristCalibrationController::update()
     break;
   }
   case CALIBRATED:
-
-    if (pub_calibrated_)
-    {
-      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime())
-      {
-        assert(pub_calibrated_);
-        if (pub_calibrated_->trylock())
-        {
-          last_publish_time_ = robot_->getTime();
-          pub_calibrated_->unlockAndPublish();
-        }
+    if (pub_calibrated_) {
+      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime()) {
+	assert(pub_calibrated_);
+	if (pub_calibrated_->trylock()) {
+	  last_publish_time_ = robot_->getTime();
+	  pub_calibrated_->unlockAndPublish();
+	}
       }
-    }
+      }
     break;
   }
 
@@ -411,7 +436,5 @@ void WristCalibrationController::update()
   prev_actuator_l_position_ = actuator_l_->state_.position_;
   prev_actuator_r_position_ = actuator_r_->state_.position_;
 }
-
-
 }
 

@@ -40,6 +40,7 @@
 #include "robot_mechanism_controllers/joint_velocity_controller.h"
 #include "realtime_tools/realtime_publisher.h"
 #include "std_msgs/Empty.h"
+#include "std_srvs/Empty.h"
 
 
 namespace controller
@@ -52,22 +53,18 @@ public:
   virtual ~JointCalibrationController();
 
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-
+  virtual void starting();
   virtual void update();
 
-  bool calibrated() { return state_ == CALIBRATED; }
-  void beginCalibration()
-  {
-    if (state_ == INITIALIZED)
-      state_ = BEGINNING;
-  }
+  bool isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp);
+
 
 protected:
-
   pr2_mechanism_model::RobotState* robot_;
   ros::NodeHandle node_;
-  boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Empty> > pub_calibrated_;
   ros::Time last_publish_time_;
+  ros::ServiceServer is_calibrated_srv_;
+  boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Empty> > pub_calibrated_;
 
   enum { INITIALIZED, BEGINNING, MOVING_TO_LOW, MOVING_TO_HIGH, CALIBRATED };
   int state_;

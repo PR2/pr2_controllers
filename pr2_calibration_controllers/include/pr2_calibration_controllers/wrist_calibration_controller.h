@@ -38,6 +38,7 @@
 #include "realtime_tools/realtime_publisher.h"
 #include "pr2_mechanism_model/wrist_transmission.h"
 #include "std_msgs/Empty.h"
+#include "std_srvs/Empty.h"
 
 namespace controller {
 
@@ -48,18 +49,10 @@ public:
   ~WristCalibrationController();
 
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-
-  /*!
-   * \brief Issues commands to the joint. Should be called at regular intervals
-   */
+  virtual void starting();
   virtual void update();
 
-  bool calibrated() { return state_ == CALIBRATED; }
-  void beginCalibration()
-  {
-    if (state_ == INITIALIZED)
-      state_ = BEGINNING;
-  }
+  bool isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp);
 
 protected:
 
@@ -71,6 +64,7 @@ protected:
   pr2_mechanism_model::RobotState *robot_;
   ros::NodeHandle node_;
   ros::Time last_publish_time_;
+  ros::ServiceServer is_calibrated_srv_;
   boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Empty> > pub_calibrated_;
 
   double roll_search_velocity_, roll_reference_position_;
