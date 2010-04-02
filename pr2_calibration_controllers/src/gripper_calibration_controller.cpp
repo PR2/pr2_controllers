@@ -45,7 +45,7 @@ namespace controller
 {
 
 GripperCalibrationController::GripperCalibrationController()
-: state_(INITIALIZED), last_publish_time_(0), joint_(NULL)
+  : last_publish_time_(0), joint_(NULL)
 {
 }
 
@@ -91,6 +91,15 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+  if (actuator_->state_.zero_offset_ != 0){
+    ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
+    state_ = CALIBRATED;
+  }
+  else{
+    ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
+    state_ = INITIALIZED;
+  }
+
 
   XmlRpc::XmlRpcValue other_joint_names;
   if (node_.getParam("other_joints", other_joint_names))
@@ -117,11 +126,29 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   if (!vc_.init(robot, node_))
     return false;
 
-  pub_calibrated_.reset(
-    new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
+  // advertise service to check calibration
+  is_calibrated_srv_ = node_.advertiseService("is_calibrated", &GripperCalibrationController::isCalibrated, this);
+
+  // "Calibrated" topic
+  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
 
   return true;
 }
+
+
+void GripperCalibrationController::starting()
+{
+  state_ = INITIALIZED; 
+  actuator_->state_.zero_offset_ = 0.0;
+}
+
+
+bool GripperCalibrationController::isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp)
+{
+  ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
+  return state_ == CALIBRATED;
+}
+
 
 void GripperCalibrationController::update()
 {
@@ -168,24 +195,18 @@ void GripperCalibrationController::update()
     }
     break;
   case CALIBRATED:
-    if (pub_calibrated_)
-    {
-      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime())
-      {
-        if (pub_calibrated_->trylock())
-        {
-          last_publish_time_ = robot_->getTime();
-          pub_calibrated_->unlockAndPublish();
-        }
+    if (pub_calibrated_) {
+      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime()) {
+	if (pub_calibrated_->trylock()) {
+	  last_publish_time_ = robot_->getTime();
+	  pub_calibrated_->unlockAndPublish();
+	}
       }
     }
     break;
   }
-
   if (state_ != CALIBRATED)
     vc_.update();
 }
-
-
 }
 

@@ -39,7 +39,7 @@ PLUGINLIB_REGISTER_CLASS(CasterCalibrationController, controller::CasterCalibrat
 namespace controller {
 
 CasterCalibrationController::CasterCalibrationController()
-: robot_(NULL), state_(INITIALIZED),
+: robot_(NULL), 
   joint_(NULL), wheel_l_joint_(NULL), wheel_r_joint_(NULL), last_publish_time_(0)
 {
 }
@@ -146,6 +146,16 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+  if (actuator_->state_.zero_offset_ != 0){
+    ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
+    state_ = CALIBRATED;
+  }
+  else{
+    ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
+    state_ = INITIALIZED;
+  }
+
+
 
   // Transmission
 
@@ -171,14 +181,32 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
   fake_as.push_back(new pr2_hardware_interface::Actuator);
   fake_js.push_back(new pr2_mechanism_model::JointState);
 
-  pub_calibrated_.reset(
-    new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
-
   if (!cc_.init(robot_, node_))
     return false;
 
+  // advertise service to check calibration
+  is_calibrated_srv_ = node_.advertiseService("is_calibrated", &CasterCalibrationController::isCalibrated, this);
+
+  // "Calibrated" topic
+  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
+
   return true;
 }
+
+void CasterCalibrationController::starting()
+{
+  state_ = INITIALIZED; 
+  actuator_->state_.zero_offset_ = 0.0;
+}
+
+
+bool CasterCalibrationController::isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp)
+{
+  ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
+  return state_ == CALIBRATED;
+}
+
+
 
 void CasterCalibrationController::update()
 {
@@ -220,6 +248,7 @@ void CasterCalibrationController::update()
       wheel_r_joint_->calibrated_ = true;
 
       state_ = CALIBRATED;
+      cc_.steer_velocity_ = 0.0;
     }
     else
     {
@@ -241,16 +270,12 @@ void CasterCalibrationController::update()
   }
   case CALIBRATED:
     cc_.steer_velocity_ = 0.0;
-
-    if (pub_calibrated_)
-    {
-      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime())
-      {
-        if (pub_calibrated_->trylock())
-        {
+    if (pub_calibrated_) {
+      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime())  {
+	if (pub_calibrated_->trylock())  {
           last_publish_time_ = robot_->getTime();
-          pub_calibrated_->unlockAndPublish();
-        }
+	  pub_calibrated_->unlockAndPublish();
+	}
       }
     }
     break;

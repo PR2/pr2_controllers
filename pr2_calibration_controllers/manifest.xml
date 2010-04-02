@@ -11,6 +11,7 @@
   <url>http://ros.org/wiki/pr2_calibration_controllers</url>
 
   <depend package="std_msgs" />
+  <depend package="std_srvs" />
   <depend package="pr2_controller_interface" />
 
   <depend package="roscpp" />

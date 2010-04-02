@@ -749,6 +749,13 @@ static bool setsEqual(const std::vector<std::string> &a, const std::vector<std::
   return true;
 }
 
+template <class Enclosure, class Member>
+static boost::shared_ptr<Member> share_member(boost::shared_ptr<Enclosure> enclosure, Member &member)
+{
+  actionlib::EnclosureDeleter<Enclosure> d(enclosure);
+  boost::shared_ptr<Member> p(&member, d);
+  return p;
+}
 
 void JointTrajectoryActionController::goalCB(GoalHandle gh)
 {
@@ -780,7 +787,7 @@ void JointTrajectoryActionController::goalCB(GoalHandle gh)
   // Sends the trajectory along to the controller
   boost::shared_ptr<RTGoalHandle> rt_gh(new RTGoalHandle(gh));
   goal_handle_timer_ = node_.createTimer(ros::Duration(0.01), &RTGoalHandle::runNonRT, rt_gh);
-  commandTrajectory(actionlib::share_member(gh.getGoal(), gh.getGoal()->trajectory), rt_gh);
+  commandTrajectory(share_member(gh.getGoal(), gh.getGoal()->trajectory), rt_gh);
   goal_handle_timer_.start();
 }
 
