@@ -149,10 +149,16 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
   if (actuator_->state_.zero_offset_ != 0){
     ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
     state_ = CALIBRATED;
+    joint_->calibrated_ = true;
+    wheel_l_joint_->calibrated_ = true;
+    wheel_r_joint_->calibrated_ = true;
   }
   else{
     ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
     state_ = INITIALIZED;
+    joint_->calibrated_ = false;
+    wheel_l_joint_->calibrated_ = false;
+    wheel_r_joint_->calibrated_ = false;
   }
 
 
@@ -197,6 +203,9 @@ void CasterCalibrationController::starting()
 {
   state_ = INITIALIZED; 
   actuator_->state_.zero_offset_ = 0.0;
+  joint_->calibrated_ = false;
+  wheel_l_joint_->calibrated_ = false;
+  wheel_r_joint_->calibrated_ = false;
 }
 
 

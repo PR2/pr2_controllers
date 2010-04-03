@@ -198,10 +198,14 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   }
   if (actuator_l_->state_.zero_offset_ != 0 && actuator_l_->state_.zero_offset_ != 0){
     ROS_INFO("Wrist joints %s and %s are already calibrated", flex_joint_name.c_str(), roll_joint_name.c_str());
+    flex_joint_->calibrated_ = true;
+    roll_joint_->calibrated_ = true;
     state_ = CALIBRATED;
   }
   else{
     ROS_INFO("Not both wrist joints %s and %s are are calibrated. Will re-calibrate both of them", flex_joint_name.c_str(), roll_joint_name.c_str());
+    roll_joint_->calibrated_ = false;
+    flex_joint_->calibrated_ = false;
     state_ = INITIALIZED;
   }
 
@@ -260,6 +264,8 @@ void WristCalibrationController::starting()
   state_ = INITIALIZED; 
   actuator_r_->state_.zero_offset_ = 0.0;
   actuator_l_->state_.zero_offset_ = 0.0;
+  flex_joint_->calibrated_ = false;
+  roll_joint_->calibrated_ = false;
 }
 
 
