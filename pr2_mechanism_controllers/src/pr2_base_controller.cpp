@@ -73,18 +73,18 @@ Pr2BaseController::~Pr2BaseController()
 
 bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
-  if(!base_kinematics_.init(robot,n))
+  if(!base_kin_.init(robot,n))
     return false;
   node_ = n;
-  state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(n, base_kinematics_.name_ + "/state", 1));
+  state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(n, base_kin_.name_ + "/state", 1));
 
-  int num_joints = base_kinematics_.num_wheels_ + base_kinematics_.num_casters_;
+  int num_joints = base_kin_.num_wheels_ + base_kin_.num_casters_;
   state_publisher_->msg_.set_joint_names_size(num_joints);
   state_publisher_->msg_.set_joint_velocity_measured_size(num_joints);
   state_publisher_->msg_.set_joint_effort_measured_size(num_joints);
-  state_publisher_->msg_.set_joint_command_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_commanded_size(num_joints);
   state_publisher_->msg_.set_joint_effort_commanded_size(num_joints);
-  state_publisher_->msg_.set_joint_error_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_error_size(num_joints);
   state_publisher_->msg_.set_joint_effort_error_size(num_joints);
 
   //Get params from param server
@@ -112,74 +112,68 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   cmd_sub_ = node_.subscribe<geometry_msgs::Twist>("command", 1, &Pr2BaseController::commandCallback, this);
 
   //casters
-  caster_controller_.resize(base_kinematics_.num_casters_);
-  caster_position_pid_.resize(base_kinematics_.num_casters_);
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  caster_controller_.resize(base_kin_.num_casters_);
+  caster_position_pid_.resize(base_kin_.num_casters_);
+  for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     control_toolbox::Pid p_i_d;
-    state_publisher_->msg_.joint_names[i] = base_kinematics_.caster_[i].joint_name_;
-    if(!p_i_d.init(ros::NodeHandle(node_, base_kinematics_.caster_[i].joint_name_+"/velocity_controller")))
+    state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
+    if(!p_i_d.init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/velocity_controller")))
     {
-      ROS_ERROR("Could not initialize pid for %s",base_kinematics_.caster_[i].joint_name_.c_str());
+      ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
 
-    if(!caster_position_pid_[i].init(ros::NodeHandle(node_, base_kinematics_.caster_[i].joint_name_+"/position_controller")))
+    if(!caster_position_pid_[i].init(ros::NodeHandle(node_, base_kin_.caster_[i].joint_name_+"/position_controller")))
     {
-      ROS_ERROR("Could not initialize position pid controller for %s",base_kinematics_.caster_[i].joint_name_.c_str());
+      ROS_ERROR("Could not initialize position pid controller for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
     caster_controller_[i].reset(new JointVelocityController());
-    if(!caster_controller_[i]->init(base_kinematics_.robot_state_, base_kinematics_.caster_[i].joint_name_, p_i_d))
+    if(!caster_controller_[i]->init(base_kin_.robot_state_, base_kin_.caster_[i].joint_name_, p_i_d))
     {
-      ROS_ERROR("Could not initialize pid for %s",base_kinematics_.caster_[i].joint_name_.c_str());
+      ROS_ERROR("Could not initialize pid for %s",base_kin_.caster_[i].joint_name_.c_str());
       return false;
     }
     if (!caster_controller_[i]->joint_state_->calibrated_)
     {
       ROS_ERROR("Caster joint \"%s\" not calibrated (namespace: %s)",
-                base_kinematics_.caster_[i].joint_name_.c_str(), node_.getNamespace().c_str());
+                base_kin_.caster_[i].joint_name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
   }
   //wheels
-  wheel_pid_controllers_.resize(base_kinematics_.num_wheels_);
-  //  wheel_controller_.resize(base_kinematics_.num_wheels_);
-  for(int j = 0; j < base_kinematics_.num_wheels_; j++)
+  wheel_controller_.resize(base_kin_.num_wheels_);
+  for(int j = 0; j < base_kin_.num_wheels_; j++)
   {
     control_toolbox::Pid p_i_d;
-    state_publisher_->msg_.joint_names[j + base_kinematics_.num_casters_] = base_kinematics_.wheel_[j].joint_name_;
-    if(!wheel_pid_controllers_[j].init(ros::NodeHandle(node_,base_kinematics_.wheel_[j].joint_name_)))
+    state_publisher_->msg_.joint_names[j + base_kin_.num_casters_] = base_kin_.wheel_[j].joint_name_;
+    if(!p_i_d.init(ros::NodeHandle(node_,base_kin_.wheel_[j].joint_name_)))
     {
-      ROS_ERROR("Could not initialize pid for %s",base_kinematics_.wheel_[j].joint_name_.c_str());
+      ROS_ERROR("Could not initialize pid for %s",base_kin_.wheel_[j].joint_name_.c_str());
       return false;
     }
-    /*    wheel_controller_[j].reset(new JointVelocityController());
-   if(!wheel_controller_[j]->init(base_kinematics_.robot_state_, base_kinematics_.wheel_[j].joint_name_, p_i_d))
+    wheel_controller_[j].reset(new JointVelocityController());
+   if(!wheel_controller_[j]->init(base_kin_.robot_state_, base_kin_.wheel_[j].joint_name_, p_i_d))
    {
-      ROS_ERROR("Could not initialize joint velocity controller for %s",base_kinematics_.wheel_[j].joint_name_.c_str());
+      ROS_ERROR("Could not initialize joint velocity controller for %s",base_kin_.wheel_[j].joint_name_.c_str());
       return false;
-      }*/
+   }
   }
-  for(int i = 0; i < base_kinematics_.num_casters_; ++i)
+  for(int i = 0; i < base_kin_.num_casters_; ++i)
   {
-    if(!base_kinematics_.caster_[i].joint_->calibrated_)
+    if(!base_kin_.caster_[i].joint_->calibrated_)
     {
       ROS_ERROR("The Base controller could not start because the casters were not calibrated. Relaunch the base controller after you see the caster calibration finish.");
       return false; // Casters are not calibrated
     }
   }
 
-  if (!((filters::MultiChannelFilterBase<double>&)caster_vel_filter_).configure(base_kinematics_.num_casters_, std::string("caster_velocity_filter"), node_)){
+  if (!((filters::MultiChannelFilterBase<double>&)caster_vel_filter_).configure(base_kin_.num_casters_, std::string("caster_velocity_filter"), node_)){
      ROS_ERROR("BaseController: could not configure velocity filters for casters");
      return false;
   }
-  if (!((filters::MultiChannelFilterBase<double>&)wheel_vel_filter_).configure(base_kinematics_.num_wheels_, std::string("wheel_velocity_filter"), node_)){
-     ROS_ERROR("BaseController: could not configure velocity filters for wheels");
-     return false;
-  }
-  filtered_velocity_.resize(base_kinematics_.num_casters_);
-  filtered_wheel_velocity_.resize(base_kinematics_.num_wheels_);
+  filtered_velocity_.resize(base_kin_.num_casters_);
   return true;
 }
 
@@ -199,20 +193,20 @@ void Pr2BaseController::setCommand(const geometry_msgs::Twist &cmd_vel)
     cmd_vel_t_.linear.y = 0.0;
   }
   cmd_vel_t_.angular.z = filters::clamp(cmd_vel.angular.z, -max_rotational_velocity_, max_rotational_velocity_);
-  cmd_received_timestamp_ = base_kinematics_.robot_state_->getTime();
+  cmd_received_timestamp_ = base_kin_.robot_state_->getTime();
 
   ROS_DEBUG("BaseController:: command received: %f %f %f",cmd_vel.linear.x,cmd_vel.linear.y,cmd_vel.angular.z);
   ROS_DEBUG("BaseController:: command current: %f %f %f", cmd_vel_.linear.x,cmd_vel_.linear.y,cmd_vel_.angular.z);
   ROS_DEBUG("BaseController:: clamped vel: %f", clamped_vel_mag);
   ROS_DEBUG("BaseController:: vel: %f", vel_mag);
 
-  for(int i=0; i < (int) base_kinematics_.num_wheels_; i++)
+  for(int i=0; i < (int) base_kin_.num_wheels_; i++)
   {
-    ROS_DEBUG("BaseController:: wheel speed cmd:: %d %f",i,(base_kinematics_.wheel_[i].direction_multiplier_*base_kinematics_.wheel_[i].wheel_speed_cmd_));
+    ROS_DEBUG("BaseController:: wheel speed cmd:: %d %f",i,(base_kin_.wheel_[i].direction_multiplier_*base_kin_.wheel_[i].wheel_speed_cmd_));
   }
-  for(int i=0; i < (int) base_kinematics_.num_casters_; i++)
+  for(int i=0; i < (int) base_kin_.num_casters_; i++)
   {
-    ROS_DEBUG("BaseController:: caster speed cmd:: %d %f",i,(base_kinematics_.caster_[i].steer_velocity_desired_));
+    ROS_DEBUG("BaseController:: caster speed cmd:: %d %f",i,(base_kin_.caster_[i].steer_velocity_desired_));
   }
   new_cmd_available_ = true;
 }
@@ -269,22 +263,22 @@ geometry_msgs::Twist Pr2BaseController::getCommand()// Return the current veloci
 
 void Pr2BaseController::starting()
 {
-  last_time_ = base_kinematics_.robot_state_->getTime();
-  cmd_received_timestamp_ = base_kinematics_.robot_state_->getTime();
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  last_time_ = base_kin_.robot_state_->getTime();
+  cmd_received_timestamp_ = base_kin_.robot_state_->getTime();
+  for(int i = 0; i < base_kin_.num_casters_; i++)
   {
     caster_controller_[i]->starting();
   }
-  for(int j = 0; j < base_kinematics_.num_wheels_; j++)
+  for(int j = 0; j < base_kin_.num_wheels_; j++)
   {
-    //    wheel_controller_[j]->starting();
+    wheel_controller_[j]->starting();
   }
 }
 
 void Pr2BaseController::update()
 {
-  ros::Time current_time = base_kinematics_.robot_state_->getTime();
-  double dT = std::min<double>((current_time - last_time_).toSec(), base_kinematics_.MAX_DT_);
+  ros::Time current_time = base_kin_.robot_state_->getTime();
+  double dT = std::min<double>((current_time - last_time_).toSec(), base_kin_.MAX_DT_);
 
   if(new_cmd_available_)
   {
@@ -333,27 +327,27 @@ void Pr2BaseController::publishState(const ros::Time &time)
     state_publisher_->msg_.command.linear.y  = cmd_vel_.linear.y;
     state_publisher_->msg_.command.angular.z = cmd_vel_.angular.z;
 
-    for(int i = 0; i < base_kinematics_.num_casters_; i++)
+    for(int i = 0; i < base_kin_.num_casters_; i++)
     {
-      state_publisher_->msg_.joint_names[i] = base_kinematics_.caster_[i].joint_name_;
-      state_publisher_->msg_.joint_velocity_measured[i] = base_kinematics_.caster_[i].joint_->velocity_;
-      state_publisher_->msg_.joint_command[i]= base_kinematics_.caster_[i].steer_angle_desired_;
-      state_publisher_->msg_.joint_error[i]  = base_kinematics_.caster_[i].joint_->position_ - base_kinematics_.caster_[i].steer_angle_desired_;
+      state_publisher_->msg_.joint_names[i] = base_kin_.caster_[i].joint_name_;
+      state_publisher_->msg_.joint_velocity_measured[i] = base_kin_.caster_[i].joint_->velocity_;
+      state_publisher_->msg_.joint_velocity_commanded[i]= base_kin_.caster_[i].steer_velocity_desired_;
+      state_publisher_->msg_.joint_velocity_error[i]    = base_kin_.caster_[i].joint_->velocity_ - base_kin_.caster_[i].steer_velocity_desired_;
 
-      state_publisher_->msg_.joint_effort_measured[i]  = base_kinematics_.caster_[i].joint_->measured_effort_;
-      state_publisher_->msg_.joint_effort_commanded[i] = base_kinematics_.caster_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_effort_error[i]     = base_kinematics_.caster_[i].joint_->measured_effort_ - base_kinematics_.caster_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_measured[i]  = base_kin_.caster_[i].joint_->measured_effort_;
+      state_publisher_->msg_.joint_effort_commanded[i] = base_kin_.caster_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_error[i]     = base_kin_.caster_[i].joint_->measured_effort_ - base_kin_.caster_[i].joint_->commanded_effort_;
     }
-    for(int i = 0; i < base_kinematics_.num_wheels_; i++)
+    for(int i = 0; i < base_kin_.num_wheels_; i++)
     {
-      state_publisher_->msg_.joint_names[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_name_;
-      state_publisher_->msg_.joint_velocity_measured[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_->velocity_;
-      state_publisher_->msg_.joint_command[i+base_kinematics_.num_casters_]= base_kinematics_.wheel_[i].joint_->velocity_-base_kinematics_.wheel_[i].wheel_speed_cmd_;
-      state_publisher_->msg_.joint_error[i+base_kinematics_.num_casters_]    = base_kinematics_.wheel_[i].wheel_speed_cmd_;
+      state_publisher_->msg_.joint_names[i+base_kin_.num_casters_] = base_kin_.wheel_[i].joint_name_;
+      state_publisher_->msg_.joint_velocity_measured[i+base_kin_.num_casters_] = base_kin_.wheel_[i].wheel_speed_actual_;
+      state_publisher_->msg_.joint_velocity_commanded[i+base_kin_.num_casters_]= base_kin_.wheel_[i].wheel_speed_error_;
+      state_publisher_->msg_.joint_velocity_error[i+base_kin_.num_casters_]    = base_kin_.wheel_[i].wheel_speed_cmd_;
 
-      state_publisher_->msg_.joint_effort_measured[i+base_kinematics_.num_casters_]  = base_kinematics_.wheel_[i].joint_->measured_effort_;
-      state_publisher_->msg_.joint_effort_commanded[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_->commanded_effort_;
-      state_publisher_->msg_.joint_effort_error[i+base_kinematics_.num_casters_]     = base_kinematics_.wheel_[i].joint_->measured_effort_ - base_kinematics_.wheel_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_measured[i+base_kin_.num_casters_]  = base_kin_.wheel_[i].joint_->measured_effort_;
+      state_publisher_->msg_.joint_effort_commanded[i+base_kin_.num_casters_] = base_kin_.wheel_[i].joint_->commanded_effort_;
+      state_publisher_->msg_.joint_effort_error[i+base_kin_.num_casters_]     = base_kin_.wheel_[i].joint_->measured_effort_ - base_kin_.wheel_[i].joint_->commanded_effort_;
     }
     state_publisher_->unlockAndPublish();
     last_publish_time_ = time;
@@ -362,11 +356,11 @@ void Pr2BaseController::publishState(const ros::Time &time)
 
 void Pr2BaseController::computeJointCommands(const double &dT)
 {
-  base_kinematics_.computeWheelPositions();
+  base_kin_.computeWheelPositions();
 
   computeDesiredCasterSteer(dT);
 
-  computeDesiredWheelSpeeds(dT);
+  computeDesiredWheelSpeeds();
 }
 
 void Pr2BaseController::setJointCommands()
@@ -384,52 +378,48 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
   double error_steer(0.0), error_steer_m_pi(0.0);
   double trans_vel = sqrt(cmd_vel_.linear.x * cmd_vel_.linear.x + cmd_vel_.linear.y * cmd_vel_.linear.y);
 
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  for(int i = 0; i < base_kin_.num_casters_; i++)
   {  
-    filtered_velocity_[i] = base_kinematics_.caster_[i].joint_->velocity_;
+    filtered_velocity_[i] = base_kin_.caster_[i].joint_->velocity_;
   }
   caster_vel_filter_.update(filtered_velocity_,filtered_velocity_);
 
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  for(int i = 0; i < base_kin_.num_casters_; i++)
   {
-    result = base_kinematics_.pointVel2D(base_kinematics_.caster_[i].offset_, cmd_vel_);
+    result = base_kin_.pointVel2D(base_kin_.caster_[i].offset_, cmd_vel_);
     if(trans_vel < EPS && fabs(cmd_vel_.angular.z) < EPS)
     {
-      steer_angle_desired = base_kinematics_.caster_[i].steer_angle_stored_;
+      steer_angle_desired = base_kin_.caster_[i].steer_angle_stored_;
     }
     else
     {
       steer_angle_desired = atan2(result.linear.y, result.linear.x);
-      base_kinematics_.caster_[i].steer_angle_stored_ = steer_angle_desired;
+      base_kin_.caster_[i].steer_angle_stored_ = steer_angle_desired;
     }
     steer_angle_desired_m_pi = angles::normalize_angle(steer_angle_desired + M_PI);
-    error_steer = angles::shortest_angular_distance(steer_angle_desired, base_kinematics_.caster_[i].joint_->position_);
-    error_steer_m_pi = angles::shortest_angular_distance(steer_angle_desired_m_pi, base_kinematics_.caster_[i].joint_->position_);
+    error_steer = angles::shortest_angular_distance(steer_angle_desired, base_kin_.caster_[i].joint_->position_);
+    error_steer_m_pi = angles::shortest_angular_distance(steer_angle_desired_m_pi, base_kin_.caster_[i].joint_->position_);
 
     if(fabs(error_steer_m_pi) < fabs(error_steer))
     {
       error_steer = error_steer_m_pi;
       steer_angle_desired = steer_angle_desired_m_pi;
     }
-    base_kinematics_.caster_[i].steer_angle_desired_ = steer_angle_desired;
-    //    base_kinematics_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
-    //base_kinematics_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
-    double command = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
-    base_kinematics_.caster_[i].joint_->commanded_effort_ = command;
-
-    base_kinematics_.caster_[i].caster_position_error_ = error_steer;
+    //    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
+    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
+    base_kin_.caster_[i].caster_position_error_ = error_steer;
   }
 }
 
 void Pr2BaseController::setDesiredCasterSteer()
 {
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  for(int i = 0; i < base_kin_.num_casters_; i++)
   {
-    //    caster_controller_[i]->setCommand(base_kinematics_.caster_[i].steer_velocity_desired_);
+    caster_controller_[i]->setCommand(base_kin_.caster_[i].steer_velocity_desired_);
   }
 }
 
-void Pr2BaseController::computeDesiredWheelSpeeds(const double &dT)
+void Pr2BaseController::computeDesiredWheelSpeeds()
 {
   geometry_msgs::Twist wheel_point_velocity;
   geometry_msgs::Twist wheel_point_velocity_projected;
@@ -440,47 +430,38 @@ void Pr2BaseController::computeDesiredWheelSpeeds(const double &dT)
   caster_2d_velocity.linear.y = 0;
   caster_2d_velocity.angular.z = 0;
 
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
-  {  
-    filtered_wheel_velocity_[i] = base_kinematics_.wheel_[i].joint_->velocity_;
-  }
-  wheel_vel_filter_.update(filtered_wheel_velocity_,filtered_wheel_velocity_);
-
   double steer_angle_actual = 0;
-  for(int i = 0; i < (int) base_kinematics_.num_wheels_; i++)
+  for(int i = 0; i < (int) base_kin_.num_wheels_; i++)
   {
-    base_kinematics_.wheel_[i].updatePosition();
-    //    caster_2d_velocity.angular.z = base_kinematics_.wheel_[i].parent_->steer_velocity_desired_;
-    caster_2d_velocity.angular.z = base_kinematics_.wheel_[i].parent_->caster_position_error_;
-    steer_angle_actual = base_kinematics_.wheel_[i].parent_->joint_->position_;
-    wheel_point_velocity = base_kinematics_.pointVel2D(base_kinematics_.wheel_[i].position_, cmd_vel_);
-    wheel_caster_steer_component = base_kinematics_.pointVel2D(base_kinematics_.wheel_[i].offset_, caster_2d_velocity);
+    base_kin_.wheel_[i].updatePosition();
+    caster_2d_velocity.angular.z = base_kin_.wheel_[i].parent_->steer_velocity_desired_;
+    steer_angle_actual = base_kin_.wheel_[i].parent_->joint_->position_;
+    wheel_point_velocity = base_kin_.pointVel2D(base_kin_.wheel_[i].position_, cmd_vel_);
+    wheel_caster_steer_component = base_kin_.pointVel2D(base_kin_.wheel_[i].offset_, caster_2d_velocity);
 
     double costh = cos(-steer_angle_actual);
     double sinth = sin(-steer_angle_actual);
 
     wheel_point_velocity_projected.linear.x = costh * wheel_point_velocity.linear.x - sinth * wheel_point_velocity.linear.y;
     wheel_point_velocity_projected.linear.y = sinth * wheel_point_velocity.linear.x + costh * wheel_point_velocity.linear.y;
-    base_kinematics_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x) / (base_kinematics_.wheel_[i].wheel_radius_);
-    double command = wheel_pid_controllers_[i].updatePid(wheel_caster_steer_component.linear.x/base_kinematics_.wheel_[i].wheel_radius_,filtered_wheel_velocity_[i]-base_kinematics_.wheel_[i].wheel_speed_cmd_,ros::Duration(dT));
-    base_kinematics_.wheel_[i].joint_->commanded_effort_ = command;
+    base_kin_.wheel_[i].wheel_speed_cmd_ = (wheel_point_velocity_projected.linear.x + wheel_caster_steer_component.linear.x) / (base_kin_.wheel_[i].wheel_radius_);
   }
 }
 
 void Pr2BaseController::setDesiredWheelSpeeds()
 {
-  /*  for(int i = 0; i < (int) base_kinematics_.num_wheels_; i++)
+  for(int i = 0; i < (int) base_kin_.num_wheels_; i++)
   {
-   wheel_controller_[i]->setCommand(base_kinematics_.wheel_[i].direction_multiplier_ * base_kinematics_.wheel_[i].wheel_speed_cmd_);
-    }*/
+    wheel_controller_[i]->setCommand(base_kin_.wheel_[i].direction_multiplier_ * base_kin_.wheel_[i].wheel_speed_cmd_);
+  }
 }
 
 void Pr2BaseController::updateJointControllers()
 {
-  /*  for(int i = 0; i < base_kinematics_.num_wheels_; i++)
-      wheel_controller_[i]->update();
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
-  caster_controller_[i]->update();*/
+  for(int i = 0; i < base_kin_.num_wheels_; i++)
+    wheel_controller_[i]->update();
+  for(int i = 0; i < base_kin_.num_casters_; i++)
+    caster_controller_[i]->update();
 }
 
 void Pr2BaseController::commandCallback(const geometry_msgs::TwistConstPtr& msg)

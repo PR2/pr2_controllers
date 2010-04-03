@@ -37,7 +37,7 @@
 
 #include <ros/node_handle.h>
 #include <realtime_tools/realtime_publisher.h>
-#include <pr2_mechanism_controllers/BaseControllerState.h>
+#include <pr2_mechanism_controllers/BaseControllerState2.h>
 #include <robot_mechanism_controllers/joint_velocity_controller.h>
 #include <pr2_mechanism_controllers/base_kinematics.h>
 #include <geometry_msgs/Twist.h>
@@ -51,20 +51,20 @@ namespace controller
   /*! \class
    \brief This class inherits from Controller and implements the actual controls.
    */
-  class Pr2BaseController: public pr2_controller_interface::Controller
+  class Pr2BaseController2: public pr2_controller_interface::Controller
   {
     public:
       /*!
-       * \brief Default Constructor of the Pr2BaseController class
+       * \brief Default Constructor of the Pr2BaseController2 class
        *
        */
-      Pr2BaseController();
+      Pr2BaseController2();
 
       /*!
-       * \brief Destructor of the Pr2BaseController class
+       * \brief Destructor of the Pr2BaseController2 class
        *
        */
-      ~Pr2BaseController();
+      ~Pr2BaseController2();
 
       /*
        * \brief  The starting method is called by the realtime thread just before
@@ -91,7 +91,7 @@ namespace controller
        * \brief class where the robot's information is computed and stored
        * @return BaseKinematic instance that is being used by this controller
        */
-      BaseKinematics base_kin_;
+      BaseKinematics base_kinematics_;
 
       /*!
        * \brief mutex lock for setting and getting commands
@@ -203,7 +203,7 @@ namespace controller
       /*!
        * \brief publishes information about the caster and wheel controllers
        */
-      boost::scoped_ptr<realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState> > state_publisher_;
+      boost::scoped_ptr<realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState2> > state_publisher_;
 
       /*!
        * \brief computes the desired caster steers and wheel speeds
@@ -223,7 +223,7 @@ namespace controller
       /*!
        * \brief computes the desired wheel speeds given the desired base speed
        */
-      void computeDesiredWheelSpeeds();
+      void computeDesiredWheelSpeeds(const double &dT);
 
       /*!
        * \brief sends the desired wheel speeds to the wheel controllers
@@ -284,8 +284,17 @@ namespace controller
       std::vector<control_toolbox::Pid> caster_position_pid_;
 
       filters::MultiChannelTransferFunctionFilter<double> caster_vel_filter_;
-      
+
       std::vector<double> filtered_velocity_;
+
+      filters::MultiChannelTransferFunctionFilter<double> wheel_vel_filter_;
+
+      std::vector<double> filtered_wheel_velocity_;
+
+      /*!
+       * \brief The pid controllers for caster position
+       */
+      std::vector<control_toolbox::Pid> wheel_pid_controllers_;
   };
 
 }
