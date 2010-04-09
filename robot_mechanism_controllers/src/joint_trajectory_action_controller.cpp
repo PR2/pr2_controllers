@@ -334,6 +334,10 @@ void JointTrajectoryActionController::update()
 
   // ------ Determines if the goal has failed or succeeded
 
+  if (has_active_goal_ && !traj[seg].gh) {
+    ROS_ERROR("Have an active goal but no current goal handle");
+  }
+
   if (traj[seg].gh && has_active_goal_)
   {
     ros::Time end_time(traj[seg].start_time + traj[seg].duration);
@@ -782,12 +786,12 @@ void JointTrajectoryActionController::goalCB(GoalHandle gh)
 
   gh.setAccepted();
   active_goal_ = gh;
-  has_active_goal_ = true;
 
   // Sends the trajectory along to the controller
   boost::shared_ptr<RTGoalHandle> rt_gh(new RTGoalHandle(gh));
   goal_handle_timer_ = node_.createTimer(ros::Duration(0.01), &RTGoalHandle::runNonRT, rt_gh);
   commandTrajectory(share_member(gh.getGoal(), gh.getGoal()->trajectory), rt_gh);
+  has_active_goal_ = true;
   goal_handle_timer_.start();
 }
 
