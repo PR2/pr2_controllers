@@ -85,6 +85,7 @@ public:
       return false;
     }
     
+    amplitude_ = amplitude;
     idum = (long) seed;
     
     return true;
