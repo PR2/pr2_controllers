@@ -46,6 +46,10 @@ CasterCalibrationController::CasterCalibrationController()
 
 CasterCalibrationController::~CasterCalibrationController()
 {
+  for (size_t i = 0; i < fake_as.size(); ++i)
+    delete fake_as[i];
+  for (size_t i = 0; i < fake_js.size(); ++i)
+    delete fake_js[i];
 }
 
 bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
@@ -164,6 +168,9 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
     return false;
   }
 
+  fake_as.push_back(new pr2_hardware_interface::Actuator);
+  fake_js.push_back(new pr2_mechanism_model::JointState);
+
   pub_calibrated_.reset(
     new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
 
@@ -196,25 +203,18 @@ void CasterCalibrationController::update()
     bool switch_state_ = actuator_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
-      pr2_hardware_interface::Actuator a;
-      pr2_mechanism_model::JointState j;
-      std::vector<pr2_hardware_interface::Actuator*> fake_a;
-      std::vector<pr2_mechanism_model::JointState*> fake_j;
-      fake_a.push_back(&a);
-      fake_j.push_back(&j);
-
       // Where was the joint when the optical switch triggered?
       if (switch_state_ == true)
-        fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
+        fake_as[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
       else
-        fake_a[0]->state_.position_ = actuator_->state_.last_calibration_falling_edge_;
-      transmission_->propagatePosition(fake_a, fake_j);
+        fake_as[0]->state_.position_ = actuator_->state_.last_calibration_falling_edge_;
+      transmission_->propagatePosition(fake_as, fake_js);
 
       // What is the actuator position at the joint's zero?
-      fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
-      transmission_->propagatePositionBackwards(fake_j, fake_a);
+      fake_js[0]->position_ = fake_js[0]->position_ - reference_position_;
+      transmission_->propagatePositionBackwards(fake_js, fake_as);
 
-      actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;
+      actuator_->state_.zero_offset_ = fake_as[0]->state_.position_;
       joint_->calibrated_ = true;
       wheel_l_joint_->calibrated_ = true;
       wheel_r_joint_->calibrated_ = true;
