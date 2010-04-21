@@ -88,8 +88,8 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
     ROS_ERROR("No rising or falling edge is specified for calibration of joint %s. Note that the reference_position is not used any more", joint_name.c_str());
     return false;
   }
-  if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
-    ROS_ERROR("Both rising and falling edge are specified for joint %s. This is not supported.", joint_name.c_str());
+  if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising && joint_->joint_->type != urdf::Joint::CONTINUOUS){
+    ROS_ERROR("Both rising and falling edge are specified for non-continuous joint %s. This is not supported.", joint_name.c_str());
     return false;
   }
   if (search_velocity_ < 0){
@@ -98,12 +98,16 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
   }
 
   // finds search velocity based on rising or falling edge
-  if (joint_->joint_->calibration->falling){
+  if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
+    reference_position_ = *(joint_->joint_->calibration->rising);
+    ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
+  }
+  else if (joint_->joint_->calibration->falling){
     reference_position_ = *(joint_->joint_->calibration->falling);
     search_velocity_ *= -1.0;
     ROS_DEBUG("Using negative search velocity for joint %s", joint_name.c_str());
   }
-  if (joint_->joint_->calibration->rising){
+  else if (joint_->joint_->calibration->rising){
     reference_position_ = *(joint_->joint_->calibration->rising);
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
