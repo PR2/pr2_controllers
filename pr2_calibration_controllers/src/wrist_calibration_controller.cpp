@@ -286,14 +286,25 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (flex_switch_l_ - prev_actuator_l_position_) / dl;
-      if ( !(0 <= k && k <= 1) )
+      if (dl == 0)
+      {
+        // This might be a serious hardware failure, so we're going to break realtime.
+        ROS_WARN("Left actuator (flex joint) didn't move even though the calibration flag tripped.  "
+                 "This may indicate an encoder problem. (namespace: %s",
+                 node_.getNamespace().c_str());
+        k = 0.5;
+      }
+      else if ( !(0 <= k && k <= 1) )
       {
         // This is really serious, so we're going to break realtime to report it.
         ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
-                  "on the left actuator or the flex joint.  Broke realtime to report (namespace: %s)",
-                  k, node_.getNamespace().c_str());
+                  "on the left actuator or the flex joint.  dl = %.4lf, dr = %.4lf, prev = %.4lf.  "
+                  "Broke realtime to report (namespace: %s)",
+                  k, dl, dr, prev_actuator_l_position_, node_.getNamespace().c_str());
         state_ = INITIALIZED;
+        break;
       }
+
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
       //original_switch_state_ = actuator_r_->state_.calibration_reading_;
@@ -323,14 +334,25 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (roll_switch_r_ - prev_actuator_r_position_) / dr;
-      if ( !(0 <= k && k <= 1) )
+      if (dr == 0)
+      {
+        // This might be a serious hardware failure, so we're going to break realtime.
+        ROS_WARN("Right actuator (roll joint) didn't move even though the calibration flag tripped.  "
+                 "This may indicate an encoder problem. (namespace: %s",
+                 node_.getNamespace().c_str());
+        k = 0.5;
+      }
+      else if ( !(0 <= k && k <= 1) )
       {
         // This is really serious, so we're going to break realtime to report it.
         ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
-                  "on the right actuator or the roll joint.  Broke realtime to report (namespace: %s)",
-                  k, node_.getNamespace().c_str());
+                  "on the right actuator or the roll joint.  dl = %.4lf, dr = %.4lf, prev = %.4lf.  "
+                  "Broke realtime to report (namespace: %s)",
+                  k, dl, dr, prev_actuator_r_position_, node_.getNamespace().c_str());
         state_ = INITIALIZED;
+        break;
       }
+
       roll_switch_l_ =  k * dl + prev_actuator_l_position_;
 
 
