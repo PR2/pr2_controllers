@@ -548,6 +548,19 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   for (size_t i = 1; i < msg->points.size(); ++i)
     durations[i] = (msg->points[i].time_from_start - msg->points[i-1].time_from_start).toSec();
 
+  // Checks if we should wrap
+  std::vector<double> wrap(joints_.size(), 0.0);
+  assert(!msg->points[0].positions.empty());
+  for (size_t j = 0; j < joints_.size(); ++j)
+  {
+    if (joints_[j]->joint_->type == urdf::Joint::CONTINUOUS)
+    {
+      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
+      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+      ROS_ERROR("wrap[%d] = %.4lf", j, wrap[j]);
+    }
+  }
+
   for (size_t i = 0; i < msg->points.size(); ++i)
   {
     Segment seg;
@@ -578,7 +591,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
       return;
     }
 
-    // Re-orders the joints in the command to match the interal joint order.
+    // Re-orders the joints in the command to match the internal joint order.
 
     accelerations.resize(msg->points[i].accelerations.size());
     velocities.resize(msg->points[i].velocities.size());
@@ -587,7 +600,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
     {
       if (!accelerations.empty()) accelerations[j] = msg->points[i].accelerations[lookup[j]];
       if (!velocities.empty()) velocities[j] = msg->points[i].velocities[lookup[j]];
-      if (!positions.empty()) positions[j] = msg->points[i].positions[lookup[j]];
+      if (!positions.empty()) positions[j] = msg->points[i].positions[lookup[j]] + wrap[j];
     }
 
     // Converts the boundary conditions to splines.
