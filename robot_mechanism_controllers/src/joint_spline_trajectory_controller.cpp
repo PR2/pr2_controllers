@@ -463,7 +463,6 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
     {
       double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
       wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
-      ROS_ERROR("wrap[%d] = %.4lf", j, wrap[j]);
     }
   }
 
