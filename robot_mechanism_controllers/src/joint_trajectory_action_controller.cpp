@@ -140,7 +140,7 @@ static void getCubicSplineCoefficients(double start_pos, double start_vel,
 
 
 JointTrajectoryActionController::JointTrajectoryActionController()
-  : loop_count_(0), robot_(NULL), has_active_goal_(false)
+  : loop_count_(0), robot_(NULL)
 {
 }
 
@@ -281,11 +281,11 @@ void JointTrajectoryActionController::starting()
 
 void JointTrajectoryActionController::update()
 {
-  // Checks if all the joints are calibrated.
-
   ros::Time time = robot_->getTime();
   ros::Duration dt = time - last_time_;
   last_time_ = time;
+
+  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
 
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
   current_trajectory_box_.get(traj_ptr);
@@ -334,7 +334,7 @@ void JointTrajectoryActionController::update()
 
   // ------ Determines if the goal has failed or succeeded
 
-  if (traj[seg].gh && has_active_goal_)
+  if (traj[seg].gh && traj[seg].gh == current_active_goal)
   {
     ros::Time end_time(traj[seg].start_time + traj[seg].duration);
     if (time <= end_time)
@@ -368,9 +368,9 @@ void JointTrajectoryActionController::update()
 
       if (inside_goal_constraints)
       {
+        rt_active_goal_.reset();
         traj[seg].gh->setSucceeded();
         //ROS_ERROR("Success!  (%s)", traj[seg].gh->gh_.getGoalID().id.c_str());
-        has_active_goal_ = false;
       }
       else if (time < end_time + ros::Duration(goal_time_constraint_))
       {
@@ -379,8 +379,8 @@ void JointTrajectoryActionController::update()
       else
       {
         //ROS_WARN("Aborting because we wound up outside the goal constraints");
+        rt_active_goal_.reset();
         traj[seg].gh->setAborted();
-        has_active_goal_ = false;
       }
     }
   }
@@ -411,11 +411,12 @@ void JointTrajectoryActionController::update()
 
 void JointTrajectoryActionController::commandCB(const trajectory_msgs::JointTrajectory::ConstPtr &msg)
 {
+  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
   // Cancels the currently active goal.
-  if (has_active_goal_)
+  if (current_active_goal)
   {
-    active_goal_.setCanceled();
-    has_active_goal_ = false;
+    rt_active_goal_.reset();
+    current_active_goal->gh_.setCanceled();
   }
 
   commandTrajectory(msg);
@@ -487,11 +488,13 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   int last_useful = -1;
   double msg_start_time;
   if (msg->header.stamp == ros::Time(0.0))
-    msg_start_time = (time + msg->points[0].time_from_start).toSec();
-  else if (msg->points.size() > 0)
-    msg_start_time = (msg->header.stamp + msg->points[0].time_from_start).toSec();
+    msg_start_time = time.toSec();
   else
-    msg_start_time = std::max(time.toSec(), msg->header.stamp.toSec());
+    msg_start_time = msg->header.stamp.toSec();
+  /*
+  if (msg->points.size() > 0)
+    msg_start_time += msg->points[0].time_from_start.toSec();
+  */
 
   while (last_useful + 1 < (int)prev_traj.size() &&
          prev_traj[last_useful + 1].start_time < msg_start_time)
@@ -521,10 +524,11 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   std::vector<double> prev_velocities(joints_.size());
   std::vector<double> prev_accelerations(joints_.size());
 
-  ROS_DEBUG("Initial conditions for new set of splines:");
+  double t = (msg->header.stamp == ros::Time(0.0) ? time.toSec() : msg->header.stamp.toSec())
+    - last.start_time;
+  ROS_DEBUG("Initial conditions at %.3f for new set of splines:", t);
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    double t = msg->header.stamp == ros::Time(0.0) ? time.toSec() : msg->header.stamp.toSec();
     sampleSplineWithTimeBounds(last.splines[i].coef, last.duration,
                                t,
                                prev_positions[i], prev_velocities[i], prev_accelerations[i]);
@@ -539,9 +543,22 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   std::vector<double> accelerations;
 
   std::vector<double> durations(msg->points.size());
-  durations[0] = msg->points[0].time_from_start.toSec();
+  if (msg->points.size() > 0)
+    durations[0] = msg->points[0].time_from_start.toSec();
   for (size_t i = 1; i < msg->points.size(); ++i)
     durations[i] = (msg->points[i].time_from_start - msg->points[i-1].time_from_start).toSec();
+
+  // Checks if we should wrap
+  std::vector<double> wrap(joints_.size(), 0.0);
+  assert(!msg->points[0].positions.empty());
+  for (size_t j = 0; j < joints_.size(); ++j)
+  {
+    if (joints_[j]->joint_->type == urdf::Joint::CONTINUOUS)
+    {
+      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
+      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+    }
+  }
 
   for (size_t i = 0; i < msg->points.size(); ++i)
   {
@@ -573,7 +590,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
       return;
     }
 
-    // Re-orders the joints in the command to match the interal joint order.
+    // Re-orders the joints in the command to match the internal joint order.
 
     accelerations.resize(msg->points[i].accelerations.size());
     velocities.resize(msg->points[i].velocities.size());
@@ -582,7 +599,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
     {
       if (!accelerations.empty()) accelerations[j] = msg->points[i].accelerations[lookup[j]];
       if (!velocities.empty()) velocities[j] = msg->points[i].velocities[lookup[j]];
-      if (!positions.empty()) positions[j] = msg->points[i].positions[lookup[j]];
+      if (!positions.empty()) positions[j] = msg->points[i].positions[lookup[j]] + wrap[j];
     }
 
     // Converts the boundary conditions to splines.
@@ -771,30 +788,33 @@ void JointTrajectoryActionController::goalCB(GoalHandle gh)
     return;
   }
 
+  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
 
   // Cancels the currently active goal.
-  if (has_active_goal_)
+  if (current_active_goal)
   {
     // Marks the current goal as canceled.
-    active_goal_.setCanceled();
-    has_active_goal_ = false;
+    rt_active_goal_.reset();
+    current_active_goal->gh_.setCanceled();
   }
 
   gh.setAccepted();
-  active_goal_ = gh;
-  has_active_goal_ = true;
+  boost::shared_ptr<RTGoalHandle> rt_gh(new RTGoalHandle(gh));
 
   // Sends the trajectory along to the controller
-  boost::shared_ptr<RTGoalHandle> rt_gh(new RTGoalHandle(gh));
   goal_handle_timer_ = node_.createTimer(ros::Duration(0.01), &RTGoalHandle::runNonRT, rt_gh);
   commandTrajectory(share_member(gh.getGoal(), gh.getGoal()->trajectory), rt_gh);
+  rt_active_goal_ = rt_gh;
   goal_handle_timer_.start();
 }
 
 void JointTrajectoryActionController::cancelCB(GoalHandle gh)
 {
-  if (has_active_goal_ && active_goal_ == gh)
+  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
+  if (current_active_goal && current_active_goal->gh_ == gh)
   {
+    rt_active_goal_.reset();
+
     trajectory_msgs::JointTrajectory::Ptr empty(new trajectory_msgs::JointTrajectory);
     empty->joint_names.resize(joints_.size());
     for (size_t j = 0; j < joints_.size(); ++j)
@@ -802,8 +822,7 @@ void JointTrajectoryActionController::cancelCB(GoalHandle gh)
     commandTrajectory(empty);
 
     // Marks the current goal as canceled.
-    active_goal_.setCanceled();
-    has_active_goal_ = false;
+    current_active_goal->gh_.setCanceled();
   }
 }
 }

@@ -170,9 +170,9 @@ private:
   boost::scoped_ptr<JTAS> action_server_;
   void goalCB(GoalHandle gh);
   void cancelCB(GoalHandle gh);
-  bool has_active_goal_;
-  GoalHandle active_goal_;
   ros::Timer goal_handle_timer_;
+
+  boost::shared_ptr<RTGoalHandle> rt_active_goal_;
 
   // ------ Mechanisms for passing the trajectory into realtime
 
