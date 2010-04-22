@@ -64,6 +64,7 @@ protected:
 
   double search_velocity_, reference_position_;
   bool original_switch_state_;
+  double original_position_;
 
   ros::Time beginning_;
   int unstick_iter_;

@@ -71,7 +71,7 @@ protected:
   int countdown_;
 
   double search_velocity_, reference_position_;
-  bool original_switch_state_;
+  double original_position_;
 
   pr2_hardware_interface::Actuator *actuator_;
   pr2_mechanism_model::JointState *joint_;

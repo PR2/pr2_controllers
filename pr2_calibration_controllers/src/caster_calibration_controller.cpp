@@ -168,7 +168,6 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
 
 
   // Transmission
-
   std::string transmission_name;
   if (!node_.getParam("transmission", transmission_name))
   {
@@ -237,6 +236,7 @@ void CasterCalibrationController::update()
   case BEGINNING:
     beginning_ = time;
     original_switch_state_ = actuator_->state_.calibration_reading_ & 1;
+    original_position_ = joint_->position_;
     cc_.steer_velocity_ = (original_switch_state_ ? -search_velocity_ : search_velocity_);
     state_ = MOVING;
     break;
@@ -244,6 +244,16 @@ void CasterCalibrationController::update()
     bool switch_state_ = actuator_->state_.calibration_reading_ & 1;
     if (switch_state_ != original_switch_state_)
     {
+      // detect when we hit the wrong transition because someone pushed the caster during calibration
+      if ((cc_.steer_velocity_ > 0.0 && (joint_->position_ - original_position_) < 0) ||
+          (cc_.steer_velocity_ < 0.0 && (joint_->position_ - original_position_) > 0))
+      {
+        state_ = BEGINNING;
+        ROS_ERROR("Caster hit the falling edge instead of the rising edge. Calibrating again...");
+        ros::Duration(1.0).sleep();  // give caster some time to move away from transition
+        break;
+      }
+
       // Where was the joint when the optical switch triggered?
       if (switch_state_ == true)
         fake_as[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;

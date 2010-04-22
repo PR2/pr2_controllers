@@ -199,15 +199,19 @@ void JointCalibrationController::update()
   case BEGINNING:
     if (actuator_->state_.calibration_reading_ & 1)
       state_ = MOVING_TO_LOW;
-    else
+    else{
       state_ = MOVING_TO_HIGH;
+      original_position_ = joint_->position_;
+    }
     break;
   case MOVING_TO_LOW:
     vc_.setCommand(-search_velocity_);
     if (!(actuator_->state_.calibration_reading_ & 1))
     {
-      if (--countdown_ <= 0)
+      if (--countdown_ <= 0){
         state_ = MOVING_TO_HIGH;
+	original_position_ = joint_->position_;
+      }
     }
     else
       countdown_ = 200;
@@ -217,6 +221,16 @@ void JointCalibrationController::update()
     
     if (actuator_->state_.calibration_reading_ & 1)
     {
+      // detect when we hit the wrong transition because someone pushed the joint during calibration
+      if ((search_velocity_ > 0.0 && (joint_->position_ - original_position_) < 0) ||
+	  (search_velocity_ < 0.0 && (joint_->position_ - original_position_) > 0))
+	{
+	  state_ = BEGINNING;
+	  ROS_ERROR("Joint hit the falling edge instead of the rising edge. Calibrating again...");
+	  ros::Duration(1.0).sleep();  // give joint some time to move away from transition
+	  break;
+	}
+    
       pr2_hardware_interface::Actuator a;
       pr2_mechanism_model::JointState j;
       fake_a[0] = &a;
