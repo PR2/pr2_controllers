@@ -34,7 +34,7 @@
 #include "pr2_mechanism_controllers/caster_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(CasterController, controller::CasterController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_controllers, CasterController, controller::CasterController, pr2_controller_interface::Controller)
 
 namespace controller {
 

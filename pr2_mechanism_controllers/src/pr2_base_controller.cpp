@@ -38,7 +38,7 @@
 #include "pr2_mechanism_controllers/pr2_base_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(Pr2BaseController, controller::Pr2BaseController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_controllers, Pr2BaseController, controller::Pr2BaseController, pr2_controller_interface::Controller)
 
 namespace controller {
 
@@ -379,7 +379,7 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
   double trans_vel = sqrt(cmd_vel_.linear.x * cmd_vel_.linear.x + cmd_vel_.linear.y * cmd_vel_.linear.y);
 
   for(int i = 0; i < base_kin_.num_casters_; i++)
-  {  
+  {
     filtered_velocity_[i] = base_kin_.caster_[i].joint_->velocity_;
   }
   caster_vel_filter_.update(filtered_velocity_,filtered_velocity_);
