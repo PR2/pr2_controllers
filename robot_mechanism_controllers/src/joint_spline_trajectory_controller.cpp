@@ -559,7 +559,7 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
   }
 
   current_trajectory_box_.set(new_traj_ptr);
-  ROS_DEBUG("The new trajectory has %d segments", new_traj.size());
+  ROS_DEBUG("The new trajectory has %d segments", (int)new_traj.size());
 #if 0
   for (size_t i = 0; i < std::min((size_t)20,new_traj.size()); ++i)
   {

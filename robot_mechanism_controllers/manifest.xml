@@ -8,6 +8,7 @@
   <depend package="rospy"/>
   <depend package="roscpp" />
   <depend package="angles" />
+  <depend package="filters" />
   <depend package="tf" />
   <depend package="tf_conversions" />
   <depend package="kdl" />
