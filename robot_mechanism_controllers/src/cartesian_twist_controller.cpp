@@ -38,7 +38,7 @@
 
 using namespace KDL;
 
-PLUGINLIB_REGISTER_CLASS(CartesianTwistController, controller::CartesianTwistController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, CartesianTwistController, controller::CartesianTwistController, pr2_controller_interface::Controller)
 
 namespace controller {
 

@@ -1,12 +1,12 @@
 <library path="lib/librobot_mechanism_controllers">
-  <class name="JointEffortController" type="controller::JointEffortController" base_class_type="pr2_controller_interface::Controller" />
-  <class name="JointVelocityController" type="controller::JointVelocityController" base_class_type="pr2_controller_interface::Controller" />  
-  <class name="JointPositionController" type="controller::JointPositionController" base_class_type="pr2_controller_interface::Controller" />
-  <class name="JointSplineTrajectoryController" type="controller::JointSplineTrajectoryController" base_class_type="pr2_controller_interface::Controller" />
-  <class name="JointTrajectoryActionController" type="controller::JointTrajectoryActionController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointEffortController" type="controller::JointEffortController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointVelocityController" type="controller::JointVelocityController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointPositionController" type="controller::JointPositionController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointSplineTrajectoryController" type="controller::JointSplineTrajectoryController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointTrajectoryActionController" type="controller::JointTrajectoryActionController" base_class_type="pr2_controller_interface::Controller" />
 
-  <class name="CartesianWrenchController" type="controller::CartesianWrenchController" base_class_type="pr2_controller_interface::Controller" />
-  <class name="CartesianTwistController" type="controller::CartesianTwistController" base_class_type="pr2_controller_interface::Controller" />
-  <class name="CartesianPoseController" type="controller::CartesianPoseController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/CartesianWrenchController" type="controller::CartesianWrenchController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/CartesianTwistController" type="controller::CartesianTwistController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/CartesianPoseController" type="controller::CartesianPoseController" base_class_type="pr2_controller_interface::Controller" />
 
 </library>
