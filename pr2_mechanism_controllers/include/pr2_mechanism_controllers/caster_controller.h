@@ -56,6 +56,7 @@ caster_fl:
 #define CASTER_CONTROLLER_H
 
 #include "ros/node_handle.h"
+#include <boost/thread/condition.hpp>
 
 #include "pr2_controller_interface/controller.h"
 #include "pr2_mechanism_model/robot.h"

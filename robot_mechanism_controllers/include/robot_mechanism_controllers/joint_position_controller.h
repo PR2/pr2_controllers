@@ -64,6 +64,7 @@
 #include <control_toolbox/pid.h>
 #include "control_toolbox/pid_gains_setter.h"
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/condition.hpp>
 #include <realtime_tools/realtime_publisher.h>
 #include <std_msgs/Float64.h>
 #include <pr2_controllers_msgs/JointControllerState.h>
