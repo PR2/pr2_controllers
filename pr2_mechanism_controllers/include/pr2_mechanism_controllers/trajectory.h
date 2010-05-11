@@ -40,6 +40,7 @@
 #include <map>
 
 #include "ros/console.h"
+#include <boost/thread/condition.hpp>
 
 namespace trajectory
 {

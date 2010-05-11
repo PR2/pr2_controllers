@@ -61,6 +61,7 @@
 
 #include <ros/node_handle.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/condition.hpp>
 
 #include "pr2_controller_interface/controller.h"
 #include "control_toolbox/pid.h"

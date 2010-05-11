@@ -51,6 +51,7 @@
    - @b command (std_msgs::Float64) : The joint effort to apply
 */
 
+#include <boost/thread/condition.hpp>
 #include <ros/node_handle.h>
 #include <pr2_controller_interface/controller.h>
 
