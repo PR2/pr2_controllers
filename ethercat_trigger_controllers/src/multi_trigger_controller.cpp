@@ -39,7 +39,7 @@
 #include "ros/console.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(MultiTriggerController, controller::MultiTriggerController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(ethercat_trigger_controllers, MultiTriggerController, controller::MultiTriggerController, pr2_controller_interface::Controller)
 
 using std::string;
 using namespace controller;
@@ -254,7 +254,7 @@ bool MultiTriggerController::setMultiWaveformSrv(
     waveform_.publish(req.waveform);
   }
   else
-    ROS_ERROR(resp.status_message.c_str());
+    ROS_ERROR("%s", resp.status_message.c_str());
   
   return true;
 }

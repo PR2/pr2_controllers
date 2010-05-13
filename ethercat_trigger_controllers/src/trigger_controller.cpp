@@ -61,7 +61,7 @@ Rectangular: (running = 1, pulsed = 0)
 #include "ros/console.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(TriggerController, controller::TriggerController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(ethercat_trigger_controllers, TriggerController, controller::TriggerController, pr2_controller_interface::Controller)
 
 using std::string;
 using namespace controller;
