@@ -36,7 +36,7 @@
 #include "angles/angles.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(JointPositionController, controller::JointPositionController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, JointPositionController, controller::JointPositionController, pr2_controller_interface::Controller)
 
 using namespace std;
 

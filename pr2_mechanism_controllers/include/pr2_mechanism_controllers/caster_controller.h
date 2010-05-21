@@ -62,6 +62,7 @@ caster_fl:
 #include "control_toolbox/pid.h"
 #include "robot_mechanism_controllers/joint_velocity_controller.h"
 #include "std_msgs/Float64.h"
+#include <boost/thread/condition.hpp>
 
 namespace controller {
 

@@ -262,10 +262,12 @@ void WristCalibrationController::starting()
 }
 
 
-bool WristCalibrationController::isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp)
+bool WristCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+					      pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
   ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
-  return state_ == CALIBRATED;
+  resp.is_calibrated = (state_ == CALIBRATED);
+  return true;
 }
 
 

@@ -43,6 +43,7 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Point.h>
 #include <control_toolbox/filters.h>
+#include <boost/thread/condition.hpp>
 
 namespace controller
 {

@@ -41,10 +41,12 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <ros/node_handle.h>
 
 #include <actionlib/server/action_server.h>
 #include <control_toolbox/pid.h>
+#include <filters/filter_chain.h>
 #include <pr2_controller_interface/controller.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <realtime_tools/realtime_box.h>
@@ -153,6 +155,7 @@ private:
   double stopped_velocity_tolerance_;
   std::vector<double> goal_constraints_;
   std::vector<double> trajectory_constraints_;
+  std::vector<boost::shared_ptr<filters::FilterChain<double> > > output_filters_;
 
   ros::NodeHandle node_;
 

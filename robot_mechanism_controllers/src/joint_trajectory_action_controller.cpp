@@ -36,7 +36,7 @@
 #include "angles/angles.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(JointTrajectoryActionController, controller::JointTrajectoryActionController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, JointTrajectoryActionController, controller::JointTrajectoryActionController, pr2_controller_interface::Controller)
 
 namespace controller {
 
@@ -220,6 +220,19 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
     node_.param(ns + "/trajectory", trajectory_constraints_[i], -1.0);
   }
 
+  // Output filters
+  output_filters_.resize(joints_.size());
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    std::string p = "output_filters/" + joints_[i]->joint_->name;
+    if (node_.hasParam(p))
+    {
+      output_filters_[i].reset(new filters::FilterChain<double>("double"));
+      if (!output_filters_[i]->configure(node_.resolveName(p)))
+        output_filters_[i].reset();
+    }
+  }
+
   // Creates a dummy trajectory
   boost::shared_ptr<SpecifiedTrajectory> traj_ptr(new SpecifiedTrajectory(1));
   SpecifiedTrajectory &traj = *traj_ptr;
@@ -329,7 +342,11 @@ void JointTrajectoryActionController::update()
   for (size_t i = 0; i < joints_.size(); ++i)
   {
     error[i] = joints_[i]->position_ - q[i];
-    joints_[i]->commanded_effort_ += pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
+    double effort = pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
+    double effort_filtered = effort;
+    if (output_filters_[i])
+      output_filters_[i]->update(effort, effort_filtered);
+    joints_[i]->commanded_effort_ += effort_filtered;
   }
 
   // ------ Determines if the goal has failed or succeeded

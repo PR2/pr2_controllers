@@ -38,7 +38,7 @@
 #include "realtime_tools/realtime_publisher.h"
 #include "pr2_mechanism_model/wrist_transmission.h"
 #include "std_msgs/Empty.h"
-#include "std_srvs/Empty.h"
+#include "pr2_controllers_msgs/QueryCalibrationState.h"
 
 namespace controller {
 
@@ -52,7 +52,7 @@ public:
   virtual void starting();
   virtual void update();
 
-  bool isCalibrated(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp);
+  bool isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, pr2_controllers_msgs::QueryCalibrationState::Response& resp);
 
 protected:
 

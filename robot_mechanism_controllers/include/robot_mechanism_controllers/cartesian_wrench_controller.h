@@ -65,6 +65,7 @@
 #include <tf/transform_datatypes.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/condition.hpp>
 
 
 namespace controller {

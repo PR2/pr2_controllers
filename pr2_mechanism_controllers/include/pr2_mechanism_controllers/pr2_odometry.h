@@ -43,6 +43,7 @@
 #include <angles/angles.h>
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/condition.hpp>
 
 #include <std_msgs/Float64.h>
 #include <pr2_mechanism_controllers/OdometryMatrix.h>

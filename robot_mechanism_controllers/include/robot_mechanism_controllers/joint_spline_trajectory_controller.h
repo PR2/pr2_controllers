@@ -41,6 +41,7 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <ros/node_handle.h>
 #include <control_toolbox/pid.h>
 #include <pr2_controller_interface/controller.h>
