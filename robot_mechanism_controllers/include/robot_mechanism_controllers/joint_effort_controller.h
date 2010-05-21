@@ -55,6 +55,7 @@
 #include <pr2_controller_interface/controller.h>
 
 #include <std_msgs/Float64.h>
+#include <boost/thread/condition.hpp>
 
 
 namespace controller

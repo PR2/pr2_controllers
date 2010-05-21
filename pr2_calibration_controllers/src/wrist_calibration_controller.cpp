@@ -113,26 +113,25 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     ROS_ERROR("No rising or falling edge is specified for calibration of joint %s. Note that the reference_position is not used any more", roll_joint_name.c_str());
     return false;
   }
-  if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising){
-    ROS_ERROR("Both rising and falling edge are specified for joint %s. This is not supported.", roll_joint_name.c_str());
+  if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising && roll_joint_->joint_->type != urdf::Joint::CONTINUOUS){
+    ROS_ERROR("Both rising and falling edge are specified for non-continuous joint %s. This is not supported.", roll_joint_name.c_str());
     return false;
   }
   if (roll_search_velocity_ < 0){
     roll_search_velocity_ *= -1;
-    ROS_WARN("Negative search velocity is not supported for joint %s. Making the search velocity positve.", roll_joint_name.c_str());
+    ROS_ERROR("Negative search velocity is not supported for joint %s. Making the search velocity positve.", roll_joint_name.c_str());
   }
 
-  // finds search velocity based on rising or falling edge
-  if (roll_joint_->joint_->calibration->falling){
-    roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
-    roll_search_velocity_ *= -1.0;
-    ROS_DEBUG("Using negative search velocity for joint %s", roll_joint_name.c_str());
-  }
-  if (roll_joint_->joint_->calibration->rising){
+  // sets reference position
+  if (roll_joint_->joint_->calibration->falling && roll_joint_->joint_->calibration->rising){
     roll_reference_position_ = *(roll_joint_->joint_->calibration->rising);
-    ROS_DEBUG("Using positive search velocity for joint %s", roll_joint_name.c_str());
   }
-
+  else if (roll_joint_->joint_->calibration->falling){
+    roll_reference_position_ = *(roll_joint_->joint_->calibration->falling);
+  }
+  else if (roll_joint_->joint_->calibration->rising){
+    roll_reference_position_ = *(roll_joint_->joint_->calibration->rising);
+  }
 
 
   if (!node_.getParam("flex_velocity", flex_search_velocity_))
@@ -145,32 +144,27 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     ROS_ERROR("No rising or falling edge is specified for calibration of joint %s. Note that the reference_position is not used any more", flex_joint_name.c_str());
     return false;
   }
-  if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising){
-    ROS_ERROR("Both rising and falling edge are specified for joint %s. This is not supported.", flex_joint_name.c_str());
+  if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising && flex_joint_->joint_->type != urdf::Joint::CONTINUOUS){
+    ROS_ERROR("Both rising and falling edge are specified for non-continuous joint %s. This is not supported.", flex_joint_name.c_str());
     return false;
   }
   if (flex_search_velocity_ < 0){
     flex_search_velocity_ *= -1;
-    ROS_WARN("Negative search velocity is not supported for joint %s. Making the search velocity positve.", flex_joint_name.c_str());
+    ROS_ERROR("Negative search velocity is not supported for joint %s. Making the search velocity positve.", flex_joint_name.c_str());
   }
 
-  // finds search velocity based on rising or falling edge
-  if (flex_joint_->joint_->calibration->falling){
-    flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
-    flex_search_velocity_ *= -1.0;
-    ROS_DEBUG("Using negative search velocity for joint %s", flex_joint_name.c_str());
-  }
-  if (flex_joint_->joint_->calibration->rising){
+  // sets reference position
+  if (flex_joint_->joint_->calibration->falling && flex_joint_->joint_->calibration->rising){
     flex_reference_position_ = *(flex_joint_->joint_->calibration->rising);
-    ROS_DEBUG("Using positive search velocity for joint %s", flex_joint_name.c_str());
   }
-
-  // The calibration code has changed to reason about which direction to move.
-  flex_search_velocity_ = fabs(flex_search_velocity_);
-  roll_search_velocity_ = fabs(roll_search_velocity_);
+  else if (flex_joint_->joint_->calibration->falling){
+    flex_reference_position_ = *(flex_joint_->joint_->calibration->falling);
+  }
+  else if (flex_joint_->joint_->calibration->rising){
+    flex_reference_position_ = *(flex_joint_->joint_->calibration->rising);
+  }
 
   // Actuators
-
   std::string actuator_l_name;
   if (!node_.getParam("actuator_l", actuator_l_name))
   {
@@ -198,7 +192,6 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   }
 
   // Transmission
-
   std::string transmission_name;
   if (!node_.getParam("transmission", transmission_name))
   {
@@ -293,14 +286,25 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (flex_switch_l_ - prev_actuator_l_position_) / dl;
-      if ( !(0 <= k && k <= 1) )
+      if (dl == 0)
+      {
+        // This might be a serious hardware failure, so we're going to break realtime.
+        ROS_WARN("Left actuator (flex joint) didn't move even though the calibration flag tripped.  "
+                 "This may indicate an encoder problem. (namespace: %s",
+                 node_.getNamespace().c_str());
+        k = 0.5;
+      }
+      else if ( !(0 <= k && k <= 1) )
       {
         // This is really serious, so we're going to break realtime to report it.
         ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
-                  "on the left actuator or the flex joint.  Broke realtime to report (namespace: %s)",
-                  k, node_.getNamespace().c_str());
+                  "on the left actuator or the flex joint.  dl = %.4lf, dr = %.4lf, prev = %.4lf.  "
+                  "Broke realtime to report (namespace: %s)",
+                  k, dl, dr, prev_actuator_l_position_, node_.getNamespace().c_str());
         state_ = INITIALIZED;
+        break;
       }
+
       flex_switch_r_ = k * dr + prev_actuator_r_position_;
 
       //original_switch_state_ = actuator_r_->state_.calibration_reading_;
@@ -330,14 +334,25 @@ void WristCalibrationController::update()
       double dl = actuator_l_->state_.position_ - prev_actuator_l_position_;
       double dr = actuator_r_->state_.position_ - prev_actuator_r_position_;
       double k = (roll_switch_r_ - prev_actuator_r_position_) / dr;
-      if ( !(0 <= k && k <= 1) )
+      if (dr == 0)
+      {
+        // This might be a serious hardware failure, so we're going to break realtime.
+        ROS_WARN("Right actuator (roll joint) didn't move even though the calibration flag tripped.  "
+                 "This may indicate an encoder problem. (namespace: %s",
+                 node_.getNamespace().c_str());
+        k = 0.5;
+      }
+      else if ( !(0 <= k && k <= 1) )
       {
         // This is really serious, so we're going to break realtime to report it.
         ROS_ERROR("k = %.4lf is outside of [0,1].  This probably indicates a hardware failure "
-                  "on the right actuator or the roll joint.  Broke realtime to report (namespace: %s)",
-                  k, node_.getNamespace().c_str());
+                  "on the right actuator or the roll joint.  dl = %.4lf, dr = %.4lf, prev = %.4lf.  "
+                  "Broke realtime to report (namespace: %s)",
+                  k, dl, dr, prev_actuator_r_position_, node_.getNamespace().c_str());
         state_ = INITIALIZED;
+        break;
       }
+
       roll_switch_l_ =  k * dl + prev_actuator_l_position_;
 
 
