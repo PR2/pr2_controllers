@@ -60,6 +60,28 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   robot_ = robot;
   node_ = n;
 
+  XmlRpc::XmlRpcValue other_joint_names;
+  if (node_.getParam("other_joints", other_joint_names))
+  {
+    if (other_joint_names.getType() != XmlRpc::XmlRpcValue::TypeArray)
+      ROS_ERROR("\"other_joints\" was not an array (namespace: %s)", node_.getNamespace().c_str());
+    else
+    {
+      for (int i = 0; i < other_joint_names.size(); ++i)
+      {
+        pr2_mechanism_model::JointState *j;
+        std::string name = (std::string)other_joint_names[i];
+        if ((j = robot->getJointState(name))){
+          other_joints_.push_back(j);
+        }
+        else {
+          ROS_ERROR("Could not find joint \"%s\" (namespace: %s)",
+                    name.c_str(), node_.getNamespace().c_str());
+        }
+      }
+    }
+  }
+
   if (!node_.getParam("velocity", search_velocity_))
   {
     ROS_ERROR("No velocity given (namespace: %s)", node_.getNamespace().c_str());
@@ -93,8 +115,10 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   }
   if (actuator_->state_.zero_offset_ != 0){
     ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
-    state_ = CALIBRATED;
     joint_->calibrated_ = true;
+    for (size_t i = 0; i < other_joints_.size(); ++i)
+      other_joints_[i]->calibrated_ = true;
+    state_ = CALIBRATED;
   }
   else{
     ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
@@ -102,28 +126,6 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
     joint_->calibrated_ = false;
   }
 
-
-  XmlRpc::XmlRpcValue other_joint_names;
-  if (node_.getParam("other_joints", other_joint_names))
-  {
-    if (other_joint_names.getType() != XmlRpc::XmlRpcValue::TypeArray)
-      ROS_ERROR("\"other_joints\" was not an array (namespace: %s)", node_.getNamespace().c_str());
-    else
-    {
-      for (int i = 0; i < other_joint_names.size(); ++i)
-      {
-        pr2_mechanism_model::JointState *j;
-        std::string name = (std::string)other_joint_names[i];
-        if ((j = robot->getJointState(name))){
-          other_joints_.push_back(j);
-        }
-        else {
-          ROS_ERROR("Could not find joint \"%s\" (namespace: %s)",
-                    name.c_str(), node_.getNamespace().c_str());
-        }
-      }
-    }
-  }
 
   if (!vc_.init(robot, node_))
     return false;
@@ -192,11 +194,11 @@ void GripperCalibrationController::update()
     if (stop_count_ > 100)
     {
       actuator_->state_.zero_offset_ = actuator_->state_.position_;
-      state_ = CALIBRATED;
       joint_->calibrated_ = true;
       for (size_t i = 0; i < other_joints_.size(); ++i)
         other_joints_[i]->calibrated_ = true;
       vc_.setCommand(0);
+      state_ = CALIBRATED;
     }
     break;
   case CALIBRATED:
