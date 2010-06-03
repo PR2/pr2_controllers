@@ -567,13 +567,19 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
 
   // Checks if we should wrap
   std::vector<double> wrap(joints_.size(), 0.0);
-  assert(!msg->points[0].positions.empty());
+  if (msg->points[0].positions.empty()) {
+    ROS_ERROR("First point of trajectory has no positions");
+    return;
+  }
+  ROS_DEBUG("wrap:");
   for (size_t j = 0; j < joints_.size(); ++j)
   {
     if (joints_[j]->joint_->type == urdf::Joint::CONTINUOUS)
     {
-      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
-      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[lookup[j]]);
+      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[lookup[j]];
+      ROS_DEBUG("    %.2lf  - %s bc dist(%.2lf, %.2lf) = %.2lf", wrap[j], joints_[j]->joint_->name.c_str(),
+                prev_positions[j], msg->points[0].positions[lookup[j]], dist);
     }
   }
 
@@ -690,7 +696,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
                 new_traj[i].splines[j].coef[3],
                 new_traj[i].splines[j].coef[4],
                 new_traj[i].splines[j].coef[5],
-                joints_[j]->joint_->name_.c_str());
+                joints_[j]->joint_->name.c_str());
     }
   }
 #endif
