@@ -456,13 +456,16 @@ void JointSplineTrajectoryController::commandCB(const trajectory_msgs::JointTraj
 
   // Checks if we should wrap
   std::vector<double> wrap(joints_.size(), 0.0);
-  assert(!msg->points[0].positions.empty());
+  if (msg->points[0].positions.empty()) {
+    ROS_ERROR("First point of trajectory has no positions");
+    return;
+  }
   for (size_t j = 0; j < joints_.size(); ++j)
   {
     if (joints_[j]->joint_->type == urdf::Joint::CONTINUOUS)
     {
-      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
-      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[lookup[j]]);
+      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[lookup[j]];
     }
   }
 
