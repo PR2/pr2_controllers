@@ -170,25 +170,20 @@ void GripperCalibrationController::update()
   {
   case INITIALIZED:
     state_ = BEGINNING;
-    backed_off_ = false;
     return;
   case BEGINNING:
     count_ = 0;
     stop_count_ = 0;
-    back_count_ = 0;
     joint_->calibrated_ = false;
     actuator_->state_.zero_offset_ = 0.0;
     
-    if (backed_off_)
-      vc_.setCommand(search_velocity_ * 0.5); // Half speed
-    else
-      vc_.setCommand(search_velocity_);
+    vc_.setCommand(search_velocity_);
     
     state_ = STARTING;
     break;
   case STARTING:
     // Makes sure we start moving for a bit before checking if we've stopped.
-    if (++count_ > 500)
+    if (++count_ > 100)
     {
       count_ = 0;
       stop_count_ = 0;
@@ -201,33 +196,41 @@ void GripperCalibrationController::update()
       stop_count_++;
     else
       stop_count_ = 0;
-
+    
     if (stop_count_ > 100)
     {
-      if (backed_off_)
-      {
-        state_ = CALIBRATED;
-        actuator_->state_.zero_offset_ = actuator_->state_.position_;
-        joint_->calibrated_ = true;
-        for (size_t i = 0; i < other_joints_.size(); ++i)
-          other_joints_[i]->calibrated_ = true;
-        vc_.setCommand(0);
-      }
-      else
-      {
-        state_ = BACK_OFF;
-        vc_.setCommand(-1 * search_velocity_);
-      }
-
-      state_ = CALIBRATED;
+      state_ = BACK_OFF;
+      stop_count_ = 0;
+      vc_.setCommand(-1 * search_velocity_);
     }
     break;
   case BACK_OFF: // Back off so we can reset from a known good position
-    if (++back_count_ > 1000)
+    if (++stop_count_ > 1000)
     {
-      state_ = BEGINNING;
-      backed_off_ = true;
+      state_ = CLOSING_SLOWLY;
+      count_ = 0;
+      stop_count_ = 0;
+      vc_.setCommand(0.5 * search_velocity_);
     }
+
+    break;
+  case CLOSING_SLOWLY: // Close slowly to avoid windup
+    // Makes sure the gripper is stopped for a while before cal
+    if (fabs(joint_->velocity_) < 0.0001)
+      stop_count_++;
+    else
+      stop_count_ = 0;
+
+    if (stop_count_ > 500)
+    {
+      state_ = CALIBRATED;
+      actuator_->state_.zero_offset_ = actuator_->state_.position_;
+      joint_->calibrated_ = true;
+      for (size_t i = 0; i < other_joints_.size(); ++i)
+        other_joints_[i]->calibrated_ = true;
+      vc_.setCommand(0);
+    }
+
     break;
   case CALIBRATED:
     if (pub_calibrated_) {
