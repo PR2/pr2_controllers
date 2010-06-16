@@ -25,7 +25,9 @@ rosbuild_add_library(${PROJECT_NAME}
   src/caster_calibration_controller.cpp
   src/gripper_calibration_controller.cpp
   src/joint_calibration_controller.cpp
-  src/wrist_calibration_controller.cpp)
+  src/wrist_calibration_controller.cpp
+  src/fake_calibration_controller.cpp
+)
 
 #common commands for building c++ executables and libraries
 #target_link_libraries(${PROJECT_NAME} another_library)
