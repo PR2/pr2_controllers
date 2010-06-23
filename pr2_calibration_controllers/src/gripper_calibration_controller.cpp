@@ -39,7 +39,8 @@
 using namespace std;
 using namespace controller;
 
-PLUGINLIB_REGISTER_CLASS(GripperCalibrationController, controller::GripperCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, GripperCalibrationController,
+                        controller::GripperCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller
 {
@@ -64,7 +65,10 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   if (node_.getParam("other_joints", other_joint_names))
   {
     if (other_joint_names.getType() != XmlRpc::XmlRpcValue::TypeArray)
+    {
       ROS_ERROR("\"other_joints\" was not an array (namespace: %s)", node_.getNamespace().c_str());
+      return false;
+    }
     else
     {
       for (int i = 0; i < other_joint_names.size(); ++i)
@@ -77,6 +81,7 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
         else {
           ROS_ERROR("Could not find joint \"%s\" (namespace: %s)",
                     name.c_str(), node_.getNamespace().c_str());
+          return false;
         }
       }
     }
@@ -127,6 +132,7 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   }
 
 
+
   if (!vc_.init(robot, node_))
     return false;
 
@@ -142,16 +148,15 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
 
 void GripperCalibrationController::starting()
 {
-  state_ = INITIALIZED; 
+  state_ = INITIALIZED;
   actuator_->state_.zero_offset_ = 0.0;
   joint_->calibrated_ = false;
 }
 
 
-bool GripperCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+bool GripperCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req,
 						pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
-  ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
   resp.is_calibrated = (state_ == CALIBRATED);
   return true;
 }
@@ -172,12 +177,14 @@ void GripperCalibrationController::update()
     stop_count_ = 0;
     joint_->calibrated_ = false;
     actuator_->state_.zero_offset_ = 0.0;
+
     vc_.setCommand(search_velocity_);
+
     state_ = STARTING;
     break;
   case STARTING:
     // Makes sure we start moving for a bit before checking if we've stopped.
-    if (++count_ > 500)
+    if (++count_ > 100)
     {
       count_ = 0;
       stop_count_ = 0;
@@ -193,13 +200,38 @@ void GripperCalibrationController::update()
 
     if (stop_count_ > 100)
     {
+      state_ = BACK_OFF;
+      stop_count_ = 0;
+      vc_.setCommand(-1 * search_velocity_);
+    }
+    break;
+  case BACK_OFF: // Back off so we can reset from a known good position
+    if (++stop_count_ > 1000)
+    {
+      state_ = CLOSING_SLOWLY;
+      count_ = 0;
+      stop_count_ = 0;
+      vc_.setCommand(0.5 * search_velocity_);
+    }
+
+    break;
+  case CLOSING_SLOWLY: // Close slowly to avoid windup
+    // Makes sure the gripper is stopped for a while before cal
+    if (fabs(joint_->velocity_) < 0.0001)
+      stop_count_++;
+    else
+      stop_count_ = 0;
+
+    if (stop_count_ > 500)
+    {
+      state_ = CALIBRATED;
       actuator_->state_.zero_offset_ = actuator_->state_.position_;
       joint_->calibrated_ = true;
       for (size_t i = 0; i < other_joints_.size(); ++i)
         other_joints_[i]->calibrated_ = true;
       vc_.setCommand(0);
-      state_ = CALIBRATED;
     }
+
     break;
   case CALIBRATED:
     if (pub_calibrated_) {

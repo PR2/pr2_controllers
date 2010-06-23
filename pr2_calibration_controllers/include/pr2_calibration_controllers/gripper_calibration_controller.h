@@ -60,7 +60,7 @@ public:
 
 protected:
 
-  enum { INITIALIZED, BEGINNING, STARTING, CLOSING, CALIBRATED };
+  enum { INITIALIZED, BEGINNING, STARTING, CLOSING, BACK_OFF, CLOSING_SLOWLY, CALIBRATED };
   int state_;
   int count_;
   int stop_count_;
