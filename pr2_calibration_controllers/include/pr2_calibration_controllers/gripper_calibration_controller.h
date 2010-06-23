@@ -60,12 +60,10 @@ public:
 
 protected:
 
-  enum { INITIALIZED, BEGINNING, STARTING, CLOSING, BACK_OFF, CALIBRATED };
+  enum { INITIALIZED, BEGINNING, STARTING, CLOSING, BACK_OFF, CLOSING_SLOWLY, CALIBRATED };
   int state_;
   int count_;
   int stop_count_;
-  int back_count_;
-  bool backed_off_;
 
   ros::NodeHandle node_;
   pr2_mechanism_model::RobotState *robot_;
