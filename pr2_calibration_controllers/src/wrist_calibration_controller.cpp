@@ -34,7 +34,8 @@
 #include "pr2_calibration_controllers/wrist_calibration_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(WristCalibrationController, controller::WristCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, WristCalibrationController,
+                        controller::WristCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller {
 
@@ -262,7 +263,7 @@ void WristCalibrationController::starting()
 }
 
 
-bool WristCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+bool WristCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req,
 					      pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
   ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
