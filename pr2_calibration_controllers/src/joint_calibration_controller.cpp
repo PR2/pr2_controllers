@@ -36,14 +36,15 @@
 #include "ros/time.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(JointCalibrationController, controller::JointCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, JointCalibrationController,
+                        controller::JointCalibrationController, pr2_controller_interface::Controller)
 
 using namespace std;
 
 namespace controller {
 
 JointCalibrationController::JointCalibrationController()
-: robot_(NULL), last_publish_time_(0), 
+: robot_(NULL), last_publish_time_(0),
   actuator_(NULL), joint_(NULL), transmission_(NULL)
 {
 }
@@ -172,13 +173,13 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
 
 void JointCalibrationController::starting()
 {
-  state_ = INITIALIZED; 
+  state_ = INITIALIZED;
   joint_->calibrated_ = false;
   actuator_->state_.zero_offset_ = 0.0;
 }
 
 
-bool JointCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+bool JointCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req,
 					      pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
   ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
@@ -220,7 +221,7 @@ void JointCalibrationController::update()
     break;
   case MOVING_TO_HIGH: {
     vc_.setCommand(search_velocity_);
-    
+
     if (actuator_->state_.calibration_reading_ & 1)
     {
       // detect when we hit the wrong transition because someone pushed the joint during calibration
@@ -232,7 +233,7 @@ void JointCalibrationController::update()
 	  ros::Duration(1.0).sleep();  // give joint some time to move away from transition
 	  break;
 	}
-    
+
       pr2_hardware_interface::Actuator a;
       pr2_mechanism_model::JointState j;
       fake_a[0] = &a;
@@ -249,7 +250,7 @@ void JointCalibrationController::update()
       assert(joint_->joint_->calibration);
       fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
       transmission_->propagatePositionBackwards(fake_j, fake_a);
-      
+
       actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;
       joint_->calibrated_ = true;
 

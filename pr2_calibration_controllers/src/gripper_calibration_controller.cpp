@@ -39,7 +39,8 @@
 using namespace std;
 using namespace controller;
 
-PLUGINLIB_REGISTER_CLASS(GripperCalibrationController, controller::GripperCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, GripperCalibrationController,
+                        controller::GripperCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller
 {
@@ -147,13 +148,13 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
 
 void GripperCalibrationController::starting()
 {
-  state_ = INITIALIZED; 
+  state_ = INITIALIZED;
   actuator_->state_.zero_offset_ = 0.0;
   joint_->calibrated_ = false;
 }
 
 
-bool GripperCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+bool GripperCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req,
 						pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
   resp.is_calibrated = (state_ == CALIBRATED);
@@ -176,9 +177,9 @@ void GripperCalibrationController::update()
     stop_count_ = 0;
     joint_->calibrated_ = false;
     actuator_->state_.zero_offset_ = 0.0;
-    
+
     vc_.setCommand(search_velocity_);
-    
+
     state_ = STARTING;
     break;
   case STARTING:
@@ -196,7 +197,7 @@ void GripperCalibrationController::update()
       stop_count_++;
     else
       stop_count_ = 0;
-    
+
     if (stop_count_ > 100)
     {
       state_ = BACK_OFF;

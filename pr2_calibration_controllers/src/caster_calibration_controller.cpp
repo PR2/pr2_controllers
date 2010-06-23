@@ -34,12 +34,13 @@
 #include "pr2_calibration_controllers/caster_calibration_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_REGISTER_CLASS(CasterCalibrationController, controller::CasterCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, CasterCalibrationController,
+                        controller::CasterCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller {
 
 CasterCalibrationController::CasterCalibrationController()
-: robot_(NULL), 
+: robot_(NULL),
   joint_(NULL), wheel_l_joint_(NULL), wheel_r_joint_(NULL), last_publish_time_(0)
 {
 }
@@ -204,7 +205,7 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
 
 void CasterCalibrationController::starting()
 {
-  state_ = INITIALIZED; 
+  state_ = INITIALIZED;
   actuator_->state_.zero_offset_ = 0.0;
   joint_->calibrated_ = false;
   wheel_l_joint_->calibrated_ = false;
@@ -212,7 +213,7 @@ void CasterCalibrationController::starting()
 }
 
 
-bool CasterCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req, 
+bool CasterCalibrationController::isCalibrated(pr2_controllers_msgs::QueryCalibrationState::Request& req,
 					       pr2_controllers_msgs::QueryCalibrationState::Response& resp)
 {
   ROS_DEBUG("Is calibrated service %d", state_ == CALIBRATED);
