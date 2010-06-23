@@ -178,7 +178,12 @@ void GripperCalibrationController::update()
     back_count_ = 0;
     joint_->calibrated_ = false;
     actuator_->state_.zero_offset_ = 0.0;
-    vc_.setCommand(search_velocity_);
+    
+    if (backed_off_)
+      vc_.setCommand(search_velocity_ * 0.5); // Half speed
+    else
+      vc_.setCommand(search_velocity_);
+    
     state_ = STARTING;
     break;
   case STARTING:
