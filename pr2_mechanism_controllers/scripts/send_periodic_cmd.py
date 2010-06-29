@@ -17,7 +17,7 @@ from time import sleep
 def print_usage(exit_code = 0):
     print '''Usage:
     send_periodic_cmd.py [controller] [profile] [period] [amplitude] [offset]
-       - [profile]   - Possible options are linear, linear_blended, sine
+       - [profile]   - Possible options are linear or linear_blended
        - [period]    - Time for one entire cycle to execute (in seconds)
        - [amplitude] - Distance max value to min value of profile (In radians for laser_tilt controller)
        - [offset]    - Constant cmd to add to profile (offset=0 results in profile centered around 0)
