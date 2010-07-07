@@ -77,6 +77,7 @@ protected:
   std::vector<pr2_mechanism_model::JointState*> other_joints_;
 
   double init_time;
+  double stopped_velocity_tolerance_;
 
   controller::JointVelocityController vc_; /** The joint velocity controller used to sweep the joint.*/
 };
