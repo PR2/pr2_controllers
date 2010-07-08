@@ -169,8 +169,6 @@ void GripperCalibrationController::update()
   assert(joint_);
   assert(actuator_);
 
-  ROS_DEBUG("%s %d %f %f",joint_->joint_->name.c_str(),state_,joint_->velocity_,this->stopped_velocity_tolerance_);
-
   switch (state_)
   {
   case INITIALIZED:
