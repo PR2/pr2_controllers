@@ -61,6 +61,8 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   robot_ = robot;
   node_ = n;
 
+  node_.param("stopped_velocity_tolerance", stopped_velocity_tolerance_, 0.0001);
+
   XmlRpc::XmlRpcValue other_joint_names;
   if (node_.getParam("other_joints", other_joint_names))
   {
@@ -193,7 +195,7 @@ void GripperCalibrationController::update()
     break;
   case CLOSING:
     // Makes sure the gripper is stopped for a while before cal
-    if (fabs(joint_->velocity_) < 0.0001)
+    if (fabs(joint_->velocity_) < this->stopped_velocity_tolerance_)
       stop_count_++;
     else
       stop_count_ = 0;
@@ -217,7 +219,7 @@ void GripperCalibrationController::update()
     break;
   case CLOSING_SLOWLY: // Close slowly to avoid windup
     // Makes sure the gripper is stopped for a while before cal
-    if (fabs(joint_->velocity_) < 0.0001)
+    if (fabs(joint_->velocity_) < this->stopped_velocity_tolerance_)
       stop_count_++;
     else
       stop_count_ = 0;
