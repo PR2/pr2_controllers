@@ -100,16 +100,16 @@ bool CasterCalibrationController::init(pr2_mechanism_model::RobotState *robot, r
 
   // finds search velocity based on rising or falling edge
   if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
-    reference_position_ = *(joint_->joint_->calibration->rising);
+    joint_->reference_position_ = *(joint_->joint_->calibration->rising);
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
   else if (joint_->joint_->calibration->falling){
-    reference_position_ = *(joint_->joint_->calibration->falling);
+    joint_->reference_position_ = *(joint_->joint_->calibration->falling);
     search_velocity_ *= -1.0;
     ROS_DEBUG("Using negative search velocity for joint %s", joint_name.c_str());
   }
   else if (joint_->joint_->calibration->rising){
-    reference_position_ = *(joint_->joint_->calibration->rising);
+    joint_->reference_position_ = *(joint_->joint_->calibration->rising);
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
 
@@ -259,25 +259,19 @@ void CasterCalibrationController::update()
 
       // Where was the joint when the optical switch triggered?
       if (switch_state_ == true)
-        fake_as[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
+        actuator_->state_.zero_offset_ = actuator_->state_.last_calibration_rising_edge_;
       else
-        fake_as[0]->state_.position_ = actuator_->state_.last_calibration_falling_edge_;
-      transmission_->propagatePosition(fake_as, fake_js);
-
-      // What is the actuator position at the joint's zero?
-      fake_js[0]->position_ = fake_js[0]->position_ - reference_position_;
-      transmission_->propagatePositionBackwards(fake_js, fake_as);
-
-      actuator_->state_.zero_offset_ = fake_as[0]->state_.position_;
+        actuator_->state_.zero_offset_ = actuator_->state_.last_calibration_falling_edge_;
+      
       joint_->calibrated_ = true;
       wheel_l_joint_->calibrated_ = true;
       wheel_r_joint_->calibrated_ = true;
-
+      
       state_ = CALIBRATED;
       cc_.steer_velocity_ = 0.0;
     }
     else
-    {
+      {
       // The caster is not strong enough to consistently move.  The
       // rest of this block contains the hacks to ensure that
       // calibration always completes.

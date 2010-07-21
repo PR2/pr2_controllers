@@ -138,16 +138,16 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
 
   // finds search velocity based on rising or falling edge
   if (joint_->joint_->calibration->falling && joint_->joint_->calibration->rising){
-    reference_position_ = *(joint_->joint_->calibration->rising);
+    joint_->reference_position_ = *(joint_->joint_->calibration->rising);
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
   else if (joint_->joint_->calibration->falling){
-    reference_position_ = *(joint_->joint_->calibration->falling);
+    joint_->reference_position_ = *(joint_->joint_->calibration->falling);
     search_velocity_ *= -1.0;
     ROS_DEBUG("Using negative search velocity for joint %s", joint_name.c_str());
   }
   else if (joint_->joint_->calibration->rising){
-    reference_position_ = *(joint_->joint_->calibration->rising);
+    joint_->reference_position_ = *(joint_->joint_->calibration->rising);
     ROS_DEBUG("Using positive search velocity for joint %s", joint_name.c_str());
   }
 
@@ -242,16 +242,10 @@ void JointCalibrationController::update()
       fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
       transmission_->propagatePosition(fake_a, fake_j);
 
-      // Where was the joint when the optical switch triggered?
-      fake_a[0]->state_.position_ = actuator_->state_.last_calibration_rising_edge_;
-      transmission_->propagatePosition(fake_a, fake_j);
+      // store position of flag in actuator 
+      actuator_->state_.zero_offset_ = actuator_->state_.last_calibration_rising_edge_;
 
-      // What is the actuator position at the joint's zero?
-      assert(joint_->joint_->calibration);
-      fake_j[0]->position_ = fake_j[0]->position_ - reference_position_;
-      transmission_->propagatePositionBackwards(fake_j, fake_a);
-
-      actuator_->state_.zero_offset_ = fake_a[0]->state_.position_;
+      // mark the joint as calibrated
       joint_->calibrated_ = true;
 
       state_ = CALIBRATED;
