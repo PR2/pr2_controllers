@@ -96,6 +96,7 @@ public:
 
   virtual void starting() {
     command_ = joint_state_->position_;
+    pid_controller_.reset();
   }
 
   /*!

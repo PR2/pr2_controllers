@@ -67,8 +67,8 @@ protected:
   ros::ServiceServer is_calibrated_srv_;
   boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Empty> > pub_calibrated_;
 
-  double roll_search_velocity_, roll_reference_position_;
-  double flex_search_velocity_, flex_reference_position_;
+  double roll_search_velocity_;
+  double flex_search_velocity_;
   bool original_switch_state_;
   int countdown_;
 
