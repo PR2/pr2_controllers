@@ -410,15 +410,17 @@ void WristCalibrationController::update()
       fake_as[LEFT_MOTOR]->state_.position_ = flex_switch_l_;
       fake_as[RIGHT_MOTOR]->state_.position_ = flex_switch_r_;
       transmission_->propagatePosition(fake_as, fake_js);
+      double flex_joint_switch = fake_js[FLEX_JOINT]->position_;
 
       // Finds the (uncalibrated) joint position where the roll optical switch triggers
       fake_as[LEFT_MOTOR]->state_.position_ = roll_switch_l_;
       fake_as[RIGHT_MOTOR]->state_.position_ = roll_switch_r_;
       transmission_->propagatePosition(fake_as, fake_js);
+      double roll_joint_switch = fake_js[ROLL_JOINT]->position_;
 
       // Finds the (uncalibrated) joint position at the desired zero
-      fake_js[FLEX_JOINT]->position_ = fake_js[FLEX_JOINT]->position_;
-      fake_js[ROLL_JOINT]->position_ = fake_js[ROLL_JOINT]->position_;
+      fake_js[FLEX_JOINT]->position_ = flex_joint_switch;
+      fake_js[ROLL_JOINT]->position_ = roll_joint_switch;
 
       // Determines the actuator zero position from the desired joint zero positions
       transmission_->propagatePositionBackwards(fake_js, fake_as);
