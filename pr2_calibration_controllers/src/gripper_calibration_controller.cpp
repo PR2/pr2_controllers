@@ -213,7 +213,7 @@ void GripperCalibrationController::update()
       state_ = CLOSING_SLOWLY;
       count_ = 0;
       stop_count_ = 0;
-      vc_.setCommand(0.5 * search_velocity_);
+      vc_.setCommand(1.0 * search_velocity_);
     }
 
     break;
