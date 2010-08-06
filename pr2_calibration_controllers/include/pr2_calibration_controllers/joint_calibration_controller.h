@@ -70,7 +70,7 @@ protected:
   int state_;
   int countdown_;
 
-  double search_velocity_, reference_position_;
+  double search_velocity_;
   double original_position_;
 
   pr2_hardware_interface::Actuator *actuator_;

@@ -62,7 +62,7 @@ protected:
   enum { INITIALIZED, BEGINNING, MOVING, CALIBRATED };
   int state_;
 
-  double search_velocity_, reference_position_;
+  double search_velocity_;
   bool original_switch_state_;
   double original_position_;
 
