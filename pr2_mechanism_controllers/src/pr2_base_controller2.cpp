@@ -440,7 +440,7 @@ void Pr2BaseController2::computeDesiredWheelSpeeds(const double &dT)
   caster_2d_velocity.linear.y = 0;
   caster_2d_velocity.angular.z = 0;
 
-  for(int i = 0; i < base_kinematics_.num_casters_; i++)
+  for(int i = 0; i < base_kinematics_.num_wheels_; i++)
   {
     filtered_wheel_velocity_[i] = base_kinematics_.wheel_[i].joint_->velocity_;
   }
