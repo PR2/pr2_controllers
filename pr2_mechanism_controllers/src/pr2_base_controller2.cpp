@@ -80,6 +80,7 @@ bool Pr2BaseController2::init(pr2_mechanism_model::RobotState *robot, ros::NodeH
 
   int num_joints = base_kinematics_.num_wheels_ + base_kinematics_.num_casters_;
   state_publisher_->msg_.set_joint_names_size(num_joints);
+  state_publisher_->msg_.set_joint_velocity_commanded_size(num_joints);
   state_publisher_->msg_.set_joint_velocity_measured_size(num_joints);
   state_publisher_->msg_.set_joint_effort_measured_size(num_joints);
   state_publisher_->msg_.set_joint_command_size(num_joints);
@@ -347,6 +348,7 @@ void Pr2BaseController2::publishState(const ros::Time &time)
     for(int i = 0; i < base_kinematics_.num_wheels_; i++)
     {
       state_publisher_->msg_.joint_names[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_name_;
+      state_publisher_->msg_.joint_velocity_commanded[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].wheel_speed_cmd_;
       state_publisher_->msg_.joint_velocity_measured[i+base_kinematics_.num_casters_] = base_kinematics_.wheel_[i].joint_->velocity_;
       state_publisher_->msg_.joint_command[i+base_kinematics_.num_casters_]= base_kinematics_.wheel_[i].joint_->velocity_-base_kinematics_.wheel_[i].wheel_speed_cmd_;
       state_publisher_->msg_.joint_error[i+base_kinematics_.num_casters_]    = base_kinematics_.wheel_[i].wheel_speed_cmd_;
