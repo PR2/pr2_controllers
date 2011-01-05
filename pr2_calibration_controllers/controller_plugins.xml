@@ -4,5 +4,6 @@
   <class name="pr2_calibration_controllers/CasterCalibrationController" type="controller::CasterCalibrationController" base_class_type="pr2_controller_interface::Controller" />
   <class name="pr2_calibration_controllers/GripperCalibrationController" type="controller::GripperCalibrationController" base_class_type="pr2_controller_interface::Controller" />
   <class name="pr2_calibration_controllers/WristCalibrationController" type="controller::WristCalibrationController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="pr2_calibration_controllers/FakeCalibrationController" type="controller::FakeCalibrationController" base_class_type="pr2_controller_interface::Controller" />
 
 </library>
