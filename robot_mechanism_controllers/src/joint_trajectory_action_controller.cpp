@@ -149,6 +149,7 @@ JointTrajectoryActionController::~JointTrajectoryActionController()
   sub_command_.shutdown();
   serve_query_state_.shutdown();
   action_server_.reset();
+  action_server_follow_.reset();
 }
 
 bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
@@ -269,6 +270,9 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
   action_server_.reset(new JTAS(node_, "joint_trajectory_action",
                                 boost::bind(&JointTrajectoryActionController::goalCB, this, _1),
                                 boost::bind(&JointTrajectoryActionController::cancelCB, this, _1)));
+  action_server_follow_.reset(new FJTAS(node_, "follow_joint_trajectory",
+                                        boost::bind(&JointTrajectoryActionController::goalCBFollow, this, _1),
+                                        boost::bind(&JointTrajectoryActionController::cancelCBFollow, this, _1)));
 
   return true;
 }
@@ -299,6 +303,7 @@ void JointTrajectoryActionController::update()
   last_time_ = time;
 
   boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
+  boost::shared_ptr<RTGoalHandleFollow> current_active_goal_follow(rt_active_goal_follow_);
 
   boost::shared_ptr<const SpecifiedTrajectory> traj_ptr;
   current_trajectory_box_.get(traj_ptr);
@@ -351,7 +356,8 @@ void JointTrajectoryActionController::update()
 
   // ------ Determines if the goal has failed or succeeded
 
-  if (traj[seg].gh && traj[seg].gh == current_active_goal)
+  if ((traj[seg].gh && traj[seg].gh == current_active_goal) ||
+      (traj[seg].gh_follow && traj[seg].gh_follow == current_active_goal_follow))
   {
     ros::Time end_time(traj[seg].start_time + traj[seg].duration);
     if (time <= end_time)
@@ -361,7 +367,13 @@ void JointTrajectoryActionController::update()
       {
         if (trajectory_constraints_[j] > 0 && fabs(error[j]) > trajectory_constraints_[j])
         {
-          traj[seg].gh->setAborted();
+          if (traj[seg].gh)
+            traj[seg].gh->setAborted();
+          else if (traj[seg].gh_follow) {
+            traj[seg].gh_follow->preallocated_result_->error_code =
+              control_msgs::FollowJointTrajectoryResult::PATH_TOLERANCE_VIOLATED;
+            traj[seg].gh_follow->setAborted(traj[seg].gh_follow->preallocated_result_);
+          }
           break;
         }
       }
@@ -386,7 +398,13 @@ void JointTrajectoryActionController::update()
       if (inside_goal_constraints)
       {
         rt_active_goal_.reset();
-        traj[seg].gh->setSucceeded();
+        rt_active_goal_follow_.reset();
+        if (traj[seg].gh)
+          traj[seg].gh->setSucceeded();
+        else if (traj[seg].gh_follow) {
+          traj[seg].gh_follow->preallocated_result_->error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
+          traj[seg].gh_follow->setSucceeded(traj[seg].gh_follow->preallocated_result_);
+        }
         //ROS_ERROR("Success!  (%s)", traj[seg].gh->gh_.getGoalID().id.c_str());
       }
       else if (time < end_time + ros::Duration(goal_time_constraint_))
@@ -397,7 +415,13 @@ void JointTrajectoryActionController::update()
       {
         //ROS_WARN("Aborting because we wound up outside the goal constraints");
         rt_active_goal_.reset();
-        traj[seg].gh->setAborted();
+        rt_active_goal_follow_.reset();
+        if (traj[seg].gh)
+          traj[seg].gh->setAborted();
+        else if (traj[seg].gh_follow) {
+          traj[seg].gh_follow->preallocated_result_->error_code = control_msgs::FollowJointTrajectoryResult::GOAL_TOLERANCE_VIOLATED;
+          traj[seg].gh_follow->setAborted(traj[seg].gh_follow->preallocated_result_);
+        }
       }
     }
   }
@@ -428,20 +452,15 @@ void JointTrajectoryActionController::update()
 
 void JointTrajectoryActionController::commandCB(const trajectory_msgs::JointTrajectory::ConstPtr &msg)
 {
-  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
-  // Cancels the currently active goal.
-  if (current_active_goal)
-  {
-    rt_active_goal_.reset();
-    current_active_goal->gh_.setCanceled();
-  }
-
+  preemptActiveGoal();
   commandTrajectory(msg);
 }
 
 void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::JointTrajectory::ConstPtr &msg,
-                                                        boost::shared_ptr<RTGoalHandle> gh)
+                                                        boost::shared_ptr<RTGoalHandle> gh,
+                                                        boost::shared_ptr<RTGoalHandleFollow> gh_follow)
 {
+  assert(!gh || !gh_follow);
   ros::Time time = last_time_ + ros::Duration(0.01);
   ROS_DEBUG("Figuring out new trajectory at %.3lf, with data from %.3lf",
             time.toSec(), msg->header.stamp.toSec());
@@ -476,6 +495,10 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
       ROS_ERROR("Unable to locate joint %s in the commanded trajectory.", joints_[j]->joint_->name.c_str());
       if (gh)
         gh->setAborted();
+      else if (gh_follow) {
+        gh_follow->preallocated_result_->error_code = control_msgs::FollowJointTrajectoryResult::INVALID_JOINTS;
+        gh_follow->setAborted(gh_follow->preallocated_result_);
+      }
       return;
     }
   }
@@ -587,6 +610,7 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
       seg.start_time = (msg->header.stamp + msg->points[i].time_from_start).toSec() - durations[i];
     seg.duration = durations[i];
     seg.gh = gh;
+    seg.gh_follow = gh_follow;
     seg.splines.resize(joints_.size());
 
     // Checks that the incoming segment has the right number of elements.
@@ -783,6 +807,26 @@ static bool setsEqual(const std::vector<std::string> &a, const std::vector<std::
   return true;
 }
 
+void JointTrajectoryActionController::preemptActiveGoal()
+{
+  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
+  boost::shared_ptr<RTGoalHandleFollow> current_active_goal_follow(rt_active_goal_follow_);
+  
+  // Cancels the currently active goal.
+  if (current_active_goal)
+  {
+    // Marks the current goal as canceled.
+    rt_active_goal_.reset();
+    current_active_goal->gh_.setCanceled();
+  }
+  if (current_active_goal_follow)
+  {
+    rt_active_goal_follow_.reset();
+    current_active_goal_follow->gh_.setCanceled();
+  }
+}
+
+
 template <class Enclosure, class Member>
 static boost::shared_ptr<Member> share_member(boost::shared_ptr<Enclosure> enclosure, Member &member)
 {
@@ -805,15 +849,7 @@ void JointTrajectoryActionController::goalCB(GoalHandle gh)
     return;
   }
 
-  boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
-
-  // Cancels the currently active goal.
-  if (current_active_goal)
-  {
-    // Marks the current goal as canceled.
-    rt_active_goal_.reset();
-    current_active_goal->gh_.setCanceled();
-  }
+  preemptActiveGoal();
 
   gh.setAccepted();
   boost::shared_ptr<RTGoalHandle> rt_gh(new RTGoalHandle(gh));
@@ -825,12 +861,60 @@ void JointTrajectoryActionController::goalCB(GoalHandle gh)
   goal_handle_timer_.start();
 }
 
+void JointTrajectoryActionController::goalCBFollow(GoalHandleFollow gh)
+{
+  std::vector<std::string> joint_names(joints_.size());
+  for (size_t j = 0; j < joints_.size(); ++j)
+    joint_names[j] = joints_[j]->joint_->name;
+
+  // Ensures that the joints in the goal match the joints we are commanding.
+  if (!setsEqual(joint_names, gh.getGoal()->trajectory.joint_names))
+  {
+    ROS_ERROR("Joints on incoming goal don't match our joints");
+    control_msgs::FollowJointTrajectoryResult result;
+    result.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_JOINTS;
+    gh.setRejected(result);
+    return;
+  }
+
+  preemptActiveGoal();
+
+  gh.setAccepted();
+  boost::shared_ptr<RTGoalHandleFollow> rt_gh(new RTGoalHandleFollow(gh));
+
+  // Sends the trajectory along to the controller
+  goal_handle_timer_ = node_.createTimer(ros::Duration(0.01), &RTGoalHandleFollow::runNonRT, rt_gh);
+  commandTrajectory(share_member(gh.getGoal(), gh.getGoal()->trajectory),
+                    boost::shared_ptr<RTGoalHandle>((RTGoalHandle*)NULL),
+                    rt_gh);
+  rt_active_goal_follow_ = rt_gh;
+  goal_handle_timer_.start();
+}
+
 void JointTrajectoryActionController::cancelCB(GoalHandle gh)
 {
   boost::shared_ptr<RTGoalHandle> current_active_goal(rt_active_goal_);
   if (current_active_goal && current_active_goal->gh_ == gh)
   {
     rt_active_goal_.reset();
+
+    trajectory_msgs::JointTrajectory::Ptr empty(new trajectory_msgs::JointTrajectory);
+    empty->joint_names.resize(joints_.size());
+    for (size_t j = 0; j < joints_.size(); ++j)
+      empty->joint_names[j] = joints_[j]->joint_->name;
+    commandTrajectory(empty);
+
+    // Marks the current goal as canceled.
+    current_active_goal->gh_.setCanceled();
+  }
+}
+
+void JointTrajectoryActionController::cancelCBFollow(GoalHandleFollow gh)
+{
+  boost::shared_ptr<RTGoalHandleFollow> current_active_goal(rt_active_goal_follow_);
+  if (current_active_goal && current_active_goal->gh_ == gh)
+  {
+    rt_active_goal_follow_.reset();
 
     trajectory_msgs::JointTrajectory::Ptr empty(new trajectory_msgs::JointTrajectory);
     empty->joint_names.resize(joints_.size());

@@ -52,10 +52,12 @@
 #include <realtime_tools/realtime_box.h>
 
 
+#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <pr2_controllers_msgs/QueryTrajectoryState.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
+
 
 namespace controller {
 
@@ -67,6 +69,7 @@ private:
 
   //typedef actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef actionlib::ServerGoalHandle<Action> GoalHandle;
+  typedef boost::shared_ptr<Result> ResultPtr;
 
   uint8_t state_;
 
@@ -76,10 +79,13 @@ private:
 
 public:
   GoalHandle gh_;
+  ResultPtr preallocated_result_;  // Preallocated so it can be used in realtime
 
-  RTServerGoalHandle(GoalHandle &gh)
-    : req_abort_(false), req_succeed_(false), gh_(gh)
+  RTServerGoalHandle(GoalHandle &gh, const ResultPtr &preallocated_result = ResultPtr((Result*)NULL))
+    : req_abort_(false), req_succeed_(false), gh_(gh), preallocated_result_(preallocated_result)
   {
+    if (!preallocated_result_)
+      preallocated_result_.reset(new Result);
   }
 
   void setAborted(ResultConstPtr result = ResultConstPtr((Result*)NULL))
@@ -132,9 +138,16 @@ public:
 
 class JointTrajectoryActionController : public pr2_controller_interface::Controller
 {
+  // Action typedefs for the original PR2 specific joint trajectory action
   typedef actionlib::ActionServer<pr2_controllers_msgs::JointTrajectoryAction> JTAS;
   typedef JTAS::GoalHandle GoalHandle;
   typedef RTServerGoalHandle<pr2_controllers_msgs::JointTrajectoryAction> RTGoalHandle;
+
+  // Action typedefs for the new follow joint trajectory action
+  typedef actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction> FJTAS;
+  typedef FJTAS::GoalHandle GoalHandleFollow;
+  typedef RTServerGoalHandle<control_msgs::FollowJointTrajectoryAction> RTGoalHandleFollow;
+    
 public:
 
   JointTrajectoryActionController();
@@ -171,16 +184,23 @@ private:
       pr2_controllers_msgs::JointTrajectoryControllerState> > controller_state_publisher_;
 
   boost::scoped_ptr<JTAS> action_server_;
+  boost::scoped_ptr<FJTAS> action_server_follow_;
   void goalCB(GoalHandle gh);
   void cancelCB(GoalHandle gh);
+  void goalCBFollow(GoalHandleFollow gh);
+  void cancelCBFollow(GoalHandleFollow gh);
   ros::Timer goal_handle_timer_;
 
   boost::shared_ptr<RTGoalHandle> rt_active_goal_;
+  boost::shared_ptr<RTGoalHandleFollow> rt_active_goal_follow_;
 
   // ------ Mechanisms for passing the trajectory into realtime
 
   void commandTrajectory(const trajectory_msgs::JointTrajectory::ConstPtr &traj,
-                         boost::shared_ptr<RTGoalHandle> gh = boost::shared_ptr<RTGoalHandle>((RTGoalHandle*)NULL));
+                         boost::shared_ptr<RTGoalHandle> gh = boost::shared_ptr<RTGoalHandle>((RTGoalHandle*)NULL),
+                         boost::shared_ptr<RTGoalHandleFollow> gh_follow = boost::shared_ptr<RTGoalHandleFollow>((RTGoalHandleFollow*)NULL));
+
+  void preemptActiveGoal();
 
   // coef[0] + coef[1]*t + ... + coef[5]*t^5
   struct Spline
@@ -197,6 +217,7 @@ private:
     std::vector<Spline> splines;
 
     boost::shared_ptr<RTGoalHandle> gh;
+    boost::shared_ptr<RTGoalHandleFollow> gh_follow;  // Goal handle for the newer FollowJointTrajectory action
   };
   typedef std::vector<Segment> SpecifiedTrajectory;
 
