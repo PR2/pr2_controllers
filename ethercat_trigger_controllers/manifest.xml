@@ -15,7 +15,7 @@
   <depend package="pluginlib" />
   <url>http://www.ros.org/wiki/ethercat_trigger_controllers</url>
   <export>
-    <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"
+    <cpp cflags="-I${prefix}/include"
 	 lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lethercat_trigger_controllers" />
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
   </export>
