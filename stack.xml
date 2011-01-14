@@ -8,6 +8,7 @@
   <url>http://ros.org/wiki/pr2_controllers</url>
   <depend stack="common" /> <!-- actionlib, filters, tinyxml, pluginlib -->
   <depend stack="common_msgs" /> <!-- nav_msgs, actionlib_msgs, trajectory_msgs, sensor_msgs, geometry_msgs, visualization_msgs, diagnostic_msgs -->
+  <depend stack="control" /> <!-- control_msgs -->
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
   <depend stack="geometry" /> <!-- tf, tf_conversions, kdl, eigen, angles -->
   <depend stack="pr2_common" /> <!-- pr2_msgs -->
