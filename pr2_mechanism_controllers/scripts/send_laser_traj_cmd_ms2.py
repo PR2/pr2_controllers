@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     cmd = LaserTrajCmd()
     controller   =    sys.argv[1]
-    cmd.header   =    roslib.msg.Header(None, None, None)
+    cmd.header   =    rospy.Header(None, None, None)
     cmd.profile  = "blended_linear"
     #cmd.pos      = [1.0, .26, -.26, -.7,   -.7,   -.26,   .26,   1.0, 1.0]
     d = .025

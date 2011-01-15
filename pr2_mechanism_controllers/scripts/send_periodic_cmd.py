@@ -25,12 +25,14 @@ def print_usage(exit_code = 0):
     sys.exit(exit_code)
 
 if __name__ == '__main__':
+    rospy.init_node('periodic_cmd_commander', sys.argv, anonymous=True)
+
     if len(sys.argv) != 6:
         print_usage()
 
     cmd = PeriodicCmd()
     controller =    sys.argv[1]
-    cmd.header =    roslib.msg.Header(None, None, None)
+    cmd.header =    rospy.Header(None, None, None)
     cmd.profile =   sys.argv[2] 
     cmd.period =    float (sys.argv[3])
     cmd.amplitude = float (sys.argv[4])
@@ -43,7 +45,6 @@ if __name__ == '__main__':
     print '  Offset:       %f Radians' % cmd.offset
 
     command_publisher = rospy.Publisher(controller + '/set_periodic_cmd', PeriodicCmd)
-    rospy.init_node('periodic_cmd_commander', anonymous=True)
     sleep(1)
     command_publisher.publish( cmd )
 

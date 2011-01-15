@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     cmd = PeriodicCmd()
     controller =    sys.argv[1]
-    cmd.header =    roslib.msg.Header(None, None, None)
+    cmd.header =    rospy.Header(None, None, None)
     cmd.profile =   sys.argv[2] 
     cmd.period =    float (sys.argv[3])
     cmd.amplitude = float (sys.argv[4])
