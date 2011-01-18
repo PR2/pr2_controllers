@@ -209,16 +209,19 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
     if (!pids_[i].init(ros::NodeHandle(gains_ns + "/" + joints_[i]->joint_->name)))
       return false;
 
-  // Trajectory and goal constraints
-  node_.param("joint_trajectory_action_node/constraints/goal_time", goal_time_constraint_, 0.0);
-  node_.param("joint_trajectory_action_node/constraints/stopped_velocity_tolerance", stopped_velocity_tolerance_, 0.01);
-  goal_constraints_.resize(joints_.size());
-  trajectory_constraints_.resize(joints_.size());
+  // Trajectory and goal tolerances
+  default_trajectory_tolerance_.resize(joints_.size());
+  default_goal_tolerance_.resize(joints_.size());
+  node_.param("joint_trajectory_action_node/constraints/goal_time", default_goal_time_constraint_, 0.0);
+  double stopped_velocity_tolerance;
+  node_.param("joint_trajectory_action_node/constraints/stopped_velocity_tolerance", stopped_velocity_tolerance, 0.01);
+  for (size_t i = 0; i < default_goal_tolerance_.size(); ++i)
+    default_goal_tolerance_[i].velocity = stopped_velocity_tolerance;
   for (size_t i = 0; i < joints_.size(); ++i)
   {
     std::string ns = std::string("joint_trajectory_action_node/constraints") + joints_[i]->joint_->name;
-    node_.param(ns + "/goal", goal_constraints_[i], -1.0);
-    node_.param(ns + "/trajectory", trajectory_constraints_[i], -1.0);
+    node_.param(ns + "/goal", default_goal_tolerance_[i].position, 0.0);
+    node_.param(ns + "/trajectory", default_trajectory_tolerance_[i].position, 0.0);
   }
 
   // Output filters
@@ -344,10 +347,12 @@ void JointTrajectoryActionController::update()
   // ------ Trajectory Following
 
   std::vector<double> error(joints_.size());
+  std::vector<double> v_error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
     error[i] = joints_[i]->position_ - q[i];
-    double effort = pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
+    v_error[i] = joints_[i]->velocity_ - qd[i];
+    double effort = pids_[i].updatePid(error[i], v_error[i], dt);
     double effort_filtered = effort;
     if (output_filters_[i])
       output_filters_[i]->update(effort, effort_filtered);
@@ -362,10 +367,10 @@ void JointTrajectoryActionController::update()
     ros::Time end_time(traj[seg].start_time + traj[seg].duration);
     if (time <= end_time)
     {
-      // Verifies trajectory constraints
+      // Verifies trajectory tolerances
       for (size_t j = 0; j < joints_.size(); ++j)
       {
-        if (trajectory_constraints_[j] > 0 && fabs(error[j]) > trajectory_constraints_[j])
+        if (traj[seg].trajectory_tolerance[j].violated(error[j], v_error[j]))
         {
           if (traj[seg].gh)
             traj[seg].gh->setAborted();
@@ -380,19 +385,12 @@ void JointTrajectoryActionController::update()
     }
     else if (seg == (int)traj.size() - 1)
     {
-      // Checks that we have ended inside the goal constraints
+      // Checks that we have ended inside the goal tolerances
       bool inside_goal_constraints = true;
       for (size_t i = 0; i < joints_.size() && inside_goal_constraints; ++i)
       {
-        if (goal_constraints_[i] > 0 && fabs(error[i]) > goal_constraints_[i])
+        if (traj[seg].goal_tolerance[i].violated(error[i], v_error[i]))
           inside_goal_constraints = false;
-
-        // It's important to be stopped if that's desired.
-        if (fabs(qd[i]) < 1e-6)
-        {
-          if (fabs(joints_[i]->velocity_) > stopped_velocity_tolerance_)
-            inside_goal_constraints = false;
-        }
       }
 
       if (inside_goal_constraints)
@@ -407,7 +405,7 @@ void JointTrajectoryActionController::update()
         }
         //ROS_ERROR("Success!  (%s)", traj[seg].gh->gh_.getGoalID().id.c_str());
       }
-      else if (time < end_time + ros::Duration(goal_time_constraint_))
+      else if (time < end_time + ros::Duration(traj[seg].goal_time_tolerance))
       {
         // Still have some time left to make it.
       }
@@ -474,6 +472,84 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   {
     starting();
     return;
+  }
+
+  // ------ Computes the tolerances for following the trajectory
+  
+  std::vector<JointTolerance> trajectory_tolerance = default_trajectory_tolerance_;
+  std::vector<JointTolerance> goal_tolerance = default_goal_tolerance_;
+  double goal_time_tolerance = default_goal_time_constraint_;
+
+  if (gh_follow)
+  {
+    for (size_t j = 0; j < joints_.size(); ++j)
+    {
+      // Extracts the path tolerance from the command
+      for (size_t k = 0; k < gh_follow->gh_.getGoal()->path_tolerance.size(); ++k)
+      {
+        const control_msgs::JointTolerance &tol = gh_follow->gh_.getGoal()->path_tolerance[k];
+        if (joints_[j]->joint_->name == tol.name)
+        {
+          // If the commanded tolerances are positive, overwrite the
+          // existing tolerances.  If they are -1, remove any existing
+          // tolerance.  If they are 0, leave the default tolerance in
+          // place.
+          
+          if (tol.position > 0)
+            trajectory_tolerance[j].position = tol.position;
+          else if (tol.position < 0)
+            trajectory_tolerance[j].position = 0.0;
+
+          if (tol.velocity > 0)
+            trajectory_tolerance[j].velocity = tol.velocity;
+          else if (tol.velocity < 0)
+            trajectory_tolerance[j].velocity = 0.0;
+
+          if (tol.acceleration > 0)
+            trajectory_tolerance[j].acceleration = tol.acceleration;
+          else if (tol.acceleration < 0)
+            trajectory_tolerance[j].acceleration = 0.0;
+          
+          break;
+        }
+      }
+
+      // Extracts the goal tolerance from the command
+      for (size_t k = 0; k < gh_follow->gh_.getGoal()->goal_tolerance.size(); ++k)
+      {
+        const control_msgs::JointTolerance &tol = gh_follow->gh_.getGoal()->goal_tolerance[k];
+        if (joints_[j]->joint_->name == tol.name)
+        {
+          // If the commanded tolerances are positive, overwrite the
+          // existing tolerances.  If they are -1, remove any existing
+          // tolerance.  If they are 0, leave the default tolerance in
+          // place.
+          
+          if (tol.position > 0)
+            goal_tolerance[j].position = tol.position;
+          else if (tol.position < 0)
+            goal_tolerance[j].position = 0.0;
+
+          if (tol.velocity > 0)
+            goal_tolerance[j].velocity = tol.velocity;
+          else if (tol.velocity < 0)
+            goal_tolerance[j].velocity = 0.0;
+
+          if (tol.acceleration > 0)
+            goal_tolerance[j].acceleration = tol.acceleration;
+          else if (tol.acceleration < 0)
+            goal_tolerance[j].acceleration = 0.0;
+          
+          break;
+        }
+      }
+    }
+    
+    const ros::Duration &tol = gh_follow->gh_.getGoal()->goal_time_tolerance;
+    if (tol < ros::Duration(0.0))
+      goal_time_tolerance = 0.0;
+    else if (tol > ros::Duration(0.0))
+      goal_time_tolerance = tol.toSec();
   }
 
   // ------ Correlates the joints we're commanding to the joints in the message
@@ -677,6 +753,11 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
         seg.splines[j].coef[5] = 0.0;
       }
     }
+
+    // Writes the tolerances into the segment
+    seg.trajectory_tolerance = trajectory_tolerance;
+    seg.goal_tolerance = goal_tolerance;
+    seg.goal_time_tolerance = goal_time_tolerance;
 
     // Pushes the splines onto the end of the new trajectory.
 
