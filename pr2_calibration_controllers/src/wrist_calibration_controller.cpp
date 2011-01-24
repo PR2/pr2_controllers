@@ -240,6 +240,13 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
   fake_js.push_back(new pr2_mechanism_model::JointState);
   fake_js.push_back(new pr2_mechanism_model::JointState);
 
+  const int LEFT_MOTOR = pr2_mechanism_model::WristTransmission::LEFT_MOTOR;
+  const int RIGHT_MOTOR = pr2_mechanism_model::WristTransmission::RIGHT_MOTOR;
+  const int FLEX_JOINT = pr2_mechanism_model::WristTransmission::FLEX_JOINT;
+  const int ROLL_JOINT = pr2_mechanism_model::WristTransmission::ROLL_JOINT;
+  fake_js[FLEX_JOINT]->joint_ = flex_joint_->joint_;
+  fake_js[ROLL_JOINT]->joint_ = roll_joint_->joint_;
+
   if (!vc_roll_.init(robot_, roll_node)) return false;
   if (!vc_flex_.init(robot_, flex_node)) return false;
 
