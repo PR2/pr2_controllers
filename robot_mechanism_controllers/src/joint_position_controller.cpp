@@ -165,7 +165,7 @@ void JointPositionController::update()
   double commanded_effort = pid_controller_.updatePid(error, joint_state_->velocity_, dt_); // assuming desired velocity is 0
   joint_state_->commanded_effort_ = commanded_effort;
 
-  //if(loop_count_ % 10 == 0) // publish at every cycle
+  if(loop_count_ % 10 == 0)
   {
     if(controller_state_publisher_ && controller_state_publisher_->trylock())
     {
