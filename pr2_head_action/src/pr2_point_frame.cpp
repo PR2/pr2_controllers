@@ -33,6 +33,9 @@
 #include <pr2_controllers_msgs/QueryTrajectoryState.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
+#include <object_manipulator/tools/shape_tools.h>
+#include <visualization_msgs/Marker.h>
+
 //#include <algorithm>
 //#include <tf/transform_broadcaster.h>
 
@@ -60,6 +63,7 @@ private:
 
   ros::NodeHandle nh_, pnh_;
   ros::Publisher pub_controller_command_;
+  ros::Publisher pub_markers_;
   ros::Subscriber sub_controller_state_;
   ros::Subscriber command_sub_;
   ros::ServiceClient cli_query_traj_;
@@ -109,6 +113,8 @@ public:
       nh_.subscribe("state", 1, &ControlHead::controllerStateCB, this);
     cli_query_traj_ =
         nh_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("/head_traj_controller/query_state");
+
+    pub_markers_ = nh_.advertise<visualization_msgs::Marker>("markers", 10);
 
     // Should only ever happen on first call... move to constructor?
     if(tree_.getNrOfJoints() == 0)
@@ -279,6 +285,12 @@ public:
       jnt_pos(i) = 0;
     }
 
+    object_manipulator::shapes::Sphere goal_sphere;
+    goal_sphere.frame = tf::Pose(tf::Quaternion(0,0,0,1), target_in_root_);
+    goal_sphere.dims = tf::Vector3(0.02, 0.02, 0.02);
+    goal_sphere.header.frame_id = root_;
+    goal_sphere.header.stamp = ros::Time(0);
+    object_manipulator::drawSphere(pub_markers_, goal_sphere, "point head goal");
 
 
 //    std::cout << "Target in root: " << target_in_root_msg << std::endl;
