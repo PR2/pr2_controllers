@@ -1,0 +1,12 @@
+<launch>
+  
+  <!-- A launch file to independently (re-)launch the point head action for debugging -->
+  
+  <include file="$(find pr2_machine)/pr2.machine" />
+
+  <group ns="head_traj_controller">
+    <node name="point_head_action" machine="c1"
+          pkg="pr2_head_action" type="pr2_head_action" output="screen" />
+  </group>
+
+</launch>
