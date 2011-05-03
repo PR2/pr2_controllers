@@ -33,11 +33,9 @@
 #include <pr2_controllers_msgs/QueryTrajectoryState.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
-#include <object_manipulator/tools/shape_tools.h>
-#include <visualization_msgs/Marker.h>
+//#include <object_manipulator/tools/shape_tools.h>
+//#include <visualization_msgs/Marker.h>
 
-//#include <algorithm>
-//#include <tf/transform_broadcaster.h>
 
 void printVector3(const char * label, tf::Vector3 v)
 {
@@ -63,7 +61,7 @@ private:
 
   ros::NodeHandle nh_, pnh_;
   ros::Publisher pub_controller_command_;
-  ros::Publisher pub_markers_;
+//  ros::Publisher pub_markers_;
   ros::Subscriber sub_controller_state_;
   ros::Subscriber command_sub_;
   ros::ServiceClient cli_query_traj_;
@@ -101,7 +99,7 @@ public:
   {
     pnh_.param("pan_link", pan_link_, std::string("head_pan_link"));
     pnh_.param("default_pointing_frame", default_pointing_frame_, std::string("head_tilt_link"));
-    pnh_.param("success_angle_threshold", success_angle_threshold_, 0.03);
+    pnh_.param("success_angle_threshold", success_angle_threshold_, 0.02);
 
     if(pan_link_[0] == '/') pan_link_.erase(0, 1);
     if(default_pointing_frame_[0] == '/') default_pointing_frame_.erase(0, 1);
@@ -114,14 +112,14 @@ public:
     cli_query_traj_ =
         nh_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("/head_traj_controller/query_state");
 
-    pub_markers_ = nh_.advertise<visualization_msgs::Marker>("markers", 10);
+//    pub_markers_ = nh_.advertise<visualization_msgs::Marker>("markers", 10);
 
     // Should only ever happen on first call... move to constructor?
     if(tree_.getNrOfJoints() == 0)
     {
       std::string robot_desc_string;
       nh_.param("/robot_description", robot_desc_string, std::string());
-      ROS_INFO("Reading tree from robot_description...");
+      ROS_DEBUG("Reading tree from robot_description...");
       if (!kdl_parser::treeFromString(robot_desc_string, tree_)){
          ROS_ERROR("Failed to construct kdl tree");
          exit(-1);
@@ -132,7 +130,7 @@ public:
       }
     }
 
-    ROS_INFO("Tree has %d joints and %d segments.", tree_.getNrOfJoints(), tree_.getNrOfSegments());
+    ROS_DEBUG("Tree has %d joints and %d segments.", tree_.getNrOfJoints(), tree_.getNrOfSegments());
 
     action_server_.start();
 
@@ -161,6 +159,8 @@ public:
       }
     }
     if(root_[0] == '/') root_.erase(0, 1);
+
+    ROS_DEBUG("Got point head goal!");
 
     // Process pointing frame and axis
     const geometry_msgs::PointStamped &target = gh.getGoal()->target;
@@ -282,15 +282,16 @@ public:
       joint_names_[i] = traj_state.response.name[i];
       limits_[i] = *(urdf_model_.joints_[joint_names_[i].c_str()]->limits);
       ROS_DEBUG("Joint %d %s: %f, limits: %f %f", i, traj_state.response.name[i].c_str(), traj_state.response.position[i], limits_[i].lower, limits_[i].upper);
+      //jnt_pos(i) = traj_state.response.position[i];
       jnt_pos(i) = 0;
     }
 
-    object_manipulator::shapes::Sphere goal_sphere;
-    goal_sphere.frame = tf::Pose(tf::Quaternion(0,0,0,1), target_in_root_);
-    goal_sphere.dims = tf::Vector3(0.02, 0.02, 0.02);
-    goal_sphere.header.frame_id = root_;
-    goal_sphere.header.stamp = ros::Time(0);
-    object_manipulator::drawSphere(pub_markers_, goal_sphere, "point head goal");
+//    object_manipulator::shapes::Sphere goal_sphere;
+//    goal_sphere.frame = tf::Pose(tf::Quaternion(0,0,0,1), target_in_root_);
+//    goal_sphere.dims = tf::Vector3(0.02, 0.02, 0.02);
+//    goal_sphere.header.frame_id = root_;
+//    goal_sphere.header.stamp = target.header.stamp;
+//    object_manipulator::drawSphere(pub_markers_, goal_sphere, "point head goal");
 
 
 //    std::cout << "Target in root: " << target_in_root_msg << std::endl;
@@ -320,6 +321,7 @@ public:
       float prev_correction = correction_angle;
       correction_angle = current_in_frame.angle(axis_in_frame);
       correction_delta = correction_angle - prev_correction;
+      ROS_DEBUG("At step %d, joint poses are %.4f and %.4f, angle error is %f", count, jnt_pos(0), jnt_pos(1), correction_angle);
       if(correction_angle < 0.5*success_angle_threshold_) break;
       tf::Vector3 correction_axis = frame_in_root.getBasis()*(axis_in_frame.cross(current_in_frame).normalized());
       //printVector3("correction_axis in root:", correction_axis);
@@ -344,13 +346,13 @@ public:
       }
 
       // account for pan_link joint limit in back.
-      if(jnt_pos(0) < limits_[0].lower){ jnt_pos(0) += M_PI; limit_flips++; }
-      if(jnt_pos(0) > limits_[0].upper){ jnt_pos(0) -= M_PI; limit_flips++; }
+      if(jnt_pos(0) < limits_[0].lower && limit_flips++ == 0){ jnt_pos(0) += 1.5*M_PI; }
+      if(jnt_pos(0) > limits_[0].upper && limit_flips++ == 0){ jnt_pos(0) -= 1.5*M_PI; }
 
-      //jnt_pos(1) = std::max(limits_[1].lower, jnt_pos(1));
-      //jnt_pos(1) = std::min(limits_[1].upper, jnt_pos(1));
+      jnt_pos(1) = std::max(limits_[1].lower, jnt_pos(1));
+      jnt_pos(1) = std::min(limits_[1].upper, jnt_pos(1));
 
-      ROS_DEBUG("At step %d, joint poses are %.4f and %.4f", count, jnt_pos(0), jnt_pos(1));
+      count++;
 
       if(limit_flips > 1){
         ROS_ERROR("Goal is out of joint limits, trying to point there anyway... \n");
