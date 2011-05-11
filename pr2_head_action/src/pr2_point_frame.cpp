@@ -99,7 +99,7 @@ public:
   {
     pnh_.param("pan_link", pan_link_, std::string("head_pan_link"));
     pnh_.param("default_pointing_frame", default_pointing_frame_, std::string("head_tilt_link"));
-    pnh_.param("success_angle_threshold", success_angle_threshold_, 0.02);
+    pnh_.param("success_angle_threshold", success_angle_threshold_, 0.1);
 
     if(pan_link_[0] == '/') pan_link_.erase(0, 1);
     if(default_pointing_frame_[0] == '/') default_pointing_frame_.erase(0, 1);
