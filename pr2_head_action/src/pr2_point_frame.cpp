@@ -33,9 +33,6 @@
 #include <pr2_controllers_msgs/QueryTrajectoryState.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
-//#include <object_manipulator/tools/shape_tools.h>
-//#include <visualization_msgs/Marker.h>
-
 
 void printVector3(const char * label, tf::Vector3 v)
 {
@@ -61,7 +58,6 @@ private:
 
   ros::NodeHandle nh_, pnh_;
   ros::Publisher pub_controller_command_;
-//  ros::Publisher pub_markers_;
   ros::Subscriber sub_controller_state_;
   ros::Subscriber command_sub_;
   ros::ServiceClient cli_query_traj_;
@@ -111,8 +107,6 @@ public:
       nh_.subscribe("state", 1, &ControlHead::controllerStateCB, this);
     cli_query_traj_ =
         nh_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("/head_traj_controller/query_state");
-
-//    pub_markers_ = nh_.advertise<visualization_msgs::Marker>("markers", 10);
 
     // Should only ever happen on first call... move to constructor?
     if(tree_.getNrOfJoints() == 0)
@@ -239,16 +233,14 @@ public:
       }
       tip_ = pointing_frame_;
 
-//      if( pose_solver_ ) delete pose_solver_;
-//      if( jac_solver_ ) delete jac_solver_;
       pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(chain_));
       jac_solver_.reset(new KDL::ChainJntToJacSolver(chain_));
       joint_names_.resize(chain_.getNrOfJoints());
     }
 
     unsigned int joints = chain_.getNrOfJoints();
-    //int segments = chain_.getNrOfSegments();
 
+//    int segments = chain_.getNrOfSegments();
 //    ROS_INFO("Parsed urdf from %s to %s and found %d joints and %d segments.", root_.c_str(), pointing_frame_.c_str(), joints, segments);
 //    for(int i = 0; i < segments; i++)
 //    {
@@ -285,21 +277,6 @@ public:
       //jnt_pos(i) = traj_state.response.position[i];
       jnt_pos(i) = 0;
     }
-
-//    object_manipulator::shapes::Sphere goal_sphere;
-//    goal_sphere.frame = tf::Pose(tf::Quaternion(0,0,0,1), target_in_root_);
-//    goal_sphere.dims = tf::Vector3(0.02, 0.02, 0.02);
-//    goal_sphere.header.frame_id = root_;
-//    goal_sphere.header.stamp = target.header.stamp;
-//    object_manipulator::drawSphere(pub_markers_, goal_sphere, "point head goal");
-
-
-//    std::cout << "Target in root: " << target_in_root_msg << std::endl;
-//    tf::StampedTransform stamped;
-//    tfl_.lookupTransform( root_, pointing_frame_, target.header.stamp, stamped);
-//    geometry_msgs::TransformStamped pose_stamped;
-//    tf::transformStampedTFToMsg(stamped, pose_stamped);
-//    std::cout << "pointing frame in root: " << pose_stamped << std::endl;
 
     int count = 0;
     int limit_flips = 0;
@@ -388,8 +365,7 @@ public:
     if (gh.getGoal()->min_duration > min_duration)
         min_duration = gh.getGoal()->min_duration;
 
-    // Determines if we need to increase the duration of the movement
-    // in order to enforce a maximum velocity.
+    // Determines if we need to increase the duration of the movement in order to enforce a maximum velocity.
     if (gh.getGoal()->max_velocity > 0)
     {
       // Very approximate velocity limiting.
@@ -420,22 +396,7 @@ public:
     pub_controller_command_.publish(traj);
   }
 
-
-//  float getPointingError(tf::Point target_in_root, KDL::JntArray jnt_pos)
-//  {
-//    KDL::Frame pose;
-//    pose_solver_->JntToCart(jnt_pos, pose);
-////    jac_solver_->JntToJac(jnt_pos, jacobian);
-//
-//    tf::Transform frame_in_root;
-//    tf::PoseKDLToTF(pose, frame_in_root);
-//    tf::Vector3 axis_in_root = (frame_in_root*pointing_axis_).normalized();
-//    tf::Vector3 current_in_root = (target_in_root - frame_in_root.getOrigin()).normalized();
-//  //  axis_in_root.normalize();
-//  //  current_in_root.normalize();
-//    return axis_in_root.angle(current_in_root);
-//  }
-
+  
   void watchdog(const ros::TimerEvent &e)
   {
     ros::Time now = ros::Time::now();
@@ -542,25 +503,3 @@ int main(int argc, char** argv)
   return 0;
 }
 
-
-
-
-///*! Main :) */
-//int main(int argc, char **argv)
-//{
-//  ros::init(argc, argv, "query_head_chain");
-//
-//  ControlHead solver;
-//
-//  solver.execute();
-//
-//  ROS_INFO("Finished...");
-//
-//  ros::shutdown();
-//  while(ros::ok())
-//  {
-//    ros::Duration(0.2).sleep();
-//  }
-//
-//  return true;
-//}
