@@ -38,7 +38,7 @@
 #define SINUSOID_H_
 
 #include <iostream>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace control_toolbox
 {

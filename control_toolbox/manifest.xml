@@ -6,7 +6,9 @@
   <license>BSD</license>
   <review status="Doc reviewed" notes="http://www.ros.org/wiki/control_toolbox/Reviews/2010-01-12_Doc_Review"/>
   <url>http://ros.org/wiki/control_toolbox</url>
-  <depend package="tinyxml" />
+
+  <rosdep name="tinyxml" />
+
   <depend package="rosconsole" />
   <depend package="tf" />
   <depend package="roscpp" />

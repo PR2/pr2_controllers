@@ -35,7 +35,7 @@
 // Original version: Melonee Wise <mwise@willowgarage.com>
 
 #include "control_toolbox/pid.h"
-#include "tinyxml/tinyxml.h"
+#include "tinyxml.h"
 
 namespace control_toolbox {
 
