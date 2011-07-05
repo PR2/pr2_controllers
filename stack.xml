@@ -6,11 +6,15 @@
   <license>BSD</license>  
   <review status="Doc reviewed" notes="2010/01/21"/>
   <url>http://ros.org/wiki/pr2_controllers</url>
-  <depend stack="common" /> <!-- actionlib, filters, tinyxml, pluginlib -->
+  <depend stack="common" /> <!-- actionlib -->
   <depend stack="common_msgs" /> <!-- nav_msgs, actionlib_msgs, trajectory_msgs, sensor_msgs, geometry_msgs, visualization_msgs, diagnostic_msgs -->
   <depend stack="control" /> <!-- control_msgs -->
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
-  <depend stack="geometry" /> <!-- tf, tf_conversions, kdl, eigen, angles -->
+  <depend stack="eigen" /> <!-- eigen -->
+  <depend stack="filters" /> <!-- filters -->
+  <depend stack="geometry" /> <!-- tf, tf_conversions, angles -->
+  <depend stack="orocos_kinematics_dynamics" /> <!-- kdl -->
+  <depend stack="pluginlib" /> <!-- pluginlib -->
   <depend stack="pr2_common" /> <!-- pr2_msgs -->
   <depend stack="pr2_mechanism" /> <!-- pr2_controller_manager, pr2_mechanism_msgs, pr2_mechanism_model, realtime_tools, pr2_controller_interface -->
   <depend stack="robot_model" /> <!-- kdl_parser -->
