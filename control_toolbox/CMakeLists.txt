@@ -10,6 +10,7 @@ rosbuild_add_library(control_toolbox
  src/sine_sweep.cpp
  src/dither.cpp
  src/sinusoid.cpp
+ src/limited_proxy.cpp
  )
  
 # rosbuild_add_executable(test_linear test/linear.cpp)
