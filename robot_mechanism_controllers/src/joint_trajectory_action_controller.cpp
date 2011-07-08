@@ -204,10 +204,37 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
   std::string gains_ns;
   if (!node_.getParam("gains", gains_ns))
     gains_ns = node_.getNamespace() + "/gains";
+  masses_.resize(joints_.size());
   pids_.resize(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
-    if (!pids_[i].init(ros::NodeHandle(gains_ns + "/" + joints_[i]->joint_->name)))
+  {
+    ros::NodeHandle joint_nh(gains_ns + "/" + joints_[i]->joint_->name);
+    joint_nh.param("mass", masses_[i], 0.0);
+    if (!pids_[i].init(joint_nh))
       return false;
+  }
+
+  // Sets up the proxy for each joint
+  proxies_enabled_.resize(joints_.size());
+  proxies_.resize(joints_.size());
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    ros::NodeHandle joint_nh(gains_ns + "/" + joints_[i]->joint_->name);
+    if (joint_nh.hasParam("proxy")) {
+      proxies_enabled_[i] = true;
+      joint_nh.param("proxy/lambda", proxies_[i].lambda_proxy_, 1.0);
+      joint_nh.param("proxy/acc_limit", proxies_[i].acc_limit_, 0.0);
+      joint_nh.param("proxy/vel_limit", proxies_[i].vel_limit_, 0.0);
+      joint_nh.param("proxy/effort_limit", proxies_[i].effort_limit_, 0.0);
+      joint_nh.param("mass", proxies_[i].mass_, 0.0);
+      proxies_[i].mass_ = masses_[i];
+      double _;
+      pids_[i].getGains(proxies_[i].Kp_, _, proxies_[i].Kd_, _, _);
+    }
+    else {
+      proxies_enabled_[i] = false;
+    }
+  }
 
   // Trajectory and goal tolerances
   default_trajectory_tolerance_.resize(joints_.size());
@@ -284,8 +311,10 @@ void JointTrajectoryActionController::starting()
 {
   last_time_ = robot_->getTime();
 
-  for (size_t i = 0; i < pids_.size(); ++i)
+  for (size_t i = 0; i < pids_.size(); ++i) {
     pids_[i].reset();
+    proxies_[i].setState(joints_[i]->position_, joints_[i]->velocity_, 0.0);
+  }
 
   // Creates a "hold current position" trajectory.
   boost::shared_ptr<SpecifiedTrajectory> hold_ptr(new SpecifiedTrajectory(1));
@@ -350,8 +379,23 @@ void JointTrajectoryActionController::update()
   std::vector<double> v_error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    error[i] = joints_[i]->position_ - q[i];
-    v_error[i] = joints_[i]->velocity_ - qd[i];
+    // Updates the proxy (if enabled)
+    double proxy_pos, proxy_vel, proxy_acc;
+    if (proxies_enabled_[i]) {
+      proxies_[i].update(q[i], qd[i], qdd[i],
+                         joints_[i]->position_, joints_[i]->velocity_,
+                         dt.toSec(),
+                         proxy_pos, proxy_vel, proxy_acc);
+    }
+    else {
+      proxy_pos = q[i];
+      proxy_vel = qd[i];
+      proxy_acc = qdd[i];
+    }
+
+    // Tracks the proxy
+    error[i] = joints_[i]->position_ - proxy_pos;
+    v_error[i] = joints_[i]->velocity_ - proxy_vel;
     double effort = pids_[i].updatePid(error[i], v_error[i], dt);
     double effort_filtered = effort;
     if (output_filters_[i])

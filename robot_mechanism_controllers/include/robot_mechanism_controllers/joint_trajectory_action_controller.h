@@ -45,6 +45,7 @@
 #include <ros/node_handle.h>
 
 #include <actionlib/server/action_server.h>
+#include <control_toolbox/limited_proxy.h>
 #include <control_toolbox/pid.h>
 #include <filters/filter_chain.h>
 #include <pr2_controller_interface/controller.h>
@@ -184,7 +185,10 @@ private:
   pr2_mechanism_model::RobotState *robot_;
   ros::Time last_time_;
   std::vector<pr2_mechanism_model::JointState*> joints_;
+  std::vector<double> masses_;  // Rough estimate of joint mass, used for feedforward control
   std::vector<control_toolbox::Pid> pids_;
+  std::vector<bool> proxies_enabled_;
+  std::vector<control_toolbox::LimitedProxy> proxies_;
 
   std::vector<JointTolerance> default_trajectory_tolerance_;
   std::vector<JointTolerance> default_goal_tolerance_;
