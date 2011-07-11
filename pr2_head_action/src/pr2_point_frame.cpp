@@ -262,7 +262,7 @@ public:
     }
     if(traj_state.response.name.size() != joints)
     {
-      ROS_ERROR("Number of joints mismatch: urdf chain vs. trajectory controller state.");
+      ROS_ERROR("Number of joints mismatch: urdf chain vs. trajectory controller state. Number from trajectory controller: %zu, from joints: %d. Did you provide the correct pointing frame \"%s\" in the point head goal?", traj_state.response.name.size(), joints, pointing_frame_.c_str());
       gh.setRejected();
       return;
     }

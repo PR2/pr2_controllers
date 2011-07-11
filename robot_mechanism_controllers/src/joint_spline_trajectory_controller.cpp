@@ -599,8 +599,10 @@ bool JointSplineTrajectoryController::queryStateService(
   {
     ++seg;
   }
-  if (seg == -1)
+  if (seg == -1) {
+    ROS_ERROR("Unable to find segment for trajectory. Start time: %.2f", req.time.toSec());
     return false;
+  }
 
   for (size_t i = 0; i < q.size(); ++i)
   {
