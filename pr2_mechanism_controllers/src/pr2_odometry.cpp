@@ -153,19 +153,19 @@ namespace controller {
       {
         matrix_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::OdometryMatrix>(node_,"odometry_matrix", 1));
         debug_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::DebugInfo>(node_,"debug", 1));
-        debug_publisher_->msg_.set_timing_size(3);
-        matrix_publisher_->msg_.set_m_size(48);
+        debug_publisher_->msg_.timing.resize(3);
+        matrix_publisher_->msg_.m.resize(48);
       }
 
     state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseOdometryState>(node_,"state", 1));
     odometer_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::Odometer>(node_,"odometer", 1));
     odometry_publisher_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(node_,odom_frame_, 1));
     transform_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(node_,"/tf", 1));
-    transform_publisher_->msg_.set_transforms_size(1);
+    transform_publisher_->msg_.transforms.resize(1);
 
-    state_publisher_->msg_.set_wheel_link_names_size(base_kin_.num_wheels_);
-    state_publisher_->msg_.set_drive_constraint_errors_size(base_kin_.num_wheels_);
-    state_publisher_->msg_.set_longitudinal_slip_constraint_errors_size(base_kin_.num_wheels_);
+    state_publisher_->msg_.wheel_link_names.resize(base_kin_.num_wheels_);
+    state_publisher_->msg_.drive_constraint_errors.resize(base_kin_.num_wheels_);
+    state_publisher_->msg_.longitudinal_slip_constraint_errors.resize(base_kin_.num_wheels_);
     return true;
   }
 
@@ -389,7 +389,7 @@ namespace controller {
     cbv_soln_ = iterativeLeastSquares(cbv_lhs_, cbv_rhs_, ils_weight_type_, ils_max_iterations_);
 
     odometry_residual_ = cbv_lhs_ * cbv_soln_ - cbv_rhs_;
-    odometry_residual_max_ = odometry_residual_.cwise().abs().maxCoeff();
+    odometry_residual_max_ = odometry_residual_.array().abs().maxCoeff();
     ROS_DEBUG("Odometry:: base velocity: %f, %f, %f",cbv_soln_(0,0), cbv_soln_(1,0), cbv_soln_(2,0));
     ROS_DEBUG("Odometry:: odometry residual: %f",odometry_residual_max_);
     odom_vel_.linear.x = cbv_soln_(0, 0);
@@ -423,8 +423,8 @@ namespace controller {
 
         if(verbose_)
           tmp_start = ros::Time::now();
-        Eigen::SVD<Eigen::MatrixXf> svdOfFit(fit_lhs_);
-        svdOfFit.solve(fit_rhs_, &fit_soln_);
+        Eigen::JacobiSVD<Eigen::MatrixXf> svdOfFit(fit_lhs_);
+        fit_soln_ = svdOfFit.solve(fit_rhs_);
 
         ROS_DEBUG("Odometry:: fit_soln_: %f %f %f",fit_soln_(0,0), fit_soln_(1,0), fit_soln_(2,0));
 
@@ -451,7 +451,7 @@ namespace controller {
           }
 
         fit_residual_ = rhs - lhs * fit_soln_;
-        if(odometry_residual_.cwise().abs().maxCoeff() <= ODOMETRY_THRESHOLD)
+        if(odometry_residual_.array().abs().maxCoeff() <= ODOMETRY_THRESHOLD)
         {
           ROS_DEBUG("Breaking out since odometry looks good");
           break;
