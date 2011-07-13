@@ -12,6 +12,7 @@
   <depend package="tf" />
   <depend package="tf_conversions" />
   <depend package="kdl" />
+  <depend package="eigen_conversions" />
   <depend package="pluginlib" />
   <depend package="actionlib" />
 

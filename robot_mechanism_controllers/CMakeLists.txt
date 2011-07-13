@@ -9,7 +9,7 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#rosbuild_genmsg()
+rosbuild_genmsg()
 #rosbuild_gensrv()
 rosbuild_add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
@@ -20,6 +20,7 @@ rosbuild_add_library(robot_mechanism_controllers
     src/joint_velocity_controller.cpp
     src/joint_spline_trajectory_controller.cpp
     src/joint_trajectory_action_controller.cpp
+    src/jt_cartesian_controller.cpp
 )
 
 
