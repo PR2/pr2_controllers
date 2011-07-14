@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <Eigen/Array>
+#include <Eigen/Core>
 #include <Eigen/SVD>
 #include <nav_msgs/Odometry.h>
 #include <pr2_mechanism_controllers/Odometer.h>
