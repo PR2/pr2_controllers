@@ -77,7 +77,7 @@ struct Kin
   {
   }
 
-  void fk(const JointVec &q, Eigen::eigen2_Transform3d &x)
+  void fk(const JointVec &q, Eigen::Affine3d &x)
   {
     kdl_q.data = q;
     KDL::Frame kdl_x;
@@ -117,7 +117,7 @@ public:
   void starting();
   void update();
 
-  Eigen::eigen2_Transform3d x_desi_, x_desi_filtered_;
+  Eigen::Affine3d x_desi_, x_desi_filtered_;
   CartVec wrench_desi_;
 
   ros::NodeHandle node_;
@@ -151,7 +151,7 @@ public:
   double res_force_, res_position_;
   double res_torque_, res_orientation_;
 
-  Eigen::eigen2_Transform3d last_pose_;
+  Eigen::Affine3d last_pose_;
   CartVec last_wrench_;
 
   JointVec qdot_filtered_;

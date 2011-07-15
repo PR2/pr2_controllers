@@ -190,10 +190,10 @@ void JTCartesianController::starting()
 }
 
 
-static void computePoseError(const Eigen::eigen2_Transform3d &xact, const Eigen::eigen2_Transform3d &xdes, Eigen::Matrix<double,6,1> &err)
+static void computePoseError(const Eigen::Affine3d &xact, const Eigen::Affine3d &xdes, Eigen::Matrix<double,6,1> &err)
 {
-  err.start<3>() = xact.translation() - xdes.translation();
-  err.end<3>()   = 0.5 * (xdes.linear().col(0).cross(xact.linear().col(0)) +
+  err.head<3>() = xact.translation() - xdes.translation();
+  err.tail<3>()   = 0.5 * (xdes.linear().col(0).cross(xact.linear().col(0)) +
                           xdes.linear().col(1).cross(xact.linear().col(1)) +
                           xdes.linear().col(2).cross(xact.linear().col(2)));
 }
@@ -211,7 +211,7 @@ void JTCartesianController::update()
   JointVec q;
   chain_.getPositions(q);
 
-  Eigen::eigen2_Transform3d x;
+  Eigen::Affine3d x;
   kin_->fk(q, x);
 
   Jacobian J;
@@ -230,8 +230,8 @@ void JTCartesianController::update()
   {
     Eigen::Vector3d p0(x_desi_filtered_.translation());
     Eigen::Vector3d p1(x_desi_.translation());
-    Eigen::eigen2_Quaterniond q0(x_desi_filtered_.linear());
-    Eigen::eigen2_Quaterniond q1(x_desi_.linear());
+    Eigen::Quaterniond q0(x_desi_filtered_.linear());
+    Eigen::Quaterniond q1(x_desi_.linear());
     q0.normalize();
     q1.normalize();
 
@@ -240,30 +240,30 @@ void JTCartesianController::update()
     tf::Quaternion tf_q = tf_q0.slerp(tf_q1, pose_command_filter_);
 
     Eigen::Vector3d p = p0 + pose_command_filter_ * (p1 - p0);
-    //Eigen::eigen2_Quaterniond q = q0.slerp(pose_command_filter_, q1);
-    Eigen::eigen2_Quaterniond q(tf_q.w(), tf_q.x(), tf_q.y(), tf_q.z());
-    //x_desi_filtered_ = q * Eigen::eigen2_Translation3d(p);
-    x_desi_filtered_ = Eigen::eigen2_Translation3d(p) * q;
+    //Eigen::Quaterniond q = q0.slerp(pose_command_filter_, q1);
+    Eigen::Quaterniond q(tf_q.w(), tf_q.x(), tf_q.y(), tf_q.z());
+    //x_desi_filtered_ = q * Eigen::Translation3d(p);
+    x_desi_filtered_ = Eigen::Translation3d(p) * q;
   }
   CartVec x_err;
   //computePoseError(x, x_desi_, x_err);
   computePoseError(x, x_desi_filtered_, x_err);
 
-  CartVec xdot_desi = (Kp.cwise() / Kd).cwise() * x_err * -1.0;
+  CartVec xdot_desi = (Kp.array() / Kd.array()) * x_err.array() * -1.0;
 
   // Caps the cartesian velocity
   if (vel_saturation_trans_ > 0.0)
   {
-    if (fabs(xdot_desi.start<3>().norm()) > vel_saturation_trans_)
-      xdot_desi.start<3>() *= (vel_saturation_trans_ / xdot_desi.start<3>().norm());
+    if (fabs(xdot_desi.head<3>().norm()) > vel_saturation_trans_)
+      xdot_desi.head<3>() *= (vel_saturation_trans_ / xdot_desi.head<3>().norm());
   }
   if (vel_saturation_rot_ > 0.0)
   {
-    if (fabs(xdot_desi.end<3>().norm()) > vel_saturation_rot_)
-      xdot_desi.end<3>() *= (vel_saturation_rot_ / xdot_desi.end<3>().norm());
+    if (fabs(xdot_desi.tail<3>().norm()) > vel_saturation_rot_)
+      xdot_desi.tail<3>() *= (vel_saturation_rot_ / xdot_desi.tail<3>().norm());
   }
 
-  CartVec F = Kd.cwise() * (xdot_desi - xdot);
+  CartVec F = Kd.array() * (xdot_desi - xdot).array();
 
   JointVec tau_pose = J.transpose() * F;
 
@@ -271,12 +271,10 @@ void JTCartesianController::update()
 
   // Computes pseudo-inverse of J
   Eigen::Matrix<double,6,6> I6; I6.setIdentity();
-  Eigen::Matrix<double,6,6> JJt = J * J.transpose();
-  Eigen::Matrix<double,6,6> JJt_inv;
-  JJt.computeInverse(&JJt_inv);
+  //Eigen::Matrix<double,6,6> JJt = J * J.transpose();
+  //Eigen::Matrix<double,6,6> JJt_inv = JJt.inverse();
   Eigen::Matrix<double,6,6> JJt_damped = J * J.transpose() + jacobian_inverse_damping_ * I6;
-  Eigen::Matrix<double,6,6> JJt_inv_damped;
-  JJt_damped.computeInverse(&JJt_inv_damped);
+  Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
   Eigen::Matrix<double,Joints,6> J_pinv = J.transpose() * JJt_inv_damped;
 
   // Computes the nullspace of J
@@ -304,7 +302,7 @@ void JTCartesianController::update()
     }
 
     JointVec qdd_posture = k_posture_ * posture_err;
-    tau_posture = joint_dd_ff_.cwise() * (N * qdd_posture);
+    tau_posture = joint_dd_ff_.array() * (N * qdd_posture).array();
   }
 
   JointVec tau = tau_pose + tau_posture;
