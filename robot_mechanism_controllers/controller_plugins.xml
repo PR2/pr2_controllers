@@ -9,4 +9,5 @@
   <class name="robot_mechanism_controllers/CartesianTwistController" type="controller::CartesianTwistController" base_class_type="pr2_controller_interface::Controller" />
   <class name="robot_mechanism_controllers/CartesianPoseController" type="controller::CartesianPoseController" base_class_type="pr2_controller_interface::Controller" />
 
+  <class name="robot_mechanism_controllers/JTCartesianController" type="controller::JTCartesianController" base_class_type="pr2_controller_interface::Controller" />
 </library>

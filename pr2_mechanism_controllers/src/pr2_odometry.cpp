@@ -423,7 +423,7 @@ namespace controller {
 
         if(verbose_)
           tmp_start = ros::Time::now();
-        Eigen::JacobiSVD<Eigen::MatrixXf> svdOfFit(fit_lhs_);
+        Eigen::JacobiSVD<Eigen::MatrixXf> svdOfFit(fit_lhs_,Eigen::ComputeThinU|Eigen::ComputeThinV);
         fit_soln_ = svdOfFit.solve(fit_rhs_);
 
         ROS_DEBUG("Odometry:: fit_soln_: %f %f %f",fit_soln_(0,0), fit_soln_(1,0), fit_soln_(2,0));
