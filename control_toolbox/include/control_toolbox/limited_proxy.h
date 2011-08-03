@@ -38,40 +38,43 @@ namespace control_toolbox {
 
 class LimitedProxy
 {
-public:
+ public:
+  // Controller parameter values
+  double mass_;                 // Estimate of the joint mass
+  double Kd_;                   // Damping gain
+  double Kp_;                   // Position gain
+  double Ki_;                   // Integral gain
+  double Ficl_;                 // Integral force clamp
+  double effort_limit_;         // Limit on output force
+  double vel_limit_;            // Limit on velocity
+  double pos_upper_limit_;      // Upper position bound
+  double pos_lower_limit_;      // Lower position bound
+  double lambda_proxy_;         // Bandwidth of proxy reconvergence
+  double acc_converge_;         // Acceleration of proxy reconvergence
 
-  double lambda_proxy_;
-  double acc_limit_;  /// Acceleration limit of the proxy
-  double vel_limit_;  /// Velocity limit of the proxy
-  double effort_limit_;  /// Effort limit of the mechanism
-  double mass_;  /// Estimated mass of the joint
-  double Kp_, Kd_; /// Gains used to control the actual to track the proxy
-
-  LimitedProxy()
-    : lambda_proxy_(0.0), acc_limit_(0.0), effort_limit_(0.0),
-      mass_(0.0)
+  
+ LimitedProxy()
+   : mass_(0.0), Kd_(0.0), Kp_(0.0), Ki_(0.0), Ficl_(0.0),
+     effort_limit_(0.0), vel_limit_(0.0),
+     pos_upper_limit_(0.0), pos_lower_limit_(0.0),
+     lambda_proxy_(0.0), acc_converge_(0.0)
   {
   }
 
-  
-  void setState(double proxy_pos, double proxy_vel, double proxy_acc) {
-    last_proxy_pos_ = proxy_pos;
-    last_proxy_vel_ = proxy_vel;
-    last_proxy_acc_ = proxy_acc;
-  }
-  
-  void getState(double &proxy_pos, double &proxy_vel, double &proxy_acc) {
-    proxy_pos = last_proxy_pos_;
-    proxy_vel = last_proxy_vel_;
-    proxy_acc = last_proxy_acc_;
-  }
+  void reset(double pos_act, double vel_act);
 
-  void update(double des_pos, double des_vel, double des_acc,
-              double pos, double vel, double dt,
-              double &proxy_pos, double &proxy_vel, double &proxy_acc);
+  double update(double pos_des, double vel_des, double acc_des,
+		double pos_act, double vel_act, double dt);
 
-private:
-  double last_proxy_pos_, last_proxy_vel_, last_proxy_acc_;
+ private:
+  // Controller state values
+  double last_proxy_pos_;       // Proxy position
+  double last_proxy_vel_;       // Proxy velocity
+  double last_proxy_acc_;       // Proxy acceleration
+
+  double last_vel_error_;       // Velocity error
+  double last_pos_error_;       // Position error
+  double last_int_error_;       // Integral error
 };
   
 } // namespace
