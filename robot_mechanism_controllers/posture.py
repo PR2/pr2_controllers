@@ -29,7 +29,7 @@
 import time
 
 import roslib
-roslib.load_manifest('teleop_controllers')
+roslib.load_manifest('robot_mechanism_controllers')
 import rospy
 from std_msgs.msg import *
 
