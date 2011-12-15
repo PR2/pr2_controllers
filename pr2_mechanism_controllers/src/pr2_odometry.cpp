@@ -276,7 +276,7 @@ namespace controller {
     msg.pose.pose.position.y = odom_.y;
     msg.pose.pose.position.z = 0.0;
 
-    btQuaternion quat_trans;
+    tf::Quaternion quat_trans;
     quat_trans.setRPY(0.0, 0.0, odom_.z);
     msg.pose.pose.orientation.x = quat_trans.x();
     msg.pose.pose.orientation.y = quat_trans.y();
@@ -584,7 +584,7 @@ namespace controller {
       out.transform.translation.x = -x * cos(yaw) - y * sin(yaw);
       out.transform.translation.y = +x * sin(yaw) - y * cos(yaw);
       out.transform.translation.z = 0;
-      btQuaternion quat_trans;
+      tf::Quaternion quat_trans;
       quat_trans.setRPY(0.0, 0.0, -yaw);
 
       out.transform.rotation.x = quat_trans.x();

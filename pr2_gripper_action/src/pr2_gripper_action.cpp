@@ -169,7 +169,7 @@ private:
       return;
 
     // Ensures that the controller is tracking my setpoint.
-    if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > stall_velocity_threshold_)
+    if (fabs(msg->set_point - active_goal_.getGoal()->command.position) > goal_threshold_)
     {
       if (now - goal_received_ < ros::Duration(1.0))
       {

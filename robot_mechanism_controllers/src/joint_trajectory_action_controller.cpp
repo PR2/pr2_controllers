@@ -214,7 +214,7 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
       return false;
   }
 
-  // Sets up the proxy for each joint
+  // Sets up the proxy controllers for each joint
   proxies_enabled_.resize(joints_.size());
   proxies_.resize(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
@@ -223,13 +223,12 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
     if (joint_nh.hasParam("proxy")) {
       proxies_enabled_[i] = true;
       joint_nh.param("proxy/lambda", proxies_[i].lambda_proxy_, 1.0);
-      joint_nh.param("proxy/acc_limit", proxies_[i].acc_limit_, 0.0);
+      joint_nh.param("proxy/acc_converge", proxies_[i].acc_converge_, 0.0);
       joint_nh.param("proxy/vel_limit", proxies_[i].vel_limit_, 0.0);
       joint_nh.param("proxy/effort_limit", proxies_[i].effort_limit_, 0.0);
-      joint_nh.param("mass", proxies_[i].mass_, 0.0);
       proxies_[i].mass_ = masses_[i];
       double _;
-      pids_[i].getGains(proxies_[i].Kp_, _, proxies_[i].Kd_, _, _);
+      pids_[i].getGains(proxies_[i].Kp_, proxies_[i].Ki_, proxies_[i].Kd_, proxies_[i].Ficl_, _);
     }
     else {
       proxies_enabled_[i] = false;
@@ -313,7 +312,7 @@ void JointTrajectoryActionController::starting()
 
   for (size_t i = 0; i < pids_.size(); ++i) {
     pids_[i].reset();
-    proxies_[i].setState(joints_[i]->position_, joints_[i]->velocity_, 0.0);
+    proxies_[i].reset(joints_[i]->position_, joints_[i]->velocity_);
   }
 
   // Creates a "hold current position" trajectory.
@@ -379,28 +378,30 @@ void JointTrajectoryActionController::update()
   std::vector<double> v_error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    // Updates the proxy (if enabled)
-    double proxy_pos, proxy_vel, proxy_acc;
+    double effort;
+
+    // Compute the errors with respect to the desired trajectory
+    // (whether or not using the proxy controller).  They are also
+    // used later to determine reaching the goal.
+    error[i] = joints_[i]->position_ - q[i];
+    v_error[i] = joints_[i]->velocity_ - qd[i];
+
+    // Use the proxy controller (if enabled)
     if (proxies_enabled_[i]) {
-      proxies_[i].update(q[i], qd[i], qdd[i],
-                         joints_[i]->position_, joints_[i]->velocity_,
-                         dt.toSec(),
-                         proxy_pos, proxy_vel, proxy_acc);
+      effort = proxies_[i].update(q[i], qd[i], qdd[i],
+				  joints_[i]->position_, joints_[i]->velocity_,
+				  dt.toSec());
     }
     else {
-      proxy_pos = q[i];
-      proxy_vel = qd[i];
-      proxy_acc = qdd[i];
+      effort = pids_[i].updatePid(error[i], v_error[i], dt);
+
+      double effort_unfiltered = effort;
+      if (output_filters_[i])
+	output_filters_[i]->update(effort_unfiltered, effort);
     }
 
-    // Tracks the proxy
-    error[i] = joints_[i]->position_ - proxy_pos;
-    v_error[i] = joints_[i]->velocity_ - proxy_vel;
-    double effort = pids_[i].updatePid(error[i], v_error[i], dt);
-    double effort_filtered = effort;
-    if (output_filters_[i])
-      output_filters_[i]->update(effort, effort_filtered);
-    joints_[i]->commanded_effort_ += effort_filtered;
+    // Apply the effort.  WHY IS THIS ADDITIVE?
+    joints_[i]->commanded_effort_ = effort;
   }
 
   // ------ Determines if the goal has failed or succeeded
