@@ -27,7 +27,6 @@
   <depend package="rospy" />
   <depend package="pluginlib" />
   <depend package="rosconsole" />
-  <depend package="eigen" />
   <depend package="tf" />
   <depend package="angles" />
   <depend package="control_toolbox" />
