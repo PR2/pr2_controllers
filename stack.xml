@@ -10,7 +10,6 @@
   <depend stack="common_msgs" /> <!-- nav_msgs, actionlib_msgs, trajectory_msgs, sensor_msgs, geometry_msgs, visualization_msgs, diagnostic_msgs -->
   <depend stack="control" /> <!-- control_msgs -->
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
-  <depend stack="eigen" /> <!-- eigen -->
   <depend stack="filters" /> <!-- filters -->
   <depend stack="geometry" /> <!-- tf, tf_conversions, angles -->
   <depend stack="orocos_kinematics_dynamics" /> <!-- kdl -->
