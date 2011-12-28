@@ -52,7 +52,8 @@ public:
     : node_(n),
       action_server_(node_, "position_joint_action",
                      boost::bind(&SingleJointPositionNode::goalCB, this, _1),
-                     boost::bind(&SingleJointPositionNode::cancelCB, this, _1)),
+                     boost::bind(&SingleJointPositionNode::cancelCB, this, _1),
+                     false),
       has_active_goal_(false)
   {
     ros::NodeHandle pn("~");
@@ -72,6 +73,14 @@ public:
       node_.subscribe("state", 1, &SingleJointPositionNode::controllerStateCB, this);
     cli_query_traj_ =
       node_.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>("query_state");
+
+    if (!cli_query_traj_.waitForExistence(ros::Duration(10.0)))
+    {
+      ROS_WARN("The controller does not appear to be ready (the query_state service is not available)");
+    }
+
+    // Starts the action server
+    action_server_.start();
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &SingleJointPositionNode::watchdog, this);
   }
