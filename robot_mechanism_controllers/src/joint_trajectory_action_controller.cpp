@@ -298,10 +298,14 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
 
   action_server_.reset(new JTAS(node_, "joint_trajectory_action",
                                 boost::bind(&JointTrajectoryActionController::goalCB, this, _1),
-                                boost::bind(&JointTrajectoryActionController::cancelCB, this, _1)));
+                                boost::bind(&JointTrajectoryActionController::cancelCB, this, _1),
+                                false));
   action_server_follow_.reset(new FJTAS(node_, "follow_joint_trajectory",
                                         boost::bind(&JointTrajectoryActionController::goalCBFollow, this, _1),
-                                        boost::bind(&JointTrajectoryActionController::cancelCBFollow, this, _1)));
+                                        boost::bind(&JointTrajectoryActionController::cancelCBFollow, this, _1),
+                                        false));
+  action_server_->start();
+  action_server_follow_->start();
 
   return true;
 }
@@ -716,8 +720,8 @@ void JointTrajectoryActionController::commandTrajectory(const trajectory_msgs::J
   {
     if (joints_[j]->joint_->type == urdf::Joint::CONTINUOUS)
     {
-      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[j]);
-      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+      double dist = angles::shortest_angular_distance(prev_positions[j], msg->points[0].positions[lookup[j]]);
+      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[lookup[j]];
     }
   }
 
