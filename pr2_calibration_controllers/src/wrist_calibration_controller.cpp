@@ -191,17 +191,33 @@ bool WristCalibrationController::init(pr2_mechanism_model::RobotState *robot,
               actuator_r_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+
+  bool force_calibration = false;
+  node_.getParam("force_calibration", force_calibration);
+
+  roll_joint_->calibrated_ = false;
+  flex_joint_->calibrated_ = false;
+  state_ = INITIALIZED;
   if (actuator_l_->state_.zero_offset_ != 0 && actuator_l_->state_.zero_offset_ != 0){
-    ROS_INFO("Wrist joints %s and %s are already calibrated", flex_joint_name.c_str(), roll_joint_name.c_str());
-    flex_joint_->calibrated_ = true;
-    roll_joint_->calibrated_ = true;
-    state_ = CALIBRATED;
+    if (force_calibration)
+    {
+      ROS_INFO("Joints %s and %s are already calibrated but will be recalibrated. "
+               "Actuator %s was zeroed at %f and %s was zeroed at %f.", 
+               flex_joint_name.c_str(), roll_joint_name.c_str(),
+               actuator_r_->name_.c_str(), actuator_r_->state_.zero_offset_,
+               actuator_l_->name_.c_str(), actuator_l_->state_.zero_offset_
+               );
+    }
+    else 
+    {
+      ROS_INFO("Wrist joints %s and %s are already calibrated", flex_joint_name.c_str(), roll_joint_name.c_str());
+      flex_joint_->calibrated_ = true;
+      roll_joint_->calibrated_ = true;
+      state_ = CALIBRATED;
+    }
   }
   else{
     ROS_INFO("Not both wrist joints %s and %s are are calibrated. Will re-calibrate both of them", flex_joint_name.c_str(), roll_joint_name.c_str());
-    roll_joint_->calibrated_ = false;
-    flex_joint_->calibrated_ = false;
-    state_ = INITIALIZED;
   }
 
 

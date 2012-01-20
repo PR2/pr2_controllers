@@ -91,11 +91,9 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+
   bool force_calibration = false;
-  if (!node_.getParam("force_calibration", force_calibration))
-  {
-    force_calibration = false;
-  }
+  node_.getParam("force_calibration", force_calibration);
 
   state_ = INITIALIZED;
   joint_->calibrated_ = false;
