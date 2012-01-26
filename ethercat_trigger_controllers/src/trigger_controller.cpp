@@ -198,8 +198,8 @@ bool TriggerController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
 
   set_waveform_handle_ = node_handle_.advertiseService("set_waveform", &TriggerController::setWaveformSrv, this);
 
-  rising_edge_pub_.reset(new realtime_tools::RealtimePublisher<roslib::Header>(n, "rising_edge_timestamps", 10));
-  falling_edge_pub_.reset(new realtime_tools::RealtimePublisher<roslib::Header>(n, "falling_edge_timestamps", 10));
+  rising_edge_pub_.reset(new realtime_tools::RealtimePublisher<std_msgs::Header>(n, "rising_edge_timestamps", 10));
+  falling_edge_pub_.reset(new realtime_tools::RealtimePublisher<std_msgs::Header>(n, "falling_edge_timestamps", 10));
 
   ROS_DEBUG("TriggerController::init completed successfully"
       " rr=%f ph=%f al=%i r=%i p=%i dc=%f.",

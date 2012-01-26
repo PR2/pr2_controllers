@@ -79,13 +79,13 @@ bool Pr2BaseController::init(pr2_mechanism_model::RobotState *robot, ros::NodeHa
   state_publisher_.reset(new realtime_tools::RealtimePublisher<pr2_mechanism_controllers::BaseControllerState>(n, base_kin_.name_ + "/state", 1));
 
   int num_joints = base_kin_.num_wheels_ + base_kin_.num_casters_;
-  state_publisher_->msg_.set_joint_names_size(num_joints);
-  state_publisher_->msg_.set_joint_velocity_measured_size(num_joints);
-  state_publisher_->msg_.set_joint_effort_measured_size(num_joints);
-  state_publisher_->msg_.set_joint_velocity_commanded_size(num_joints);
-  state_publisher_->msg_.set_joint_effort_commanded_size(num_joints);
-  state_publisher_->msg_.set_joint_velocity_error_size(num_joints);
-  state_publisher_->msg_.set_joint_effort_error_size(num_joints);
+  state_publisher_->msg_.joint_names.resize(num_joints);
+  state_publisher_->msg_.joint_velocity_measured.resize(num_joints);
+  state_publisher_->msg_.joint_effort_measured.resize(num_joints);
+  state_publisher_->msg_.joint_velocity_commanded.resize(num_joints);
+  state_publisher_->msg_.joint_effort_commanded.resize(num_joints);
+  state_publisher_->msg_.joint_velocity_error.resize(num_joints);
+  state_publisher_->msg_.joint_effort_error.resize(num_joints);
 
   //Get params from param server
   node_.param<double> ("max_translational_velocity", max_translational_velocity_,0.5);

@@ -41,7 +41,7 @@
 #include <ethercat_trigger_controllers/SetMultiWaveform.h>
 #include <ethercat_trigger_controllers/MultiWaveform.h>
 #include <realtime_tools/realtime_publisher.h>
-#include <roslib/Header.h>
+#include <std_msgs/Header.h>
 #include <boost/scoped_ptr.hpp>
 
 /** @class MultiMultiTriggerController
@@ -83,7 +83,7 @@ private:
   ros::NodeHandle node_handle_;
   ros::Publisher waveform_;
 
-  std::vector<boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > > pubs_;
+  std::vector<boost::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Header> > > pubs_;
 
   // Configuration of controller.
   config_t config_;

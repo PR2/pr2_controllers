@@ -39,7 +39,7 @@
 #include <pr2_controller_interface/controller.h>
 #include <pr2_mechanism_model/robot.h>
 #include <realtime_tools/realtime_publisher.h>
-#include <roslib/Header.h>
+#include <std_msgs/Header.h>
 #include <boost/scoped_ptr.hpp>
 
 namespace controller
@@ -66,7 +66,7 @@ private:
 
   boost::scoped_ptr<
     realtime_tools::RealtimePublisher<
-      roslib::Header> > rising_edge_pub_, falling_edge_pub_;
+      std_msgs::Header> > rising_edge_pub_, falling_edge_pub_;
 
   ros::NodeHandle node_handle_;
 

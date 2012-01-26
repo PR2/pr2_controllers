@@ -19,4 +19,6 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_genmsg()
 #rosbuild_gensrv()
 
+rosbuild_add_boost_directories()
 rosbuild_add_executable(single_joint_position_action src/single_joint_position_action.cpp)
+rosbuild_link_boost(single_joint_position_action thread)
