@@ -120,20 +120,30 @@ bool GripperCalibrationController::init(pr2_mechanism_model::RobotState *robot,
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
+
+  bool force_calibration = false;
+  node_.getParam("force_calibration", force_calibration);
+
+  state_ = INITIALIZED;
+  joint_->calibrated_ = false;
   if (actuator_->state_.zero_offset_ != 0){
-    ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
-    joint_->calibrated_ = true;
-    for (size_t i = 0; i < other_joints_.size(); ++i)
-      other_joints_[i]->calibrated_ = true;
-    state_ = CALIBRATED;
+    if (force_calibration)
+    {
+      ROS_INFO("Joint %s will be recalibrated, but was already calibrated at offset %f", 
+               joint_name.c_str(), actuator_->state_.zero_offset_);
+    }
+    else 
+    {
+      ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
+      joint_->calibrated_ = true;
+      for (size_t i = 0; i < other_joints_.size(); ++i)
+        other_joints_[i]->calibrated_ = true;
+      state_ = CALIBRATED;
+    }
   }
   else{
     ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
-    state_ = INITIALIZED;
-    joint_->calibrated_ = false;
   }
-
-
 
   if (!vc_.init(robot, node_))
     return false;

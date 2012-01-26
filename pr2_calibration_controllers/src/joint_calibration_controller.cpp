@@ -91,15 +91,29 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
               actuator_name.c_str(), node_.getNamespace().c_str());
     return false;
   }
-  if (actuator_->state_.zero_offset_ != 0){
-    ROS_INFO("Joint %s is already calibrated at offset %f", joint_name.c_str(), actuator_->state_.zero_offset_);
-    state_ = CALIBRATED;
-    joint_->calibrated_ = true;
+
+  bool force_calibration = false;
+  node_.getParam("force_calibration", force_calibration);
+
+  state_ = INITIALIZED;
+  joint_->calibrated_ = false;
+  if (actuator_->state_.zero_offset_ != 0) 
+  {
+    if (force_calibration)
+    {
+      ROS_INFO("Joint %s will be recalibrated, but was already calibrated at offset %f", 
+               joint_name.c_str(), actuator_->state_.zero_offset_);
+    }
+    else
+    {
+      ROS_INFO("Joint %s is already calibrated at offset %f", 
+               joint_name.c_str(), actuator_->state_.zero_offset_);
+      state_ = CALIBRATED;
+      joint_->calibrated_ = true;
+    }
   }
   else{
     ROS_INFO("Joint %s is not yet calibrated", joint_name.c_str());
-    state_ = INITIALIZED;
-    joint_->calibrated_ = false;
   }
 
   // Transmission

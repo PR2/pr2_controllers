@@ -181,7 +181,7 @@ bool MultiTriggerController::setMultiWaveformSrv(
     ethercat_trigger_controllers::SetMultiWaveform::Request &req,
     ethercat_trigger_controllers::SetMultiWaveform::Response &resp)
 {
-  std::vector<boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > > new_pubs;
+  std::vector<boost::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Header> > > new_pubs;
   new_pubs.reserve(config_.transitions.size());
   ethercat_trigger_controllers::MultiWaveform &new_config = req.waveform;
 
@@ -237,10 +237,10 @@ bool MultiTriggerController::setMultiWaveformSrv(
     for (std::vector<ethercat_trigger_controllers::MultiWaveformTransition>::iterator trans = new_config.transitions.begin();
         trans != new_config.transitions.end() && resp.success; trans++)
     {
-      boost::shared_ptr<realtime_tools::RealtimePublisher<roslib::Header> > new_pub;
+      boost::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Header> > new_pub;
         
       if (trans->topic.compare("-"))
-        new_pub.reset(new realtime_tools::RealtimePublisher<roslib::Header>(node_handle_, trans->topic, 10));
+        new_pub.reset(new realtime_tools::RealtimePublisher<std_msgs::Header>(node_handle_, trans->topic, 10));
 
       new_pubs.push_back(new_pub);
     }
