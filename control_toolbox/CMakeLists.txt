@@ -11,5 +11,6 @@ rosbuild_add_library(control_toolbox
  src/sinusoid.cpp
  src/limited_proxy.cpp
  )
+target_link_libraries(control_toolbox tinyxml)
  
 # rosbuild_add_executable(test_linear test/linear.cpp)
