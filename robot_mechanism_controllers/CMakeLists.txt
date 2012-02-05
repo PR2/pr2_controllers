@@ -11,6 +11,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_genmsg()
 #rosbuild_gensrv()
+rosbuild_add_boost_directories()
 rosbuild_add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
     src/cartesian_twist_controller.cpp
@@ -22,7 +23,6 @@ rosbuild_add_library(robot_mechanism_controllers
     src/joint_trajectory_action_controller.cpp
     src/jt_cartesian_controller.cpp
 )
-
-
 rosbuild_remove_compile_flags(robot_mechanism_controllers -W)
 target_link_libraries(robot_mechanism_controllers ltdl)
+rosbuild_link_boost(robot_mechanism_controllers signals)
