@@ -8,6 +8,7 @@ rosbuild_add_library(control_toolbox
  src/pid.cpp
  src/pid_gains_setter.cpp
  src/sine_sweep.cpp
+ src/dither.cpp
  src/sinusoid.cpp
  src/limited_proxy.cpp
  )
