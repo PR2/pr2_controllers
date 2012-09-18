@@ -290,7 +290,7 @@ public:
       jac_solver_->JntToJac(jnt_pos, jacobian);
 
       tf::Transform frame_in_root;
-      tf::PoseKDLToTF(pose, frame_in_root);
+      tf::poseKDLToTF(pose, frame_in_root);
 
       tf::Vector3 axis_in_frame = pointing_axis_.normalized();
       tf::Vector3 target_from_frame = (target_in_root_ - frame_in_root.getOrigin()).normalized();
@@ -304,7 +304,7 @@ public:
       //printVector3("correction_axis in root:", correction_axis);
       tf::Transform correction_tf(tf::Quaternion(correction_axis, 0.5*correction_angle), tf::Vector3(0,0,0));
       KDL::Frame correction_kdl;
-      tf::TransformTFToKDL(correction_tf, correction_kdl);
+      tf::transformTFToKDL(correction_tf, correction_kdl);
 
       // We apply a "wrench" proportional to the desired correction
       KDL::Frame identity_kdl;
@@ -467,7 +467,7 @@ public:
       pose_solver_->JntToCart(jnt_pos, pose);
 
       tf::Transform frame_in_root;
-      tf::PoseKDLToTF(pose, frame_in_root);
+      tf::poseKDLToTF(pose, frame_in_root);
 
       tf::Vector3 axis_in_frame = pointing_axis_.normalized();
       tf::Vector3 target_from_frame = target_in_root_ - frame_in_root.getOrigin();

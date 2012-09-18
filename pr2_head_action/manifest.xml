@@ -21,6 +21,7 @@
   <depend package="tf" />
   <depend package="tf_conversions" />
   <depend package="actionlib" />
+  <depend package="orocos_kdl" />
   <depend package="kdl_parser" />
 
   <platform os="ubuntu" version="9.04"/>

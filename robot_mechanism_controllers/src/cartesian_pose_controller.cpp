@@ -179,7 +179,7 @@ void CartesianPoseController::update()
     if (state_pose_publisher_){
       if (state_pose_publisher_->trylock()){
 	Pose tmp;
-        tf::PoseKDLToTF(pose_meas_, tmp);
+        tf::poseKDLToTF(pose_meas_, tmp);
 	poseStampedTFToMsg(Stamped<Pose>(tmp, ros::Time::now(), root_name_), state_pose_publisher_->msg_);
         state_pose_publisher_->unlockAndPublish();
       }
@@ -209,7 +209,7 @@ void CartesianPoseController::command(const geometry_msgs::PoseStamped::ConstPtr
 
   // convert to reference frame of root link of the controller chain
   tf_.transformPose(root_name_, pose_stamped, pose_stamped);
-  tf::PoseTFToKDL(pose_stamped, pose_desi_);
+  tf::poseTFToKDL(pose_stamped, pose_desi_);
 }
 
 } // namespace

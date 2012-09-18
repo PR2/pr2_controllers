@@ -11,13 +11,16 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
 
+find_package(Eigen REQUIRED)
+include_directories(SYSTEM ${Eigen_INCLUDE_DIRS})
+
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#rosbuild_genmsg()
-#rosbuild_gensrv()
 
 #rosbuild_add_executable(pr2_head_action src/pr2_head_action.cpp)
+rosbuild_add_boost_directories()
 rosbuild_add_executable(pr2_head_action src/pr2_point_frame.cpp)
+rosbuild_link_boost(pr2_head_action thread)
