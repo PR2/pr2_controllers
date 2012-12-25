@@ -33,16 +33,13 @@
 
 
 
-#include "robot_mechanism_controllers/cartesian_pose_controller.h"
+#include <robot_mechanism_controllers/cartesian_pose_controller.h>
 #include <algorithm>
-#include "kdl/chainfksolverpos_recursive.hpp"
-#include "pluginlib/class_list_macros.h"
-#include "tf_conversions/tf_kdl.h"
+#include <kdl/chainfksolverpos_recursive.hpp>
+#include <pluginlib/class_list_macros.h>
+#include <tf_conversions/tf_kdl.h>
 
 
-using namespace KDL;
-using namespace tf;
-using namespace std;
 
 PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, CartesianPoseController, controller::CartesianPoseController, pr2_controller_interface::Controller)
 
@@ -90,8 +87,8 @@ bool CartesianPoseController::init(pr2_mechanism_model::RobotState *robot_state,
   chain_.toKDL(kdl_chain_);
 
   // create solver
-  jnt_to_pose_solver_.reset(new ChainFkSolverPos_recursive(kdl_chain_));
-  jac_solver_.reset(new ChainJntToJacSolver(kdl_chain_));
+  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
+  jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
   jnt_pos_.resize(kdl_chain_.getNrOfJoints());
   jnt_eff_.resize(kdl_chain_.getNrOfJoints());
   jacobian_.resize(kdl_chain_.getNrOfJoints());
@@ -125,7 +122,7 @@ void CartesianPoseController::starting()
     pid_controller_[i].reset();
 
   // initialize desired pose/twist
-  twist_ff_ = Twist::Zero();
+  twist_ff_ = KDL::Twist::Zero();
   pose_desi_ = getPose();
   last_time_ = robot_state_->getTime();
 
@@ -178,9 +175,9 @@ void CartesianPoseController::update()
     }
     if (state_pose_publisher_){
       if (state_pose_publisher_->trylock()){
-	Pose tmp;
+	tf::Pose tmp;
         tf::PoseKDLToTF(pose_meas_, tmp);
-	poseStampedTFToMsg(Stamped<Pose>(tmp, ros::Time::now(), root_name_), state_pose_publisher_->msg_);
+	tf::poseStampedTFToMsg(tf::Stamped<tf::Pose>(tmp, ros::Time::now(), root_name_), state_pose_publisher_->msg_);
         state_pose_publisher_->unlockAndPublish();
       }
     }
@@ -189,13 +186,13 @@ void CartesianPoseController::update()
 
 
 
-Frame CartesianPoseController::getPose()
+KDL::Frame CartesianPoseController::getPose()
 {
   // get the joint positions and velocities
   chain_.getPositions(jnt_pos_);
 
   // get cartesian pose
-  Frame result;
+  KDL::Frame result;
   jnt_to_pose_solver_->JntToCart(jnt_pos_, result);
 
   return result;
@@ -204,7 +201,7 @@ Frame CartesianPoseController::getPose()
 void CartesianPoseController::command(const geometry_msgs::PoseStamped::ConstPtr& pose_msg)
 {
   // convert message to transform
-  Stamped<Pose> pose_stamped;
+  tf::Stamped<tf::Pose> pose_stamped;
   poseStampedMsgToTF(*pose_msg, pose_stamped);
 
   // convert to reference frame of root link of the controller chain
