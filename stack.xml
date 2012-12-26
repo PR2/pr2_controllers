@@ -19,6 +19,6 @@
   <depend stack="robot_model" /> <!-- kdl_parser -->
   <depend stack="ros" />
   <depend stack="ros_comm" /> <!-- rosconsole, std_srvs, roscpp, message_filters, std_msgs, rospy -->
-  <depend stack="ros_control" />  <!-- control_toolbox -->
+  <depend stack="ros_control" />
 
 </stack>

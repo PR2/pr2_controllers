@@ -202,7 +202,7 @@ void CartesianPoseController::command(const geometry_msgs::PoseStamped::ConstPtr
 {
   // convert message to transform
   tf::Stamped<tf::Pose> pose_stamped;
-  tf::poseStampedMsgToTF(*pose_msg, pose_stamped);
+  poseStampedMsgToTF(*pose_msg, pose_stamped);
 
   // convert to reference frame of root link of the controller chain
   tf_.transformPose(root_name_, pose_stamped, pose_stamped);
