@@ -20,6 +20,4 @@
   <depend stack="ros" />
   <depend stack="ros_comm" /> <!-- rosconsole, std_srvs, roscpp, message_filters, std_msgs, rospy -->
 
-  <depend stack="pr2_controllers_msgs" /> <!-- This package is now released with catkin, so we add a dep here -->
-
 </stack>
