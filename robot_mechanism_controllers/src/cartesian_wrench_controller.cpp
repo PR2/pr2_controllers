@@ -38,7 +38,7 @@
 
 using namespace KDL;
 
-PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, CartesianWrenchController, controller::CartesianWrenchController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::CartesianWrenchController, pr2_controller_interface::Controller)
 
 namespace controller {
 

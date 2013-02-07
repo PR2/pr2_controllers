@@ -38,7 +38,7 @@
 #include "pr2_mechanism_controllers/pr2_odometry.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_controllers, Pr2Odometry, controller::Pr2Odometry, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::Pr2Odometry, pr2_controller_interface::Controller)
 
 namespace controller {
 

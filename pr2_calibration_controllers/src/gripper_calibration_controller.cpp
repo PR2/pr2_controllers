@@ -39,8 +39,7 @@
 using namespace std;
 using namespace controller;
 
-PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, GripperCalibrationController,
-                        controller::GripperCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS(controller::GripperCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller
 {

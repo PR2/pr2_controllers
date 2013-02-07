@@ -43,8 +43,7 @@
 #include <angles/angles.h>
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, JTCartesianController,
-                        controller::JTCartesianController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS(controller::JTCartesianController, pr2_controller_interface::Controller)
 
 
 namespace controller {

@@ -39,7 +39,7 @@
 #include "ros/console.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(ethercat_trigger_controllers, MultiTriggerController, controller::MultiTriggerController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::MultiTriggerController, pr2_controller_interface::Controller)
 
 using std::string;
 using namespace controller;
