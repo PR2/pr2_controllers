@@ -44,7 +44,7 @@ using namespace KDL;
 using namespace tf;
 using namespace std;
 
-PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, CartesianPoseController, controller::CartesianPoseController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::CartesianPoseController, pr2_controller_interface::Controller)
 
 namespace controller {
 

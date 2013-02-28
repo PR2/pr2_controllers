@@ -35,7 +35,7 @@
 #include "robot_mechanism_controllers/joint_effort_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, JointEffortController, controller::JointEffortController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::JointEffortController, pr2_controller_interface::Controller)
 
 namespace controller {
 

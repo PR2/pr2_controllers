@@ -36,7 +36,7 @@
 #include "angles/angles.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(robot_mechanism_controllers, JointTrajectoryActionController, controller::JointTrajectoryActionController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::JointTrajectoryActionController, pr2_controller_interface::Controller)
 
 namespace controller {
 

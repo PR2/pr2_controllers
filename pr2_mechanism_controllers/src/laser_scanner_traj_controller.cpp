@@ -38,7 +38,7 @@
 #include "angles/angles.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_controllers, LaserScannerTrajController, controller::LaserScannerTrajControllerNode, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::LaserScannerTrajControllerNode, pr2_controller_interface::Controller)
 
 using namespace std ;
 using namespace controller ;

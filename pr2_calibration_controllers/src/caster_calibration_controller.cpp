@@ -34,8 +34,7 @@
 #include "pr2_calibration_controllers/caster_calibration_controller.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, CasterCalibrationController,
-                        controller::CasterCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS(controller::CasterCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller {
 

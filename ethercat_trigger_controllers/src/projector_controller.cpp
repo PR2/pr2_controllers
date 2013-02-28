@@ -36,7 +36,7 @@
 #include "ros/console.h"
 #include "pluginlib/class_list_macros.h"
 
-PLUGINLIB_DECLARE_CLASS(ethercat_trigger_controllers, ProjectorController, controller::ProjectorController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( controller::ProjectorController, pr2_controller_interface::Controller)
 
 using std::string;
 using namespace controller;

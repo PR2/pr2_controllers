@@ -39,8 +39,7 @@
 using namespace std;
 using namespace controller;
 
-PLUGINLIB_DECLARE_CLASS(pr2_calibration_controllers, FakeCalibrationController,
-                        controller::FakeCalibrationController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS(controller::FakeCalibrationController, pr2_controller_interface::Controller)
 
 namespace controller
 {
