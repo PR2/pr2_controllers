@@ -25,7 +25,8 @@ add_action_files(
    SingleJointPosition.action
 )
 ## Generate added messages and services with any dependencies listed here
-generate_messages( DEPENDENCIES trajectory_msgs std_msgs)
+generate_messages( DEPENDENCIES trajectory_msgs std_msgs geometry_msgs
+   actionlib_msgs)
 
 catkin_package(
     CATKIN_DEPENDS actionlib_msgs trajectory_msgs geometry_msgs message_runtime
