@@ -1,0 +1,29 @@
+<package>
+  <name>joint_trajectory_action</name>
+  <version>1.10.0</version>
+  <description>The joint_trajectory_action is a node that exposes an action interface
+     to a joint trajectory controller.</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/joint_trajectory_action</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Stuart Glaser</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>pr2_controllers_msgs</build_depend>
+  <build_depend>actionlib</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>trajectory_msgs</run_depend>
+  <run_depend>actionlib_msgs</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
+
+</package>
