@@ -20,7 +20,6 @@
   <build_depend>filters</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
-  <build_depend>kdl</build_depend>
   <build_depend>eigen_conversions</build_depend>
   <build_depend>pluginlib</build_depend>
   <build_depend>actionlib</build_depend>
@@ -45,7 +44,6 @@
   <run_depend>filters</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf_conversions</run_depend>
-  <run_depend>kdl</run_depend>
   <run_depend>eigen_conversions</run_depend>
   <run_depend>pluginlib</run_depend>
   <run_depend>actionlib</run_depend>
