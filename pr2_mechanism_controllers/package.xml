@@ -1,0 +1,68 @@
+<package>
+  <name>pr2_mechanism_controllers</name>
+  <version>1.10.0</version>
+  <description>The pr2_mechanism_controllers package contains realtime
+    controllers that are meant for specific mechanisms of the PR2.</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/pr2_mechanism_controllers</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Sachin Chita</author>
+  <author>John Hsu</author>
+  <author>Melonee Wise</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>pr2_mechanism_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>pr2_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>pr2_controller_interface</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>pr2_controllers_msgs</build_depend>
+  <build_depend>pr2_mechanism_model</build_depend>
+  <build_depend>realtime_tools</build_depend>
+  <build_depend>robot_mechanism_controllers</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>rosconsole</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>control_toolbox</build_depend>
+  <build_depend>filters</build_depend>
+  <build_depend>diagnostic_updater</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>pr2_mechanism_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>pr2_msgs</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+  <run_depend>diagnostic_msgs</run_depend>
+  <run_depend>pr2_controller_interface</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>pr2_mechanism_model</run_depend>
+  <run_depend>realtime_tools</run_depend>
+  <run_depend>robot_mechanism_controllers</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>rosconsole</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>angles</run_depend>
+  <run_depend>control_toolbox</run_depend>
+  <run_depend>filters</run_depend>
+  <run_depend>diagnostic_updater</run_depend>
+  <run_depend>message_runtime</run_depend>
+
+  <export>
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml"/>
+  </export>
+</package>
