@@ -1,0 +1,35 @@
+<package>
+  <name>pr2_controllers</name>
+  <version>1.10.0</version>
+  <description>Contains the controllers that run in realtime on the PR2 and supporting packages.</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/pr2_controllers</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Stuart Glaser sglaser@willowgarage.com</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+
+  <run_depend>pr2_gripper_action</run_depend>
+  <run_depend>pr2_calibration_controllers</run_depend>
+  <run_depend>joint_trajectory_action</run_depend>
+  <run_depend>ethercat_trigger_controllers</run_depend>
+  <run_depend>robot_mechanism_controllers</run_depend>
+  <run_depend>pr2_mechanism_controllers</run_depend>
+  <run_depend>single_joint_position_action</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>pr2_head_action</run_depend>
+  <run_depend>control_toolbox</run_depend>
+
+
+
+
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
