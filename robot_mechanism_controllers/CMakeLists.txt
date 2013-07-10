@@ -37,4 +37,18 @@ add_library(robot_mechanism_controllers
 target_link_libraries(robot_mechanism_controllers ltdl ${Boost_LIBRARIES}
    ${catkin_LIBRARIES})
 add_dependencies(robot_mechanism_controllers 
-   ${robot_mechanism_controllers_EXPORTED_TARGETS})
+   ${robot_mechanism_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+install(TARGETS robot_mechanism_controllers
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(FILES controller_plugins.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(FILES scripts/effort.py posture.py
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

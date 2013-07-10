@@ -13,6 +13,7 @@ catkin_package()
 add_executable(joint_trajectory_action src/joint_trajectory_action.cpp)
 target_link_libraries(joint_trajectory_action ${Boost_LIBRARIES}
    ${catkin_LIBRARIES})
+add_dependencies(joint_trajectory_action ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS joint_trajectory_action
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
