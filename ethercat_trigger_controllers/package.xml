@@ -1,0 +1,40 @@
+<package>
+  <name>ethercat_trigger_controllers</name>
+  <version>1.10.0</version>
+  <description>Controllers to operate the digital output of the motor controller
+    boards and the projector board. This package has not been reviewed and
+    should be considered unstable.</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://www.ros.org/wiki/ethercat_trigger_controllers</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Blaise Gassend</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>pr2_controller_interface</build_depend>
+  <build_depend>realtime_tools</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>libtool</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>pr2_controller_interface</run_depend>
+  <run_depend>realtime_tools</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>diagnostic_msgs</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>libtool</run_depend>
+
+  <export>
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml"/>
+  </export>
+</package>

@@ -1,17 +1,43 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-set(ROS_BUILD_TYPE RelWithDebInfo)
-#set(ROS_BUILD_TYPE Release)
-rosbuild_init()
-rosbuild_genmsg()
-rosbuild_gensrv()
+# http://ros.org/doc/groovy/api/catkin/html/user_guide/supposed.html
+cmake_minimum_required(VERSION 2.8.3)
+project(ethercat_trigger_controllers)
+
+# Load catkin and all dependencies required for this package
+find_package(catkin REQUIRED COMPONENTS pr2_controller_interface realtime_tools roscpp diagnostic_msgs pluginlib message_generation std_msgs)
+
+add_message_files(
+   DIRECTORY msg
+   FILES MultiWaveform.msg MultiWaveformTransition.msg
+)
+add_service_files(
+   DIRECTORY srv
+   FILES SetMultiWaveform.srv SetWaveform.srv
+)
 set(_srcs
     src/trigger_controller.cpp
     src/multi_trigger_controller.cpp
     src/projector_controller.cpp
 )
 
-# For some reason, the endeffector_constraint_controller won't build on OSX
-rosbuild_add_library(ethercat_trigger_controllers ${_srcs})
-rosbuild_remove_compile_flags(ethercat_trigger_controllers -W)
+generate_messages(DEPENDENCIES std_msgs)
+
+catkin_package(
+    DEPENDS libtool
+    CATKIN_DEPENDS pr2_controller_interface realtime_tools roscpp diagnostic_msgs pluginlib message_runtime std_msgs
+    INCLUDE_DIRS include
+    LIBRARIES ethercat_trigger_controllers
+)
+
+add_library(ethercat_trigger_controllers ${_srcs})
 target_link_libraries(ethercat_trigger_controllers ltdl)
+
+install(TARGETS ethercat_trigger_controllers
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(FILES controller_plugins.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
