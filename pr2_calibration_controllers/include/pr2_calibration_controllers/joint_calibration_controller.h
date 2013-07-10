@@ -75,7 +75,7 @@ protected:
 
   pr2_hardware_interface::Actuator *actuator_;
   pr2_mechanism_model::JointState *joint_;
-  pr2_mechanism_model::Transmission *transmission_;
+  boost::shared_ptr<pr2_mechanism_model::Transmission> transmission_;
 
   controller::JointVelocityController vc_;
 };

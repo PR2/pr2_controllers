@@ -44,7 +44,7 @@ namespace controller {
 
 JointCalibrationController::JointCalibrationController()
 : robot_(NULL), last_publish_time_(0),
-  actuator_(NULL), joint_(NULL), transmission_(NULL)
+  actuator_(NULL), joint_(NULL)
 {
 }
 

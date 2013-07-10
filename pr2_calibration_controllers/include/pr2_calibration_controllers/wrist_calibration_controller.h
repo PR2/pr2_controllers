@@ -80,7 +80,7 @@ protected:
 
   pr2_hardware_interface::Actuator *actuator_l_, *actuator_r_;
   pr2_mechanism_model::JointState *flex_joint_, *roll_joint_;
-  pr2_mechanism_model::Transmission *transmission_;
+  boost::shared_ptr<pr2_mechanism_model::Transmission> transmission_;
 
   // Preallocated, for use in update()
   std::vector<pr2_hardware_interface::Actuator*> fake_as;

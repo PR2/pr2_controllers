@@ -25,13 +25,11 @@ add_service_files(
    SetProfile.srv
 )
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-
 find_package(Eigen REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
-
 find_package(Boost REQUIRED COMPONENTS thread)
-include_directories(${Boost_INCLUDE_DIRS})
+
+include_directories(include ${EIGEN_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS}
+   ${catkin_INCLUDE_DIRS})
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages( DEPENDENCIES geometry_msgs std_msgs)
@@ -53,4 +51,23 @@ add_library( pr2_mechanism_controllers
   src/pr2_gripper_controller.cpp
   src/trajectory.cpp
   )
-target_link_libraries(pr2_mechanism_controllers ${Boost_LIBRARIES})
+target_link_libraries(pr2_mechanism_controllers ${Boost_LIBRARIES} 
+   ${catkin_LIBRARIES})
+add_dependencies(pr2_mechanism_controllers
+   ${pr2_mechanism_controllers_EXPORTED_TARGETS})
+
+# TODO: tests
+
+install(TARGETS pr2_mechanism_controllers
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(FILES controller_plugins.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY scripts/
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

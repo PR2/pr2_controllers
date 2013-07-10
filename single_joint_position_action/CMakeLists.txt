@@ -6,9 +6,13 @@ project(single_joint_position_action)
 find_package(catkin REQUIRED COMPONENTS roscpp pr2_controllers_msgs actionlib)
 
 find_package(Boost REQUIRED COMPONENTS thread)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 catkin_package()
 
 add_executable(single_joint_position_action src/single_joint_position_action.cpp)
-target_link_libraries(single_joint_position_action ${Boost_LIBRARIES})
+target_link_libraries(single_joint_position_action ${Boost_LIBRARIES} 
+   ${catkin_LIBRARIES})
+
+install(TARGETS single_joint_position_action
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

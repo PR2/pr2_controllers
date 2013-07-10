@@ -19,6 +19,8 @@ set(_srcs
     src/projector_controller.cpp
 )
 
+include_directories(include ${catkin_INCLUDE_DIRS})
+
 generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
@@ -29,7 +31,8 @@ catkin_package(
 )
 
 add_library(ethercat_trigger_controllers ${_srcs})
-target_link_libraries(ethercat_trigger_controllers ltdl)
+target_link_libraries(ethercat_trigger_controllers ltdl ${catkin_LIBRARIES})
+add_dependencies(ethercat_trigger_controllers ${ethercat_trigger_controllers_EXPORTED_TARGETS})
 
 install(TARGETS ethercat_trigger_controllers
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
