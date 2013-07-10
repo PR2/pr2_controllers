@@ -1,0 +1,71 @@
+<package>
+  <name>robot_mechanism_controllers</name>
+  <version>1.10.0</version>
+  <description>Generic Mechanism Controller Library</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/robot_mechanism_controllers</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>John Hsu</author>
+  <author>Melonee Wise</author>
+  <author>Stuart Glaser</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>filters</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf_conversions</build_depend>
+  <build_depend>kdl</build_depend>
+  <build_depend>eigen_conversions</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+  <build_depend>pr2_controllers_msgs</build_depend>
+  <build_depend>pr2_controller_interface</build_depend>
+  <build_depend>pr2_controller_manager</build_depend>
+  <build_depend>kdl_parser</build_depend>
+  <build_depend>pr2_mechanism_model</build_depend>
+  <build_depend>control_toolbox</build_depend>
+  <build_depend>realtime_tools</build_depend>
+  <build_depend>message_filters</build_depend>
+  <build_depend>control_msgs</build_depend>
+  <build_depend>libtool</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>angles</run_depend>
+  <run_depend>filters</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>tf_conversions</run_depend>
+  <run_depend>kdl</run_depend>
+  <run_depend>eigen_conversions</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>diagnostic_msgs</run_depend>
+  <run_depend>trajectory_msgs</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>pr2_controller_interface</run_depend>
+  <run_depend>pr2_controller_manager</run_depend>
+  <run_depend>kdl_parser</run_depend>
+  <run_depend>pr2_mechanism_model</run_depend>
+  <run_depend>control_toolbox</run_depend>
+  <run_depend>realtime_tools</run_depend>
+  <run_depend>message_filters</run_depend>
+  <run_depend>control_msgs</run_depend>
+  <run_depend>libtool</run_depend>
+
+  <export>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lrobot_mechanism_controllers" cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"/>
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml"/>
+  </export>
+</package>

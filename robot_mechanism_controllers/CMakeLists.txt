@@ -1,18 +1,29 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+# http://ros.org/doc/groovy/api/catkin/html/user_guide/supposed.html
+cmake_minimum_required(VERSION 2.8.3)
+project(robot_mechanism_controllers)
 
-set(ROS_BUILD_TYPE RelWithDebInfo)
-#set(ROS_BUILD_TYPE Release)
+# Load catkin and all dependencies required for this package
+find_package(catkin REQUIRED COMPONENTS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs )
 
-rosbuild_init()
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+add_message_files(
+   DIRECTORY msg
+   FILES
+   JTCartesianControllerState.msg
+)
 
-rosbuild_genmsg()
-#rosbuild_gensrv()
-rosbuild_add_boost_directories()
-rosbuild_add_library(robot_mechanism_controllers
+find_package(Boost REQUIRED COMPONENTS signals)
+include_directories(include ${Boost_INCLUDE_DIRS})
+
+generate_messages(DEPENDENCIES geometry_msgs std_msgs)
+
+catkin_package(
+   CATKIN_DEPENDS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs 
+   INCLUDE_DIRS include
+   LIBRARIES robot_mechanism_controllers
+)
+
+add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
     src/cartesian_twist_controller.cpp
     src/cartesian_wrench_controller.cpp
@@ -23,6 +34,5 @@ rosbuild_add_library(robot_mechanism_controllers
     src/joint_trajectory_action_controller.cpp
     src/jt_cartesian_controller.cpp
 )
-rosbuild_remove_compile_flags(robot_mechanism_controllers -W)
 target_link_libraries(robot_mechanism_controllers ltdl)
-rosbuild_link_boost(robot_mechanism_controllers signals)
+target_link_libraries(robot_mechanism_controllers ${Boost_LIBRARIES})
