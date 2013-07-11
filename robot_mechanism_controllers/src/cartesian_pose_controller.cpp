@@ -145,10 +145,10 @@ void CartesianPoseController::update()
   pose_meas_ = getPose();
 
   // pose feedback into twist
-  twist_error_ = diff(pose_desi_, pose_meas_);
+  twist_error_ = diff(pose_meas_, pose_desi_);
   KDL::Wrench wrench_desi;
   for (unsigned int i=0; i<6; i++)
-    wrench_desi(i) = pid_controller_[i].updatePid(twist_error_(i), dt);
+    wrench_desi(i) = pid_controller_[i].computeCommand(twist_error_(i), dt);
 
   // get the chain jacobian
   jac_solver_->JntToJac(jnt_pos_, jacobian_);

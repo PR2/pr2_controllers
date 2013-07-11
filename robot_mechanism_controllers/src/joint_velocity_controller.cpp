@@ -135,9 +135,9 @@ void JointVelocityController::update()
   assert(robot_ != NULL);
   ros::Time time = robot_->getTime();
 
-  double error = joint_state_->velocity_ - command_;
+  double error = command_ - joint_state_->velocity_;
   dt_ = time - last_time_;
-  double command = pid_controller_.updatePid(error, dt_);
+  double command = pid_controller_.computeCommand(error, dt_);
   joint_state_->commanded_effort_ += command;
 
   if(loop_count_ % 10 == 0)

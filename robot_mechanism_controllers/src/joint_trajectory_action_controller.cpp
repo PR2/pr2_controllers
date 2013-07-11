@@ -387,21 +387,21 @@ void JointTrajectoryActionController::update()
     // Compute the errors with respect to the desired trajectory
     // (whether or not using the proxy controller).  They are also
     // used later to determine reaching the goal.
-    error[i] = joints_[i]->position_ - q[i];
-    v_error[i] = joints_[i]->velocity_ - qd[i];
+    error[i] = q[i] - joints_[i]->position_;
+    v_error[i] = qd[i] - joints_[i]->velocity_;
 
     // Use the proxy controller (if enabled)
     if (proxies_enabled_[i]) {
       effort = proxies_[i].update(q[i], qd[i], qdd[i],
-				  joints_[i]->position_, joints_[i]->velocity_,
-				  dt.toSec());
+                                  joints_[i]->position_, joints_[i]->velocity_,
+                                  dt.toSec());
     }
     else {
-      effort = pids_[i].updatePid(error[i], v_error[i], dt);
+      effort = pids_[i].computeCommand(error[i], v_error[i], dt);
 
       double effort_unfiltered = effort;
       if (output_filters_[i])
-	output_filters_[i]->update(effort_unfiltered, effort);
+        output_filters_[i]->update(effort_unfiltered, effort);
     }
 
     // Apply the effort.  WHY IS THIS ADDITIVE?

@@ -310,8 +310,9 @@ void JointSplineTrajectoryController::update()
   std::vector<double> error(joints_.size());
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    error[i] = joints_[i]->position_ - q[i];
-    joints_[i]->commanded_effort_ += pids_[i].updatePid(error[i], joints_[i]->velocity_ - qd[i], dt);
+    error[i] = q[i] - joints_[i]->position_;
+    joints_[i]->commanded_effort_ += pids_[i].computeCommand(error[i],
+          joints_[i]->velocity_ - qd[i], dt);
   }
 
   // ------ State publishing

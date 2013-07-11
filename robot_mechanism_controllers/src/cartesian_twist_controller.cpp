@@ -149,17 +149,17 @@ void CartesianTwistController::update()
   FrameVel twist;
   jnt_to_twist_solver_->JntToCart(jnt_posvel_, twist);
   twist_meas_ = twist.deriv();
-  Twist error = twist_meas_ - twist_desi_;
+  Twist error = twist_desi_ - twist_meas_;
 
   // get the chain jacobian
   jac_solver_->JntToJac(jnt_posvel_.q, jacobian_);
 
   // pid feedback
   for (unsigned int i=0; i<3; i++)
-    wrench_out_.force(i) = (twist_desi_.vel(i) * ff_trans_) + fb_pid_controller_[i].updatePid(error.vel(i), dt);
+    wrench_out_.force(i) = (twist_desi_.vel(i) * ff_trans_) + fb_pid_controller_[i].computeCommand(error.vel(i), dt);
 
   for (unsigned int i=0; i<3; i++)
-    wrench_out_.torque(i) = (twist_desi_.rot(i) * ff_rot_) + fb_pid_controller_[i+3].updatePid(error.rot(i), dt);
+    wrench_out_.torque(i) = (twist_desi_.rot(i) * ff_rot_) + fb_pid_controller_[i+3].computeCommand(error.rot(i), dt);
 
   // Converts the wrench into joint efforts with a jacbobian-transpose
   for (unsigned int i = 0; i < kdl_chain_.getNrOfJoints(); i++){

@@ -149,20 +149,26 @@ void JointPositionController::update()
 
   if(joint_state_->joint_->type == urdf::Joint::REVOLUTE)
   {
-    angles::shortest_angular_distance_with_limits(command_, joint_state_->position_, joint_state_->joint_->limits->lower, joint_state_->joint_->limits->upper,error);
+    angles::shortest_angular_distance_with_limits(
+          joint_state_->position_,
+          command_,
+          joint_state_->joint_->limits->lower,
+          joint_state_->joint_->limits->upper,
+          error);
 
   }
   else if(joint_state_->joint_->type == urdf::Joint::CONTINUOUS)
   {
-    error = angles::shortest_angular_distance(command_, joint_state_->position_);
+    error = angles::shortest_angular_distance(joint_state_->position_,
+          command_);
   }
   else //prismatic
   {
-    error = joint_state_->position_ - command_;
+    error = command_ - joint_state_->position_;
   }
 
-  //double commanded_effort = pid_controller_.updatePid(error, dt_);
-  double commanded_effort = pid_controller_.updatePid(error, joint_state_->velocity_, dt_); // assuming desired velocity is 0
+  double commanded_effort = pid_controller_.computeCommand(error, 
+        0.0 - joint_state_->velocity_, dt_); // assuming desired velocity is 0
   joint_state_->commanded_effort_ = commanded_effort;
 
   if(loop_count_ % 10 == 0)
