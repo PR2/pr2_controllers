@@ -133,7 +133,7 @@ int Trajectory::setTrajectory(const std::vector<double> &p, int numPoints)
 
   if((int) p.size() < num_points_*dimension_)
   {
-    ROS_WARN("Input has only %d values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
+    ROS_WARN("Input has only %zd values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
     return -1;
   }   
   autocalc_timing_ = true;//Enable autocalc timing by default since no time information given in trajectory
@@ -197,7 +197,7 @@ int Trajectory::setTrajectory(const std::vector<double> &p, const std::vector<do
   }
   if((int) p.size() < num_points_*dimension_)
   {
-    ROS_WARN("Input has only %d values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
+    ROS_WARN("Input has only %zd values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
     return -1;
   }   
 
@@ -229,7 +229,7 @@ int Trajectory::setTrajectory(const std::vector<double> &p, const std::vector<do
   }
   if((int) p.size() < num_points_*dimension_)
   {
-    ROS_WARN("Input has only %d values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
+    ROS_WARN("Input has only %zd values, expecting %d values for a %d dimensional trajectory with %d number of points",p.size(), num_points_*dimension_, dimension_, num_points_);
     return -1;
   }   
 
@@ -301,7 +301,7 @@ int Trajectory::sample(TPoint &tp, double time)
 
   if((int) tp.q_.size() != dimension_ || (int) tp.qdot_.size() != dimension_)
   {
-    ROS_WARN("Dimension of sample point passed in = %d does not match dimension of trajectory = %d",tp.q_.size(),dimension_);
+    ROS_WARN("Dimension of sample point passed in = %zd does not match dimension of trajectory = %d",tp.q_.size(),dimension_);
     return -1;
   } 
   int segment_index = findTrajectorySegment(time);
@@ -350,7 +350,7 @@ int Trajectory::setMaxRates(std::vector<double> max_rate)
 {
   if((int) max_rate.size() != dimension_)
   {
-    ROS_WARN("Input size: %d does not match dimension of trajectory = %d",max_rate.size(),dimension_);
+    ROS_WARN("Input size: %zd does not match dimension of trajectory = %d",max_rate.size(),dimension_);
     return -1;
   }
 //  max_rate.resize(dimension_);
@@ -366,7 +366,7 @@ int Trajectory::setMaxAcc(std::vector<double> max_acc)
 {
   if((int) max_acc.size() != dimension_)
   {
-    ROS_WARN("Input size: %d does not match dimension of trajectory = %d",max_acc.size(),dimension_);
+    ROS_WARN("Input size: %zd does not match dimension of trajectory = %d",max_acc.size(),dimension_);
     return -1;
   }
 //  max_acc.resize(dimension_);
@@ -650,7 +650,7 @@ int Trajectory::getDuration(std::vector<double> &duration)
 {
   if((int) duration.size() != num_points_-1)
   {
-    ROS_WARN("Size of duration vector %d does not match number of segments in trajectory %d", duration.size(), num_points_-1);
+    ROS_WARN("Size of duration vector %zd does not match number of segments in trajectory %d", duration.size(), num_points_-1);
     return -1;
   }
   for(int i = 0; i < num_points_-1; i++)
@@ -677,7 +677,7 @@ int Trajectory::getTimeStamps(std::vector<double> &timestamps)
 {
   if((int) timestamps.size() != num_points_)
   {
-    ROS_WARN("Size of timestamps vector %d does not match number of points in trajectory %d", timestamps.size(), num_points_);
+    ROS_WARN("Size of timestamps vector %zd does not match number of points in trajectory %d", timestamps.size(), num_points_);
     return -1;
   }
   for(int i = 0; i < num_points_; i++)

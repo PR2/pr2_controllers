@@ -46,7 +46,8 @@ public:
     node_(n),
     action_server_(node_, "gripper_action",
                    boost::bind(&Pr2GripperAction::goalCB, this, _1),
-                   boost::bind(&Pr2GripperAction::cancelCB, this, _1)),
+                   boost::bind(&Pr2GripperAction::cancelCB, this, _1),
+                   false),
     has_active_goal_(false)
   {
     ros::NodeHandle pn("~");
@@ -61,6 +62,7 @@ public:
       node_.subscribe("state", 1, &Pr2GripperAction::controllerStateCB, this);
 
     watchdog_timer_ = node_.createTimer(ros::Duration(1.0), &Pr2GripperAction::watchdog, this);
+    action_server_.start();
   }
 
   ~Pr2GripperAction()
