@@ -380,7 +380,7 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
 
   for(int i = 0; i < base_kin_.num_casters_; i++)
   {
-    filtered_velocity_[i] = base_kin_.caster_[i].joint_->velocity_;
+    filtered_velocity_[i] = 0.0 - base_kin_.caster_[i].joint_->velocity_;
   }
   caster_vel_filter_.update(filtered_velocity_,filtered_velocity_);
 
@@ -397,8 +397,12 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
       base_kin_.caster_[i].steer_angle_stored_ = steer_angle_desired;
     }
     steer_angle_desired_m_pi = angles::normalize_angle(steer_angle_desired + M_PI);
-    error_steer = angles::shortest_angular_distance(steer_angle_desired, base_kin_.caster_[i].joint_->position_);
-    error_steer_m_pi = angles::shortest_angular_distance(steer_angle_desired_m_pi, base_kin_.caster_[i].joint_->position_);
+    error_steer = angles::shortest_angular_distance(
+          base_kin_.caster_[i].joint_->position_,
+          steer_angle_desired);
+    error_steer_m_pi = angles::shortest_angular_distance(
+          base_kin_.caster_[i].joint_->position_,
+          steer_angle_desired_m_pi);
 
     if(fabs(error_steer_m_pi) < fabs(error_steer))
     {
@@ -406,7 +410,10 @@ void Pr2BaseController::computeDesiredCasterSteer(const double &dT)
       steer_angle_desired = steer_angle_desired_m_pi;
     }
     //    base_kin_.caster_[i].steer_velocity_desired_ = -kp_caster_steer_ * error_steer;
-    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].updatePid(error_steer,filtered_velocity_[i],ros::Duration(dT));
+    base_kin_.caster_[i].steer_velocity_desired_ = caster_position_pid_[i].computeCommand(
+          error_steer,
+          filtered_velocity_[i],
+          ros::Duration(dT));
     base_kin_.caster_[i].caster_position_error_ = error_steer;
   }
 }

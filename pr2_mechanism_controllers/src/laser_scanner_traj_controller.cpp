@@ -186,12 +186,12 @@ void LaserScannerTrajController::update()
 
   ros::Time time = robot_->getTime();
   double error(0.0) ;
-  angles::shortest_angular_distance_with_limits(cmd, joint_state_->position_,
+  angles::shortest_angular_distance_with_limits(joint_state_->position_, cmd,
                                                 joint_state_->joint_->limits->lower,
                                                 joint_state_->joint_->limits->upper,
                                                 error) ;
   ros::Duration dt = time - last_time_ ;
-  double d_error = (error-last_error_)/dt.toSec();
+  double d_error = (last_error_ - error)/dt.toSec();
   double filtered_d_error;
 
   // Weird that we're filtering the d_error. Probably makes more sense to filter the velocity,
@@ -199,7 +199,8 @@ void LaserScannerTrajController::update()
   d_error_filter_chain_.update(d_error, filtered_d_error);
 
   // Update pid with d_error added
-  joint_state_->commanded_effort_ = pid_controller_.updatePid(error, filtered_d_error, dt) ;
+  joint_state_->commanded_effort_ = pid_controller_.computeCommand(error, 
+        filtered_d_error, dt) ;
   last_time_ = time ;
   last_error_ = error ;
 }
@@ -317,7 +318,7 @@ bool LaserScannerTrajController::setTrajCmd(const pr2_msgs::LaserTrajCmd& traj_c
     const unsigned int N = traj_cmd.position.size() ;
     if (traj_cmd.time_from_start.size() != N)
     {
-      ROS_ERROR("# Times and # Pos must match! pos.size()=%u times.size()=%u", N, traj_cmd.time_from_start.size()) ;
+      ROS_ERROR("# Times and # Pos must match! pos.size()=%u times.size()=%zu", N, traj_cmd.time_from_start.size()) ;
       return false ;
     }
 

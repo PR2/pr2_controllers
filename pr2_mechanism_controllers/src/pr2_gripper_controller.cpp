@@ -113,10 +113,10 @@ void Pr2GripperController::update()
   assert(command);
 
   // Computes the position error
-  error = joint_state_->position_ - command->position;
+  error = command->position - joint_state_->position_;
 
   // Sets the effort (limited)
-  double effort = pid_.updatePid(error, joint_state_->velocity_, dt);
+  double effort = pid_.computeCommand(error, 0.0 - joint_state_->velocity_, dt);
   if (command->max_effort >= 0.0)
   {
     effort = std::max(-command->max_effort, std::min(effort, command->max_effort));
