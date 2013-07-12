@@ -1,6 +1,6 @@
 <package>
   <name>pr2_mechanism_controllers</name>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <description>The pr2_mechanism_controllers package contains realtime
     controllers that are meant for specific mechanisms of the PR2.</description>
   <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
