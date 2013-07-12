@@ -1,6 +1,6 @@
 <package>
   <name>joint_trajectory_action</name>
-  <version>1.10.3</version>
+  <version>1.10.4</version>
   <description>The joint_trajectory_action is a node that exposes an action interface
      to a joint trajectory controller.</description>
   <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
