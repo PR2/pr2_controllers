@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME}
   src/wrist_calibration_controller.cpp
   src/fake_calibration_controller.cpp
 )
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS ${PROJECT_NAME}
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
