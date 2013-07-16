@@ -15,7 +15,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>std_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
   <build_depend>pr2_controller_interface</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>pr2_mechanism_model</build_depend>
@@ -23,12 +22,8 @@
   <build_depend>robot_mechanism_controllers</build_depend>
   <build_depend>pr2_mechanism_controllers</build_depend>
   <build_depend>pluginlib</build_depend>
-  <build_depend>rosconsole</build_depend>
-  <build_depend>angles</build_depend>
-  <build_depend>control_toolbox</build_depend>
 
   <run_depend>std_msgs</run_depend>
-  <run_depend>std_srvs</run_depend>
   <run_depend>pr2_controller_interface</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>pr2_mechanism_model</run_depend>
@@ -36,9 +31,6 @@
   <run_depend>robot_mechanism_controllers</run_depend>
   <run_depend>pr2_mechanism_controllers</run_depend>
   <run_depend>pluginlib</run_depend>
-  <run_depend>rosconsole</run_depend>
-  <run_depend>angles</run_depend>
-  <run_depend>control_toolbox</run_depend>
 
   <export>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml"/>
