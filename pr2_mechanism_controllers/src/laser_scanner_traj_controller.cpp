@@ -191,7 +191,7 @@ void LaserScannerTrajController::update()
                                                 joint_state_->joint_->limits->upper,
                                                 error) ;
   ros::Duration dt = time - last_time_ ;
-  double d_error = (last_error_ - error)/dt.toSec();
+  double d_error = (error - last_error_)/dt.toSec();
   double filtered_d_error;
 
   // Weird that we're filtering the d_error. Probably makes more sense to filter the velocity,

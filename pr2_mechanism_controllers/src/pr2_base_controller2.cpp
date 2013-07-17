@@ -456,7 +456,7 @@ void Pr2BaseController2::computeDesiredWheelSpeeds(const double &dT)
   {
     base_kinematics_.wheel_[i].updatePosition();
     //    caster_2d_velocity.angular.z = base_kinematics_.wheel_[i].parent_->steer_velocity_desired_;
-    caster_2d_velocity.angular.z = base_kinematics_.wheel_[i].parent_->caster_position_error_;
+    caster_2d_velocity.angular.z = 0.0 - base_kinematics_.wheel_[i].parent_->caster_position_error_;
     steer_angle_actual = base_kinematics_.wheel_[i].parent_->joint_->position_;
     wheel_point_velocity = base_kinematics_.pointVel2D(base_kinematics_.wheel_[i].position_, cmd_vel_);
     wheel_caster_steer_component = base_kinematics_.pointVel2D(base_kinematics_.wheel_[i].offset_, caster_2d_velocity);
