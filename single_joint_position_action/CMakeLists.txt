@@ -13,6 +13,7 @@ catkin_package()
 add_executable(single_joint_position_action src/single_joint_position_action.cpp)
 target_link_libraries(single_joint_position_action ${Boost_LIBRARIES} 
    ${catkin_LIBRARIES})
+add_dependencies(single_joint_position_action ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS single_joint_position_action
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
