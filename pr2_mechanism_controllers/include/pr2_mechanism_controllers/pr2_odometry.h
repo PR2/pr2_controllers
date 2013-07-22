@@ -174,12 +174,12 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     /*!
     * \brief Function used to compute the most likely solution to the odometry using iterative least squares
     */
-    OdomMatrix3x1 iterativeLeastSquares(const OdomMatrix16x3 &lhs, const OdomMatrix16x1 &rhs, const std::string &weight_type, const int &max_iter);
+    OdomMatrix3x1 iterativeLeastSquares(const OdomMatrix16x3 &lhs, const OdomMatrix16x1 &rhs, const int &max_iter);
 
     /*!
     * \brief Finds the weight matrix from the iterative least squares residuals
     */
-    OdomMatrix16x16 findWeightMatrix(const OdomMatrix16x1 &residual, const std::string &weight_type);
+    OdomMatrix16x16 findWeightMatrix(const OdomMatrix16x1 &residual);
 
     /*!
     * \brief Total distance traveled by the base as computed by the odometer
@@ -197,11 +197,6 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     ros::Time last_time_,current_time_;
 
     /*!
-    * \brief Matricies used in the computation of the iterative least squares and related functions
-    */
-    //    Eigen::MatrixXf cbv_rhs_, fit_rhs_, fit_residual_, odometry_residual_, cbv_lhs_, fit_lhs_, cbv_soln_,fit_soln_,  weight_matrix_;
-
-    /*!
     * \brief Point that stores the current translational position (x,y) and angular position (z)
     */
     geometry_msgs::Point odom_;
@@ -210,11 +205,6 @@ typedef Eigen::Matrix<float, 16, 16> OdomMatrix16x16;
     * \brief Twist that remembers the current translational velocities (vel.vx, vel.vy) and angular position (ang_vel.vz)
     */
     geometry_msgs::Twist odom_vel_;
-
-    /*!
-    * \brief The type of weighting used in findWeightMatrix
-    */
-    std::string ils_weight_type_;
 
     /*!
     * \brief Number of iterations used during iterative least squares

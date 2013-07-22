@@ -63,14 +63,13 @@ namespace controller {
     node.searchParam("tf_prefix", prefix_param);
     node.getParam(prefix_param, tf_prefix_);
 
-    node.param("odometer/initial_distance", odometer_distance_, 0.0);
-    node.param("odometer/initial_angle", odometer_angle_, 0.0);
-    node.param("odom/initial_x", odom_.x, 0.0);
-    node.param("odom/initial_y", odom_.y, 0.0);
-    node.param("odom/initial_yaw", odom_.z, 0.0);
+    node.param<double>("odometer/initial_distance", odometer_distance_, 0.0);
+    node.param<double>("odometer/initial_angle", odometer_angle_, 0.0);
+    node.param<double>("odom/initial_x", odom_.x, 0.0);
+    node.param<double>("odom/initial_y", odom_.y, 0.0);
+    node.param<double>("odom/initial_yaw", odom_.z, 0.0);
 
-    node.param("publish_tf", publish_tf_, true);
-    ils_weight_type_ = "Gaussian";
+    node.param<bool>("publish_tf", publish_tf_, true);
     node.param<int> ("ils_max_iterations", ils_max_iterations_, 3);
     node.param<std::string> ("odom_frame", odom_frame_, "odom");
     node.param<std::string> ("base_footprint_frame", base_footprint_frame_,
@@ -86,10 +85,10 @@ namespace controller {
     node.param<double> ("cov_yrotation", cov_y_theta_, 0.0);
     node.param<bool> ("verbose", verbose_, false);
 
-    node.param("odom_publish_rate", odom_publish_rate_, 30.0);
-    node.param("odometer_publish_rate", odometer_publish_rate_, 1.0);
-    node.param("state_publish_rate", state_publish_rate_, 1.0);
-    node.param("caster_calibration_multiplier",
+    node.param<double>("odom_publish_rate", odom_publish_rate_, 30.0);
+    node.param<double>("odometer_publish_rate", odometer_publish_rate_, 1.0);
+    node.param<double>("state_publish_rate", state_publish_rate_, 1.0);
+    node.param<double>("caster_calibration_multiplier",
         caster_calibration_multiplier_, 1.0);
 
     if(odom_publish_rate_ <= 0.0) {
@@ -190,9 +189,10 @@ namespace controller {
   void Pr2Odometry::update()
   {
     if(!isInputValid()) {
-      if(verbose_)
+      if(verbose_) {
         debug_publisher_->msg_.input_valid = false;
-      ROS_DEBUG("Odometry:: Input velocities are invalid");
+        ROS_DEBUG("Odometry:: Input velocities are invalid");
+      }
       return;
     } else {
       if(verbose_)
@@ -349,6 +349,7 @@ namespace controller {
       wheel_position = base_kin_.wheel_[i].position_;
       costh = cos(steer_angle);
       sinth = sin(steer_angle);
+      wheel_speed = 0;
       wheel_speed = getCorrectedWheelSpeed(i);
       ROS_DEBUG("Odometry:: Wheel: %s, angle: %f, speed: %f",
           base_kin_.wheel_[i].link_name_.c_str(),steer_angle,wheel_speed);
@@ -364,8 +365,7 @@ namespace controller {
       cbv_lhs_(i * 2 + 1, 2) = sinth * wheel_position.y + 
                                costh * wheel_position.x;
     }
-    cbv_soln_ = iterativeLeastSquares(cbv_lhs_, cbv_rhs_, ils_weight_type_,
-                                      ils_max_iterations_);
+    cbv_soln_ = iterativeLeastSquares(cbv_lhs_, cbv_rhs_, ils_max_iterations_);
 
     odometry_residual_ = cbv_lhs_ * cbv_soln_ - cbv_rhs_;
     odometry_residual_max_ = odometry_residual_.array().abs().maxCoeff();
@@ -390,8 +390,7 @@ namespace controller {
   }
 
   OdomMatrix3x1 Pr2Odometry::iterativeLeastSquares(const OdomMatrix16x3 &lhs,
-      const OdomMatrix16x1 &rhs, const std::string &weight_type,
-      const int &max_iter)
+      const OdomMatrix16x1 &rhs, const int &max_iter)
   {
     weight_matrix_.setIdentity();
     double svd_time = 0.0;
@@ -413,7 +412,7 @@ namespace controller {
       if(verbose_) {
         svd_time = (ros::Time::now()-tmp_start).toSec();
         debug_publisher_->msg_.timing[2] = svd_time;
-        if((ros::Time::now()-tmp_start).toSec() > MAX_ALLOWABLE_SVD_TIME) {
+        if(svd_time > MAX_ALLOWABLE_SVD_TIME) {
           for(int k = 0; k < 48; k++) {
             int i_index = k/3;
             int j_index = k - i_index *3;
@@ -444,14 +443,13 @@ namespace controller {
           fit_residual_(sw, 0) = fit_residual_(fw, 0);
         }
       }
-      weight_matrix_ = findWeightMatrix(fit_residual_, weight_type);
+      weight_matrix_ = findWeightMatrix(fit_residual_);
 
     }
     return fit_soln_;
   }
 
-  OdomMatrix16x16 Pr2Odometry::findWeightMatrix(const OdomMatrix16x1 &residual,
-      const std::string &weight_type)
+  OdomMatrix16x16 Pr2Odometry::findWeightMatrix(const OdomMatrix16x1 &residual)
   {
     w_fit.setIdentity();
     double g_sigma = 0.1;
