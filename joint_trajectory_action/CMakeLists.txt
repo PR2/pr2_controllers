@@ -10,6 +10,8 @@ include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 catkin_package()
 
+add_definitions(-O3)
+
 add_executable(joint_trajectory_action src/joint_trajectory_action.cpp)
 target_link_libraries(joint_trajectory_action ${Boost_LIBRARIES}
    ${catkin_LIBRARIES})

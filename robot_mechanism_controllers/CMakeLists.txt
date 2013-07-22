@@ -23,6 +23,8 @@ catkin_package(
    LIBRARIES robot_mechanism_controllers
 )
 
+add_definitions(-O3)
+
 add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
     src/cartesian_twist_controller.cpp

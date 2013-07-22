@@ -41,6 +41,8 @@ catkin_package(
     LIBRARIES pr2_mechanism_controllers
 )
 
+add_definitions(-O3)
+
 add_library( pr2_mechanism_controllers
   src/laser_scanner_traj_controller.cpp
   src/caster_controller.cpp
