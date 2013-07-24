@@ -24,7 +24,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
-    DEPENDS libtool
     CATKIN_DEPENDS pr2_controller_interface realtime_tools roscpp diagnostic_msgs pluginlib message_runtime std_msgs
     INCLUDE_DIRS include
     LIBRARIES ethercat_trigger_controllers
