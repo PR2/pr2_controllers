@@ -40,6 +40,7 @@ target_link_libraries(robot_mechanism_controllers ltdl ${Boost_LIBRARIES}
    ${catkin_LIBRARIES})
 add_dependencies(robot_mechanism_controllers 
    ${robot_mechanism_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+pr2_enable_rpath(robot_mechanism_controllers)
 
 install(TARGETS robot_mechanism_controllers
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

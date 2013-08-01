@@ -34,6 +34,7 @@ add_definitions(-O3)
 add_library(ethercat_trigger_controllers ${_srcs})
 target_link_libraries(ethercat_trigger_controllers ltdl ${catkin_LIBRARIES})
 add_dependencies(ethercat_trigger_controllers ${ethercat_trigger_controllers_EXPORTED_TARGETS})
+pr2_enable_rpath(ethercat_trigger_controllers)
 
 install(TARGETS ethercat_trigger_controllers
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
