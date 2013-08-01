@@ -1,6 +1,6 @@
 <package>
   <name>robot_mechanism_controllers</name>
-  <version>1.10.5</version>
+  <version>1.10.6</version>
   <description>Generic Mechanism Controller Library</description>
   <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
 

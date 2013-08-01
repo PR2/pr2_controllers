@@ -1,6 +1,6 @@
 <package>
   <name>ethercat_trigger_controllers</name>
-  <version>1.10.5</version>
+  <version>1.10.6</version>
   <description>Controllers to operate the digital output of the motor controller
     boards and the projector board. This package has not been reviewed and
     should be considered unstable.</description>
