@@ -164,13 +164,13 @@ namespace controller {
     return true;
 
     for(int i=0; i < base_kin_.num_wheels_; i++)
-      if(isnan(base_kin_.wheel_[i].joint_->velocity_) || 
-          isnan(base_kin_.wheel_[i].joint_->velocity_))
+      if(std::isnan(base_kin_.wheel_[i].joint_->velocity_) || 
+          std::isnan(base_kin_.wheel_[i].joint_->velocity_))
         return false;
 
     for(int i=0; i < base_kin_.num_casters_; i++)
-      if(isnan(base_kin_.caster_[i].joint_->velocity_) || 
-          isnan(base_kin_.caster_[i].joint_->velocity_))
+      if(std::isnan(base_kin_.caster_[i].joint_->velocity_) || 
+          std::isnan(base_kin_.caster_[i].joint_->velocity_))
         return false;
 
     return true;

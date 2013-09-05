@@ -446,8 +446,8 @@ void WristCalibrationController::update()
 
       // Determines the actuator zero position from the desired joint zero positions
       transmission_->propagatePositionBackwards(fake_js, fake_as);
-      if (isnan(fake_as[LEFT_MOTOR]->state_.position_) ||
-          isnan(fake_as[RIGHT_MOTOR]->state_.position_))
+      if (std::isnan(fake_as[LEFT_MOTOR]->state_.position_) ||
+          std::isnan(fake_as[RIGHT_MOTOR]->state_.position_))
       {
         ROS_ERROR("Restarting calibration because a computed offset was NaN. If this happens "
                   "repeatedly it may indicate a hardware failure.  (namespace: %s)",
