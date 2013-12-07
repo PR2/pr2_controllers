@@ -26,8 +26,6 @@ catkin_package()
 add_executable(pr2_head_action src/pr2_point_frame.cpp)
 target_link_libraries(pr2_head_action ${Boost_LIBRARIES} 
    ${orocos_kdl_LIBRARIES} ${catkin_LIBRARIES})
-set_target_properties(pr2_head_action PROPERTIES LINK_FLAGS
-   -L${orocos_kdl_LIBRARY_DIRS})
 add_dependencies(pr2_head_action ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS pr2_head_action
