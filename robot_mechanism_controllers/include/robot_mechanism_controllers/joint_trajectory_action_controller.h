@@ -71,6 +71,7 @@ private:
   //typedef actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef actionlib::ServerGoalHandle<Action> GoalHandle;
   typedef boost::shared_ptr<Result> ResultPtr;
+  typedef boost::shared_ptr<Feedback> FeedbackPtr;
 
   uint8_t state_;
 
@@ -81,12 +82,15 @@ private:
 public:
   GoalHandle gh_;
   ResultPtr preallocated_result_;  // Preallocated so it can be used in realtime
+  FeedbackPtr preallocated_feedback_;
 
-  RTServerGoalHandle(GoalHandle &gh, const ResultPtr &preallocated_result = ResultPtr((Result*)NULL))
-    : req_abort_(false), req_succeed_(false), gh_(gh), preallocated_result_(preallocated_result)
+ RTServerGoalHandle(GoalHandle &gh, const ResultPtr &preallocated_result = ResultPtr((Result*)NULL))
+   : req_abort_(false), req_succeed_(false), gh_(gh), preallocated_result_(preallocated_result)
   {
     if (!preallocated_result_)
       preallocated_result_.reset(new Result);
+    if (!preallocated_feedback_)
+      preallocated_feedback_.reset(new Feedback);
   }
 
   void setAborted(ResultConstPtr result = ResultConstPtr((Result*)NULL))

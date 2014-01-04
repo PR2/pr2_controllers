@@ -492,6 +492,36 @@ void JointTrajectoryActionController::update()
       }
       controller_state_publisher_->unlockAndPublish();
     }
+    if (current_active_goal_follow)
+    {
+      current_active_goal_follow->preallocated_feedback_->header.stamp = time;
+      current_active_goal_follow->preallocated_feedback_->joint_names.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->desired.positions.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->desired.velocities.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->desired.accelerations.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->actual.positions.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->actual.velocities.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->error.positions.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->error.velocities.resize(joints_.size());
+      for (size_t j = 0; j < joints_.size(); ++j)
+      {
+        current_active_goal_follow->preallocated_feedback_->joint_names[j] = joints_[j]->joint_->name;
+        current_active_goal_follow->preallocated_feedback_->desired.positions[j] = q[j];
+        current_active_goal_follow->preallocated_feedback_->desired.velocities[j] = qd[j];
+        current_active_goal_follow->preallocated_feedback_->desired.accelerations[j] = qdd[j];
+        current_active_goal_follow->preallocated_feedback_->actual.positions[j] = joints_[j]->position_;
+        current_active_goal_follow->preallocated_feedback_->actual.velocities[j] = joints_[j]->velocity_;
+        current_active_goal_follow->preallocated_feedback_->error.positions[j] = error[j];
+        current_active_goal_follow->preallocated_feedback_->error.velocities[j] = joints_[j]->velocity_ - qd[j];
+      }
+      const actionlib_msgs::GoalID goalID = current_active_goal_follow->gh_.getGoalID();
+      ros::Duration time_from_start = time - goalID.stamp;
+      current_active_goal_follow->preallocated_feedback_->desired.time_from_start = time_from_start;
+      current_active_goal_follow->preallocated_feedback_->actual.time_from_start = time_from_start;
+      current_active_goal_follow->preallocated_feedback_->error.time_from_start = time_from_start;
+      current_active_goal_follow->gh_.publishFeedback(*current_active_goal_follow->preallocated_feedback_);
+
+    }
   }
 
   ++loop_count_;
