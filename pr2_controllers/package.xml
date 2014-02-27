@@ -1,6 +1,6 @@
 <package>
   <name>pr2_controllers</name>
-  <version>1.10.7</version>
+  <version>1.10.8</version>
   <description>Contains the controllers that run in realtime on the PR2 and supporting packages.</description>
   <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
 
