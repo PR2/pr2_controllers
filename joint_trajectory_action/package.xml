@@ -3,7 +3,7 @@
   <version>1.10.8</version>
   <description>The joint_trajectory_action is a node that exposes an action interface
      to a joint trajectory controller.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 
