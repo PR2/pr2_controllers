@@ -2,6 +2,9 @@
 Changelog for package ethercat_trigger_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.10.9 (2014-12-16)
 -------------------
 * Changelogs
