@@ -1,6 +1,6 @@
 <package>
   <name>pr2_gripper_action</name>
-  <version>1.10.11</version>
+  <version>1.10.12</version>
   <description>The pr2_gripper_action provides an action interface for using the
   gripper. Users can specify what position to move to (while limiting the
   force) and the action will report success when the position is reached or
