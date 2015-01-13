@@ -2,6 +2,9 @@
 Changelog for package single_joint_position_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.10.10 (2014-12-16)
 --------------------
 
