@@ -2,8 +2,8 @@
 Changelog for package single_joint_position_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.13 (2015-02-09)
+--------------------
 * Updated maintainership
 * Contributors: dash
 
