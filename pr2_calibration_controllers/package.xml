@@ -3,7 +3,7 @@
   <version>1.10.8</version>
   <description>The pr2_calibration_controllers package contains the controllers
      used to bring all the joints in the PR2 to a calibrated state.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 

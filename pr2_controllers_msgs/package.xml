@@ -2,7 +2,7 @@
   <name>pr2_controllers_msgs</name>
   <version>1.10.8</version>
   <description>Messages, services, and actions used in the pr2_controllers stack.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 
