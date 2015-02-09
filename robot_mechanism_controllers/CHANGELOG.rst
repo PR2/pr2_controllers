@@ -2,6 +2,11 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated maintainership
+* Contributors: dash
+
 1.10.12 (2015-01-13)
 --------------------
 

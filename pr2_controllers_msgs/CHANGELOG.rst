@@ -2,6 +2,11 @@
 Changelog for package pr2_controllers_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated maintainership
+* Contributors: dash
+
 1.10.12 (2015-01-13)
 --------------------
 

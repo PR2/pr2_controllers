@@ -2,6 +2,9 @@
 Changelog for package joint_trajectory_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.10.12 (2015-01-13)
 --------------------
 
