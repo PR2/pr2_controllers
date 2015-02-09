@@ -3,7 +3,7 @@
   <version>1.10.12</version>
   <description>The pr2_mechanism_controllers package contains realtime
     controllers that are meant for specific mechanisms of the PR2.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 

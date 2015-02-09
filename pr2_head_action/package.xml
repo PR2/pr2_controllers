@@ -4,7 +4,7 @@
   <description>The PR2 head action is a node that provides an action interface for
   pointing the head of the PR2.  It passes trajectory goals to the
   controller, and reports success when they have finished executing.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 

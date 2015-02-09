@@ -4,7 +4,7 @@
   <description>Controllers to operate the digital output of the motor controller
     boards and the projector board. This package has not been reviewed and
     should be considered unstable.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 

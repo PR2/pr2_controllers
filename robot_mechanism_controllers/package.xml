@@ -2,7 +2,7 @@
   <name>robot_mechanism_controllers</name>
   <version>1.10.12</version>
   <description>Generic Mechanism Controller Library</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 
