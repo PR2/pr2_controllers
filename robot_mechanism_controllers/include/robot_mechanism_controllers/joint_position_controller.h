@@ -114,7 +114,6 @@ public:
 
 private:
   int loop_count_;
-  bool initialized_;
   pr2_mechanism_model::RobotState *robot_;              /**< Pointer to robot structure. */
   control_toolbox::Pid pid_controller_;       /**< Internal PID controller. */
   ros::Time last_time_;                          /**< Last time stamp of update. */
