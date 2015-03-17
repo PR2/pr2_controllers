@@ -105,6 +105,7 @@ public:
   virtual void starting() {
     command_ = 0.0;
     pid_controller_.reset();
+    last_time_ = robot_->getTime();
   }
   virtual void update();
 

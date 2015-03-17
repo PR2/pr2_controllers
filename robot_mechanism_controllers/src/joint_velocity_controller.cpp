@@ -56,7 +56,6 @@ bool JointVelocityController::init(pr2_mechanism_model::RobotState *robot, const
 {
   assert(robot);
   robot_ = robot;
-  last_time_ = robot->getTime();
 
   joint_state_ = robot_->getJointState(joint_name);
   if (!joint_state_)
@@ -136,7 +135,7 @@ void JointVelocityController::update()
   ros::Time time = robot_->getTime();
 
   double error = command_ - joint_state_->velocity_;
-  dt_ = time - last_time_;
+  dt_ = time - last_time_;  //will be 0.0 if starting() was called on this iteration
   double command = pid_controller_.computeCommand(error, dt_);
   joint_state_->commanded_effort_ += command;
 
