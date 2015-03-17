@@ -58,7 +58,6 @@ bool JointPositionController::init(pr2_mechanism_model::RobotState *robot, const
 {
   assert(robot);
   robot_ = robot;
-  last_time_ = robot->getTime();
 
   joint_state_ = robot_->getJointState(joint_name);
   if (!joint_state_)
@@ -139,7 +138,7 @@ void JointPositionController::update()
   double error(0);
   ros::Time time = robot_->getTime();
   assert(joint_state_->joint_);
-  dt_= time - last_time_;
+  dt_= time - last_time_;   //will be 0.0 if starting() was called on this iteration
 
   if (!initialized_)
   {
