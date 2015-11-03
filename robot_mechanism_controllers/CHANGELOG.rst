@@ -2,5 +2,5 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.9 (2015-11-03)
+-------------------

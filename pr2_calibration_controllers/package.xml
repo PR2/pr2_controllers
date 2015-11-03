@@ -1,6 +1,6 @@
 <package>
   <name>pr2_calibration_controllers</name>
-  <version>1.10.8</version>
+  <version>1.10.9</version>
   <description>The pr2_calibration_controllers package contains the controllers
      used to bring all the joints in the PR2 to a calibrated state.</description>
   <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
