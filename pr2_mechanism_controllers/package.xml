@@ -1,6 +1,6 @@
 <package>
   <name>pr2_mechanism_controllers</name>
-  <version>1.10.10</version>
+  <version>1.10.11</version>
   <description>The pr2_mechanism_controllers package contains realtime
     controllers that are meant for specific mechanisms of the PR2.</description>
   <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
