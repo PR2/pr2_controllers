@@ -1,6 +1,6 @@
 <package>
   <name>pr2_controllers</name>
-  <version>1.10.9</version>
+  <version>1.10.10</version>
   <description>Contains the controllers that run in realtime on the PR2 and supporting packages.</description>
   <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
