@@ -56,7 +56,7 @@ add_library( pr2_mechanism_controllers
 target_link_libraries(pr2_mechanism_controllers ${Boost_LIBRARIES} 
    ${catkin_LIBRARIES})
 add_dependencies(pr2_mechanism_controllers
-   ${pr2_mechanism_controllers_EXPORTED_TARGETS})
+   ${pr2_mechanism_controllers_EXPORTED_TARGETS} ${pr2_msgs_EXPORTED_TARGETS})
 pr2_enable_rpath(pr2_mechanism_controllers)
 
 # TODO: tests
