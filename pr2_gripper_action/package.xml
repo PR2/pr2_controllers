@@ -5,7 +5,7 @@
   gripper. Users can specify what position to move to (while limiting the
   force) and the action will report success when the position is reached or
   failure when the gripper cannot move any longer.</description>
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <license>BSD</license>
 

@@ -5,7 +5,7 @@
   interface for commanding a trajectory to move a joint to a particular
   position. The action reports success when the joint reaches the desired
   position.</description>
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <license>BSD</license>
 
