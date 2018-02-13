@@ -2,6 +2,16 @@
 Changelog for package pr2_calibration_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#387 <https://github.com/PR2/pr2_controllers/issues/387>`_ from k-okada/maintain
+  change maintainer to ROS orphaned package maintainer
+* Merge pull request `#369 <https://github.com/PR2/pr2_controllers/issues/369>`_ from muratsevim/hydro-devel
+  std namespace prefix is added to isnan calls
+* change maintainer to ROS orphaned package maintainer
+* std namespace prefix is added to isnan calls
+* Contributors: Kei Okada, Mehmet Murat Sevim
+
 1.10.13 (2015-02-09)
 --------------------
 * Updated maintainership

@@ -2,6 +2,16 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#388 <https://github.com/PR2/pr2_controllers/issues/388>`_ from k-okada/add_missing_dep
+  add missing dependency
+* Merge pull request `#387 <https://github.com/PR2/pr2_controllers/issues/387>`_ from k-okada/maintain
+  change maintainer to ROS orphaned package maintainer
+* robot_mechanism_controllers: add missing deps
+* change maintainer to ROS orphaned package maintainer
+* Contributors: Furushchev, Kei Okada
+
 1.10.13 (2015-02-09)
 --------------------
 * Updated maintainership
