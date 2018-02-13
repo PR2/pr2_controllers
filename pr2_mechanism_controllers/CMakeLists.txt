@@ -25,17 +25,17 @@ add_service_files(
    SetProfile.srv
 )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
 
-include_directories(include ${EIGEN_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS}
+include_directories(include ${EIGEN3_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS}
    ${catkin_INCLUDE_DIRS})
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages( DEPENDENCIES geometry_msgs std_msgs)
 
 catkin_package(
-    DEPENDS eigen
+    DEPENDS EIGEN3
     CATKIN_DEPENDS std_msgs geometry_msgs pr2_mechanism_msgs nav_msgs pr2_msgs visualization_msgs diagnostic_msgs pr2_controller_interface roscpp pr2_controllers_msgs pr2_mechanism_model realtime_tools robot_mechanism_controllers  pluginlib rosconsole tf angles control_toolbox filters diagnostic_updater message_runtime
     INCLUDE_DIRS include
     LIBRARIES pr2_mechanism_controllers
