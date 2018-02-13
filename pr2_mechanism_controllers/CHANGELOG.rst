@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.14 (2018-02-13)
+--------------------
 * Merge pull request `#389 <https://github.com/PR2/pr2_controllers/issues/389>`_ from k-okada/kinetic-devel
   - use Eigen3 instead of Eigen
 * use Eigen3 instead of Eigen

@@ -2,8 +2,8 @@
 Changelog for package pr2_calibration_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.14 (2018-02-13)
+--------------------
 * Merge pull request `#387 <https://github.com/PR2/pr2_controllers/issues/387>`_ from k-okada/maintain
   change maintainer to ROS orphaned package maintainer
 * Merge pull request `#369 <https://github.com/PR2/pr2_controllers/issues/369>`_ from muratsevim/hydro-devel

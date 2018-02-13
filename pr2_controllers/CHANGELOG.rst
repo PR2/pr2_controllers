@@ -2,8 +2,8 @@
 Changelog for package pr2_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.14 (2018-02-13)
+--------------------
 * Merge pull request `#387 <https://github.com/PR2/pr2_controllers/issues/387>`_ from k-okada/maintain
   change maintainer to ROS orphaned package maintainer
 * change maintainer to ROS orphaned package maintainer
