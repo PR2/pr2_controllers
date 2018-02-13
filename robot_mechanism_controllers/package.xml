@@ -37,6 +37,7 @@
   <build_depend>message_filters</build_depend>
   <build_depend>control_msgs</build_depend>
   <build_depend>libtool</build_depend>
+  <build_depend>message_generation</build_depend>
 
   <run_depend>rospy</run_depend>
   <run_depend>roscpp</run_depend>
@@ -61,6 +62,7 @@
   <run_depend>message_filters</run_depend>
   <run_depend>control_msgs</run_depend>
   <run_depend>libtool</run_depend>
+  <run_depend>message_runtime</run_depend>
 
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lrobot_mechanism_controllers" cflags="-I${prefix}/include -I${prefix}/msg/cpp -I${prefix}/srv/cpp"/>

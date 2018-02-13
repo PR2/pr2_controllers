@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(robot_mechanism_controllers)
 
 # Load catkin and all dependencies required for this package
-find_package(catkin REQUIRED COMPONENTS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs )
+find_package(catkin REQUIRED COMPONENTS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs message_generation)
 
 
 add_message_files(
@@ -18,7 +18,7 @@ include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 generate_messages(DEPENDENCIES geometry_msgs std_msgs)
 
 catkin_package(
-   CATKIN_DEPENDS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs 
+   CATKIN_DEPENDS  roscpp angles filters tf tf_conversions  eigen_conversions pluginlib actionlib std_msgs geometry_msgs diagnostic_msgs trajectory_msgs pr2_controllers_msgs pr2_controller_interface pr2_controller_manager kdl_parser pr2_mechanism_model control_toolbox realtime_tools message_filters control_msgs message_runtime
    INCLUDE_DIRS include
    LIBRARIES robot_mechanism_controllers
 )
