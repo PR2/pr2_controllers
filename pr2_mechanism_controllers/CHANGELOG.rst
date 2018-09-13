@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.15 (2018-09-13)
+--------------------
 * Merge pull request `#390 <https://github.com/pr2/pr2_controllers/issues/390>`_ from k-okada/add_travis
   update travis.yml
 * add fix for urdfmodel 1.0.0(melodic),
