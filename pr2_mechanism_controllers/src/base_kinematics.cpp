@@ -50,7 +50,11 @@ bool Wheel::init(pr2_mechanism_model::RobotState *robot_state, ros::NodeHandle &
   wheel_speed_cmd_ = 0;
   wheel_speed_actual_ = 0;
 
+#if URDFDOM_1_0_0_API
+  urdf::LinkConstSharedPtr link;
+#else
   boost::shared_ptr<const urdf::Link> link;
+#endif
   link = robot_state->model_->robot_model_.getLink(link_name);
   if (!link){
     ROS_ERROR("Could not find link with name %s",link_name.c_str());
@@ -105,7 +109,11 @@ bool Caster::init(pr2_mechanism_model::RobotState *robot_state,  ros::NodeHandle
   steer_angle_actual_ = 0;
   num_children_ = 0;
 
+#if URDFDOM_1_0_0_API
+  urdf::LinkConstSharedPtr link;
+#else
   boost::shared_ptr<const urdf::Link> link;
+#endif
   link = robot_state->model_->robot_model_.getLink(link_name);
   if (!link){
     ROS_ERROR("Could not find link with name %s",link_name.c_str());
@@ -127,7 +135,11 @@ bool Caster::init(pr2_mechanism_model::RobotState *robot_state,  ros::NodeHandle
 
   for(unsigned int i=0; i < link->child_links.size(); i++)
   {
+#if URDFDOM_1_0_0_API
+    urdf::LinkSharedPtr child = link->child_links[i];
+#else
     boost::shared_ptr<urdf::Link> child = link->child_links[i];
+#endif
     Wheel tmp;
     parent_->wheel_.push_back(tmp);
     if(!parent_->wheel_[parent_->num_wheels_].init(robot_state, node, child->name))

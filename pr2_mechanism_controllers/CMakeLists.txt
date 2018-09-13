@@ -53,6 +53,10 @@ add_library( pr2_mechanism_controllers
   src/pr2_gripper_controller.cpp
   src/trajectory.cpp
   )
+find_package(PkgConfig)
+pkg_check_modules(URDFDOM REQUIRED urdfdom)
+message(STATUS "Find URDFDOM ${URDFDOM_VERSION}")
+target_compile_definitions(pr2_mechanism_controllers PRIVATE -DURDFDOM_1_0_0_API)
 target_link_libraries(pr2_mechanism_controllers ${Boost_LIBRARIES} 
    ${catkin_LIBRARIES})
 add_dependencies(pr2_mechanism_controllers
