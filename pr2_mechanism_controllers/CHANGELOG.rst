@@ -2,6 +2,14 @@
 Changelog for package pr2_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#390 <https://github.com/pr2/pr2_controllers/issues/390>`_ from k-okada/add_travis
+  update travis.yml
+* add fix for urdfmodel 1.0.0(melodic),
+  since 12.04 have urdfmodel < 1.0.0, it will fail to compile on indigo, so we need to chaeck URDFDOM_version
+* Contributors: Kei Okada
+
 1.10.14 (2018-02-13)
 --------------------
 * Merge pull request `#389 <https://github.com/PR2/pr2_controllers/issues/389>`_ from k-okada/kinetic-devel

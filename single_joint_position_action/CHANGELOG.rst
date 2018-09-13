@@ -2,6 +2,9 @@
 Changelog for package single_joint_position_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.10.14 (2018-02-13)
 --------------------
 * Merge pull request `#387 <https://github.com/PR2/pr2_controllers/issues/387>`_ from k-okada/maintain
