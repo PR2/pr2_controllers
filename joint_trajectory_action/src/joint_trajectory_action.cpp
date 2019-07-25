@@ -29,6 +29,8 @@
 
 // Author: Stuart Glaser
 
+#include <boost/bind.hpp>
+
 #include <ros/ros.h>
 #include <actionlib/server/action_server.h>
 

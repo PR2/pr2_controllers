@@ -34,6 +34,9 @@
 #ifndef CASTER_CALIBRATION_CONTROLLER_H
 #define CASTER_CALIBRATION_CONTROLLER_H
 
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "ros/node_handle.h"
 #include "pr2_mechanism_controllers/caster_controller.h"
 #include "realtime_tools/realtime_publisher.h"

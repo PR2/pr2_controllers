@@ -37,6 +37,8 @@
 #ifndef PR2_CONTROLLERS_JT_CARTESIAN_CONTROLLER_H
 #define PR2_CONTROLLERS_JT_CARTESIAN_CONTROLLER_H
 
+#include <boost/scoped_ptr.hpp>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

@@ -34,6 +34,8 @@
  *********************************************************************/
 
 #include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include "ethercat_trigger_controllers/multi_trigger_controller.h"
 #include "ros/console.h"
