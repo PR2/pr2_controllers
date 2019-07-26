@@ -31,6 +31,8 @@
 
 #include "ros/ros.h"
 
+#include <boost/bind.hpp>
+
 #include <actionlib/server/action_server.h>
 #include <pr2_controllers_msgs/JointControllerState.h>
 #include <pr2_controllers_msgs/Pr2GripperCommand.h>

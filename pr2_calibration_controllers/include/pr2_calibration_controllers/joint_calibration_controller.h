@@ -35,6 +35,9 @@
 #ifndef PR2_JOINT_CALIBRATION_CONTROLLER
 #define PR2_JOINT_CALIBRATION_CONTROLLER
 
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "ros/node_handle.h"
 #include "pr2_mechanism_model/robot.h"
 #include "robot_mechanism_controllers/joint_velocity_controller.h"

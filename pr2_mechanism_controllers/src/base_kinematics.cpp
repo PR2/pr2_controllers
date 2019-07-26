@@ -35,6 +35,8 @@
  * Author: Sachin Chitta and Matthew Piccoli
  */
 
+#include <boost/shared_ptr.hpp>
+
 #include <pr2_mechanism_controllers/base_kinematics.h>
 #include <kdl/tree.hpp>
 
