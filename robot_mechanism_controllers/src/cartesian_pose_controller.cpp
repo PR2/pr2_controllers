@@ -32,6 +32,7 @@
  */
 
 
+#include <boost/bind.hpp>
 
 #include "robot_mechanism_controllers/cartesian_pose_controller.h"
 #include <algorithm>

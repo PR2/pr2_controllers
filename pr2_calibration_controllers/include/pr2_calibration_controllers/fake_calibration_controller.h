@@ -34,7 +34,7 @@
 
 #pragma once
 
-
+#include <boost/scoped_ptr.hpp>
 
 #include "pr2_mechanism_model/robot.h"
 #include "robot_mechanism_controllers/joint_velocity_controller.h"

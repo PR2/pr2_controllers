@@ -35,6 +35,8 @@
 #ifndef TRIGGER_CONTROLLER_H
 #define TRIGGER_CONTROLLER_H
 
+#include <vector>
+
 #include <ros/node_handle.h>
 #include <pr2_controller_interface/controller.h>
 #include <pr2_mechanism_model/robot.h>
@@ -42,7 +44,8 @@
 #include <ethercat_trigger_controllers/MultiWaveform.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <std_msgs/Header.h>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 
 /** @class MultiMultiTriggerController
   * @brief Allows complex periodic triggering waveforms through a digital output

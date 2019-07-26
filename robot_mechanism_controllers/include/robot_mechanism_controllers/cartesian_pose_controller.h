@@ -71,7 +71,6 @@
 
 #include <vector>
 #include <boost/scoped_ptr.hpp>
-#include <boost/thread/condition.hpp>
 
 #include <ros/node_handle.h>
 

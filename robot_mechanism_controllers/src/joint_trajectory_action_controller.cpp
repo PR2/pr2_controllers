@@ -31,6 +31,9 @@
  * Author: Stuart Glaser
  */
 
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "robot_mechanism_controllers/joint_trajectory_action_controller.h"
 #include <sstream>
 #include "angles/angles.h"

@@ -35,8 +35,8 @@
 #include <ros/ros.h>
 
 #include <vector>
+#include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/thread/condition.hpp>
 
 #include <actionlib/server/action_server.h>
 #include <geometry_msgs/PoseStamped.h>

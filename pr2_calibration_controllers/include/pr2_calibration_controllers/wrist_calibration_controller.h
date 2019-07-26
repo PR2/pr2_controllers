@@ -34,6 +34,9 @@
 #ifndef WRIST_CALIBRATION_CONTROLLER_H
 #define WRIST_CALIBRATION_CONTROLLER_H
 
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "robot_mechanism_controllers/joint_velocity_controller.h"
 #include "realtime_tools/realtime_publisher.h"
 #include "pr2_mechanism_model/wrist_transmission.h"

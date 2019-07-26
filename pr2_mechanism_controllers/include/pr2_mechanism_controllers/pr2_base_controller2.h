@@ -44,7 +44,6 @@
 #include <angles/angles.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/thread/condition.hpp>
 #include <filters/transfer_function.h>
 
 namespace controller
