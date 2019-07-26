@@ -2,6 +2,15 @@
 Changelog for package pr2_gripper_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make sure to include the correct boost libraries.
+  This follows the principle of "include what you use", and
+  also should in theory fix the problems on the build farm.
+  (`#394 <https://github.com/PR2/pr2_controllers/issues/394>`_)
+  Signed-off-by: Chris Lalancette <clalancette@openrobotics.org>
+* Contributors: Chris Lalancette
+
 1.10.15 (2018-09-13)
 --------------------
 
