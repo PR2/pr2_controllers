@@ -12,7 +12,7 @@ add_message_files(
    JTCartesianControllerState.msg
 )
 
-find_package(Boost REQUIRED COMPONENTS signals)
+find_package(Boost REQUIRED)
 include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 generate_messages(DEPENDENCIES geometry_msgs std_msgs)
