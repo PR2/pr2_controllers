@@ -69,8 +69,6 @@ private:
 
   //typedef actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef actionlib::ServerGoalHandle<Action> GoalHandle;
-  typedef boost::shared_ptr<Result> ResultPtr;
-  typedef boost::shared_ptr<Feedback> FeedbackPtr;
 
   uint8_t state_;
 
