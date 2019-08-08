@@ -2,6 +2,9 @@
 Changelog for package pr2_head_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.10.16 (2019-07-26)
 --------------------
 * Make sure to include the correct boost libraries.
