@@ -23,7 +23,11 @@ catkin_package(
    LIBRARIES robot_mechanism_controllers
 )
 
-add_definitions(-O3)
+string(REPLACE "." ";" VERSION_LIST ${actionlib_VERSION})
+list(GET VERSION_LIST 0 actionlib_VERSION_MAJOR)
+list(GET VERSION_LIST 1 actionlib_VERSION_MINOR)
+list(GET VERSION_LIST 2 actionlib_VERSION_PATCH)
+add_definitions(-O3 -Dactionlib_VERSION=${actionlib_VERSION} -Dactionlib_VERSION_MAJOR=${actionlib_VERSION_MAJOR} -Dactionlib_VERSION_MINOR=${actionlib_VERSION_MINOR} -Dactionlib_VERSION_PATCH=${actionlib_VERSION_PATCH})
 
 add_library(robot_mechanism_controllers
     src/cartesian_pose_controller.cpp
