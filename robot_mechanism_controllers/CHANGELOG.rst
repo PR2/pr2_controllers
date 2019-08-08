@@ -2,8 +2,8 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.17 (2019-08-08)
+--------------------
 * Remove actionlib typedefs defined in actionlib 1.12.0 (`#396 <https://github.com/PR2/pr2_controllers/issues/396>`_)
   * check actinlib_VERSION to removing re-typedef ResultPtr and FeedbackPtr https://github.com/ros/actionlib/issues/106
   * Remove actionlib typedefs defined upstream

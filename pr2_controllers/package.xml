@@ -1,6 +1,6 @@
 <package>
   <name>pr2_controllers</name>
-  <version>1.10.16</version>
+  <version>1.10.17</version>
   <description>Contains the controllers that run in realtime on the PR2 and supporting packages.</description>
   <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
