@@ -69,8 +69,10 @@ private:
 
   //typedef actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef actionlib::ServerGoalHandle<Action> GoalHandle;
+#if ((actionlib_VERSION_MAJOR == 1) && (actionlib_VERSION_MINOR < 12)) || (actionlib_VERSION_MAJOR < 1)
   typedef boost::shared_ptr<Result> ResultPtr;
   typedef boost::shared_ptr<Feedback> FeedbackPtr;
+#endif
 
   uint8_t state_;
 
