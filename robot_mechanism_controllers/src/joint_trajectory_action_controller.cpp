@@ -293,10 +293,13 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
   controller_state_publisher_->msg_.desired.positions.resize(joints_.size());
   controller_state_publisher_->msg_.desired.velocities.resize(joints_.size());
   controller_state_publisher_->msg_.desired.accelerations.resize(joints_.size());
+  controller_state_publisher_->msg_.desired.effort.resize(joints_.size());
   controller_state_publisher_->msg_.actual.positions.resize(joints_.size());
   controller_state_publisher_->msg_.actual.velocities.resize(joints_.size());
+  controller_state_publisher_->msg_.actual.effort.resize(joints_.size());
   controller_state_publisher_->msg_.error.positions.resize(joints_.size());
   controller_state_publisher_->msg_.error.velocities.resize(joints_.size());
+  controller_state_publisher_->msg_.error.effort.resize(joints_.size());
   controller_state_publisher_->unlock();
 
   action_server_.reset(new JTAS(node_, "joint_trajectory_action",
@@ -488,10 +491,13 @@ void JointTrajectoryActionController::update()
         controller_state_publisher_->msg_.desired.positions[j] = q[j];
         controller_state_publisher_->msg_.desired.velocities[j] = qd[j];
         controller_state_publisher_->msg_.desired.accelerations[j] = qdd[j];
+        controller_state_publisher_->msg_.desired.effort[j] = joints_[j]->commanded_effort_;
         controller_state_publisher_->msg_.actual.positions[j] = joints_[j]->position_;
         controller_state_publisher_->msg_.actual.velocities[j] = joints_[j]->velocity_;
+        controller_state_publisher_->msg_.actual.effort[j] = joints_[j]->measured_effort_;
         controller_state_publisher_->msg_.error.positions[j] = error[j];
         controller_state_publisher_->msg_.error.velocities[j] = joints_[j]->velocity_ - qd[j];
+        controller_state_publisher_->msg_.error.effort[j] = joints_[j]->measured_effort_ - joints_[j]->commanded_effort_;
       }
       controller_state_publisher_->unlockAndPublish();
     }
@@ -502,20 +508,26 @@ void JointTrajectoryActionController::update()
       current_active_goal_follow->preallocated_feedback_->desired.positions.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->desired.velocities.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->desired.accelerations.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->desired.effort.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->actual.positions.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->actual.velocities.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->actual.effort.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->error.positions.resize(joints_.size());
       current_active_goal_follow->preallocated_feedback_->error.velocities.resize(joints_.size());
+      current_active_goal_follow->preallocated_feedback_->error.effort.resize(joints_.size());
       for (size_t j = 0; j < joints_.size(); ++j)
       {
         current_active_goal_follow->preallocated_feedback_->joint_names[j] = joints_[j]->joint_->name;
         current_active_goal_follow->preallocated_feedback_->desired.positions[j] = q[j];
         current_active_goal_follow->preallocated_feedback_->desired.velocities[j] = qd[j];
         current_active_goal_follow->preallocated_feedback_->desired.accelerations[j] = qdd[j];
+        current_active_goal_follow->preallocated_feedback_->desired.effort[j] = joints_[j]->commanded_effort_;
         current_active_goal_follow->preallocated_feedback_->actual.positions[j] = joints_[j]->position_;
         current_active_goal_follow->preallocated_feedback_->actual.velocities[j] = joints_[j]->velocity_;
+        current_active_goal_follow->preallocated_feedback_->actual.effort[j] = joints_[j]->measured_effort_;
         current_active_goal_follow->preallocated_feedback_->error.positions[j] = error[j];
         current_active_goal_follow->preallocated_feedback_->error.velocities[j] = joints_[j]->velocity_ - qd[j];
+        current_active_goal_follow->preallocated_feedback_->error.effort[j] = joints_[j]->measured_effort_ - joints_[j]->commanded_effort_;
       }
       const actionlib_msgs::GoalID goalID = current_active_goal_follow->gh_.getGoalID();
       ros::Duration time_from_start = time - goalID.stamp;
