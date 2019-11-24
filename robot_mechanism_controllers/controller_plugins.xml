@@ -1,6 +1,7 @@
 <library path="lib/librobot_mechanism_controllers">
   <class name="robot_mechanism_controllers/JointEffortController" type="controller::JointEffortController" base_class_type="pr2_controller_interface::Controller" />
   <class name="robot_mechanism_controllers/JointVelocityController" type="controller::JointVelocityController" base_class_type="pr2_controller_interface::Controller" />
+  <class name="robot_mechanism_controllers/JointGroupVelocityController" type="controller::JointGroupVelocityController" base_class_type="pr2_controller_interface::Controller" />
   <class name="robot_mechanism_controllers/JointPositionController" type="controller::JointPositionController" base_class_type="pr2_controller_interface::Controller" />
   <class name="robot_mechanism_controllers/JointSplineTrajectoryController" type="controller::JointSplineTrajectoryController" base_class_type="pr2_controller_interface::Controller" />
   <class name="robot_mechanism_controllers/JointTrajectoryActionController" type="controller::JointTrajectoryActionController" base_class_type="pr2_controller_interface::Controller" />
