@@ -248,7 +248,7 @@ bool JointTrajectoryActionController::init(pr2_mechanism_model::RobotState *robo
     default_goal_tolerance_[i].velocity = stopped_velocity_tolerance;
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    std::string ns = std::string("joint_trajectory_action_node/constraints") + joints_[i]->joint_->name;
+    std::string ns = std::string("joint_trajectory_action_node/constraints/") + joints_[i]->joint_->name;
     node_.param(ns + "/goal", default_goal_tolerance_[i].position, 0.0);
     node_.param(ns + "/trajectory", default_trajectory_tolerance_[i].position, 0.0);
   }
