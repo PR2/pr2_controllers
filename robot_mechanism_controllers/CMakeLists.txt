@@ -36,6 +36,7 @@ add_library(robot_mechanism_controllers
     src/joint_effort_controller.cpp
     src/joint_position_controller.cpp
     src/joint_velocity_controller.cpp
+    src/joint_group_velocity_controller.cpp
     src/joint_spline_trajectory_controller.cpp
     src/joint_trajectory_action_controller.cpp
     src/jt_cartesian_controller.cpp
