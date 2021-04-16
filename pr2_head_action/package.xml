@@ -1,4 +1,4 @@
-<package>
+<package format="3">
   <name>pr2_head_action</name>
   <version>1.10.17</version>
   <description>The PR2 head action is a node that provides an action interface for
@@ -27,15 +27,15 @@
   <build_depend>orocos_kdl</build_depend>
   <build_depend>kdl_parser</build_depend>
 
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>trajectory_msgs</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>pr2_controllers_msgs</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>message_filters</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>tf_conversions</run_depend>
-  <run_depend>actionlib</run_depend>
-  <run_depend>orocos_kdl</run_depend>
-  <run_depend>kdl_parser</run_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>pr2_controllers_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>tf_conversions</exec_depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>orocos_kdl</exec_depend>
+  <exec_depend>kdl_parser</exec_depend>
 </package>
