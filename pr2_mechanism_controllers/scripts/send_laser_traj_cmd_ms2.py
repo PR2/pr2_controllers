@@ -16,9 +16,9 @@ from pr2_msgs.srv import *
 from time import sleep
 
 def print_usage(exit_code = 0):
-    print '''Usage:
+    print('''Usage:
     send_periodic_cmd.py [controller]
-'''
+''')
     sys.exit(exit_code)
 
 if __name__ == '__main__':
@@ -40,16 +40,16 @@ if __name__ == '__main__':
     cmd.max_velocity     =  5
     cmd.max_acceleration =  5
 
-    print 'Sending Command to %s: ' % controller
-    print '  Profile Type: %s' % cmd.profile
-    print '  Pos: %s ' % ','.join(['%.3f' % x for x in cmd.position])
-    print '  Time: %s' % ','.join(['%.3f' % x.to_sec() for x in cmd.time_from_start])
-    print '  MaxVelocity:     %f' % cmd.max_velocity
-    print '  MaxAcceleration: %f' % cmd.max_acceleration
+    print('Sending Command to %s: ' % controller)
+    print('  Profile Type: %s' % cmd.profile)
+    print('  Pos: %s ' % ','.join(['%.3f' % x for x in cmd.position]))
+    print('  Time: %s' % ','.join(['%.3f' % x.to_sec() for x in cmd.time_from_start]))
+    print('  MaxVelocity:     %f' % cmd.max_velocity)
+    print('  MaxAcceleration: %f' % cmd.max_acceleration)
 
     rospy.wait_for_service(controller + '/set_traj_cmd')
     s = rospy.ServiceProxy(controller + '/set_traj_cmd', SetLaserTrajCmd)
     resp = s.call(SetLaserTrajCmdRequest(cmd))
 
-    print 'Command sent!'
-    print '  Resposne: %f' % resp.start_time.to_seconds()
+    print('Command sent!')
+    print('  Resposne: %f' % resp.start_time.to_seconds())

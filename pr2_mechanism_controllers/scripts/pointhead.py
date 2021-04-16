@@ -67,7 +67,7 @@ def usage():
 if __name__ == "__main__":
 
     if len(sys.argv) < 3:
-        print usage()
+        print(usage())
         sys.exit(1)
     elif len(sys.argv) ==3:
         point_head_client(float(sys.argv[1]), float(sys.argv[2]))
