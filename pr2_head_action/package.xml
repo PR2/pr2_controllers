@@ -24,7 +24,8 @@
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>actionlib</build_depend>
-  <build_depend>orocos_kdl</build_depend>
+  <build_depend condition="$ROS_DISTRO != noetic">orocos_kdl</build_depend>
+  <build_depend condition="$ROS_DISTRO == noetic">liborocos-kdl-dev</build_depend>
   <build_depend>kdl_parser</build_depend>
 
   <exec_depend>geometry_msgs</exec_depend>
@@ -36,6 +37,7 @@
   <exec_depend>tf</exec_depend>
   <exec_depend>tf_conversions</exec_depend>
   <exec_depend>actionlib</exec_depend>
-  <exec_depend>orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_DISTRO != noetic">orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_DISTRO == noetic">liborocos-kdl</exec_depend>
   <exec_depend>kdl_parser</exec_depend>
 </package>
