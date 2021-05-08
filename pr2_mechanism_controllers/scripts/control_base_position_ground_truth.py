@@ -58,6 +58,6 @@ if __name__ == "__main__":
     if len(sys.argv) ==4:
         control_base_pose_odom_frame(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]) )
     else:
-        print usage()
+        print(usage())
         sys.exit(1)
 

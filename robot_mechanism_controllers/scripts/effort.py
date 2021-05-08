@@ -56,7 +56,7 @@ def load_joint_config(joint_name):
 
 def main():
     if len(sys.argv) < 2:
-        print "Usage:  effort.py <joint>"
+        print("Usage:  effort.py <joint>")
         sys.exit(1)
     joint = sys.argv[1]
     rospy.init_node('effort', anonymous=True)
@@ -72,7 +72,7 @@ def main():
 
     pub = rospy.Publisher("%s/command" % CONTROLLER_NAME, Float64)
 
-    print "Enter efforts:"
+    print("Enter efforts:")
     while not rospy.is_shutdown():
         effort = float(sys.stdin.readline().strip())
         pub.publish(Float64(effort))
