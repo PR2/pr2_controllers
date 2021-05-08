@@ -2,6 +2,11 @@
 Changelog for package pr2_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* 2to3 -w -f print . (`#401 <https://github.com/PR2/pr2_controllers/issues/401>`_)
+* Contributors: Kei Okada
+
 1.10.17 (2019-08-08)
 --------------------
 

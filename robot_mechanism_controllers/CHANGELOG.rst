@@ -2,6 +2,15 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix for noetic, 2to3 -w -f print (`#401 <https://github.com/PR2/pr2_controllers/issues/401>`_)
+* use install(PROGRAMS scripts/effort.py posture.py instaed of install(FILES (`#398 <https://github.com/PR2/pr2_controllers/issues/398>`_)
+* add effort values in joint_trajectory_action_controller/state (`#397 <https://github.com/PR2/pr2_controllers/issues/397>`_)
+* do not find deprecated boost signals package, it was not used either (`#395 <https://github.com/PR2/pr2_controllers/issues/395>`_)
+* add missing / to constraints parameter,  This never worked before...
+* Contributors: Kei Okada, Michael Görner, Shingo Kitagawa
+
 1.10.17 (2019-08-08)
 --------------------
 * Remove actionlib typedefs defined in actionlib 1.12.0 (`#396 <https://github.com/PR2/pr2_controllers/issues/396>`_)
