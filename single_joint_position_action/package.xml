@@ -1,6 +1,6 @@
 <package>
   <name>single_joint_position_action</name>
-  <version>1.10.17</version>
+  <version>1.10.18</version>
   <description>The single joint position action is a node that provides an action
   interface for commanding a trajectory to move a joint to a particular
   position. The action reports success when the joint reaches the desired

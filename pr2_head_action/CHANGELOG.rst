@@ -2,8 +2,8 @@
 Changelog for package pr2_head_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.18 (2021-05-08)
+--------------------
 * Fix for noetic (`#401 <https://github.com/PR2/pr2_controllers/issues/401>`_)
 
   * install liborocos for noetic

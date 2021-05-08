@@ -1,6 +1,6 @@
 <package>
   <name>robot_mechanism_controllers</name>
-  <version>1.10.17</version>
+  <version>1.10.18</version>
   <description>Generic Mechanism Controller Library</description>
   <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 

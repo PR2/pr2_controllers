@@ -2,8 +2,8 @@
 Changelog for package robot_mechanism_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.10.18 (2021-05-08)
+--------------------
 * Fix for noetic, 2to3 -w -f print (`#401 <https://github.com/PR2/pr2_controllers/issues/401>`_)
 * use install(PROGRAMS scripts/effort.py posture.py instaed of install(FILES (`#398 <https://github.com/PR2/pr2_controllers/issues/398>`_)
 * add effort values in joint_trajectory_action_controller/state (`#397 <https://github.com/PR2/pr2_controllers/issues/397>`_)
