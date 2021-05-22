@@ -9,6 +9,7 @@ add_message_files(
    DIRECTORY msg
    FILES
    JointControllerState.msg
+   JointControllerStateArray.msg
    JointTrajectoryControllerState.msg
    Pr2GripperCommand.msg
 )
