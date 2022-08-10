@@ -74,6 +74,7 @@ protected:
   int state_;
   bool announced_calibration_success_;
   int countdown_;
+  int tics_moving_past_calibration_reading_;
 
   double search_velocity_;
   double original_position_;

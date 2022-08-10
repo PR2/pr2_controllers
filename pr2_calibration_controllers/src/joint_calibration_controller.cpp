@@ -90,6 +90,9 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
     return false;
   }
 
+  tics_moving_past_calibration_reading_ = 200;
+  node_.getParam("tics_moving_past_calibration_reading", tics_moving_past_calibration_reading_);
+
   bool force_calibration = false;
   node_.getParam("force_calibration", force_calibration);
 
@@ -227,7 +230,7 @@ void JointCalibrationController::update()
       }
     }
     else
-      countdown_ = 200;
+      countdown_ = tics_moving_past_calibration_reading_;
     break;
   case MOVING_TO_HIGH: {
     vc_.setCommand(search_velocity_);
