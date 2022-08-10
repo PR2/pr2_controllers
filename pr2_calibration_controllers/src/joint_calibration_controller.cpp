@@ -43,8 +43,7 @@ using namespace std;
 namespace controller {
 
 JointCalibrationController::JointCalibrationController()
-: robot_(NULL), last_publish_time_(0),
-  actuator_(NULL), joint_(NULL)
+: robot_(NULL), actuator_(NULL), joint_(NULL)
 {
 }
 
@@ -96,6 +95,7 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
 
   state_ = INITIALIZED;
   joint_->calibrated_ = false;
+  announced_calibration_success_ = false;
   if (actuator_->state_.zero_offset_ != 0) 
   {
     if (force_calibration)
@@ -173,8 +173,8 @@ bool JointCalibrationController::init(pr2_mechanism_model::RobotState *robot, ro
   is_calibrated_srv_ = node_.advertiseService("is_calibrated", &JointCalibrationController::isCalibrated, this);
 
   // "Calibrated" topic
-  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1));
-
+  pub_calibrated_.reset(new realtime_tools::RealtimePublisher<std_msgs::Empty>(node_, "calibrated", 1, true));
+  pub_zero_offset_.reset(new realtime_tools::RealtimePublisher<std_msgs::Float32>(node_, "zero_offset", 1, true));
 
   return true;
 }
@@ -185,6 +185,7 @@ void JointCalibrationController::starting()
   state_ = INITIALIZED;
   joint_->calibrated_ = false;
   actuator_->state_.zero_offset_ = 0.0;
+  announced_calibration_success_ = false;
 }
 
 
@@ -258,13 +259,17 @@ void JointCalibrationController::update()
     break;
   }
   case CALIBRATED:
-    if (pub_calibrated_) {
-      if (last_publish_time_ + ros::Duration(0.5) < robot_->getTime()){
-	assert(pub_calibrated_);
-	if (pub_calibrated_->trylock()) {
-	  last_publish_time_ = robot_->getTime();
-	  pub_calibrated_->unlockAndPublish();
-	}
+    if (!announced_calibration_success_ && pub_zero_offset_ && pub_calibrated_) {
+      if (pub_zero_offset_->trylock()) {
+          if (pub_calibrated_->trylock()) {
+            pub_calibrated_->unlockAndPublish();
+            pub_zero_offset_->msg_.data = actuator_->state_.zero_offset_;
+            pub_zero_offset_->unlockAndPublish();
+            announced_calibration_success_ = true;
+          }
+          else {
+            pub_zero_offset_->unlock();
+          }
       }
     }
     break;
