@@ -33,7 +33,7 @@
  *********************************************************************/
 
 #include "robot_mechanism_controllers/joint_effort_controller.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::JointEffortController, pr2_controller_interface::Controller)
 

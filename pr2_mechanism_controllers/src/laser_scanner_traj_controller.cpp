@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <cmath>
 #include "angles/angles.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::LaserScannerTrajControllerNode, pr2_controller_interface::Controller)
 

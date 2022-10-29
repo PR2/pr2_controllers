@@ -46,7 +46,7 @@
 #include <actionlib/server/action_server.h>
 #include <control_toolbox/limited_proxy.h>
 #include <control_toolbox/pid.h>
-#include <filters/filter_chain.h>
+#include <filters/filter_chain.hpp>
 #include <pr2_controller_interface/controller.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <realtime_tools/realtime_box.h>

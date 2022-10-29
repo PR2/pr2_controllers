@@ -36,7 +36,7 @@
  */
 
 #include "pr2_mechanism_controllers/pr2_odometry.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::Pr2Odometry, pr2_controller_interface::Controller)
 

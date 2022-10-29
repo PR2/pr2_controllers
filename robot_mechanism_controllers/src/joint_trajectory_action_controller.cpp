@@ -37,7 +37,7 @@
 #include "robot_mechanism_controllers/joint_trajectory_action_controller.h"
 #include <sstream>
 #include "angles/angles.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::JointTrajectoryActionController, pr2_controller_interface::Controller)
 

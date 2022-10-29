@@ -36,7 +36,7 @@
 #include "robot_mechanism_controllers/joint_spline_trajectory_controller.h"
 #include <sstream>
 #include "angles/angles.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::JointSplineTrajectoryController, pr2_controller_interface::Controller)
 

@@ -43,7 +43,7 @@
 #include <realtime_tools/realtime_publisher.h>
 #include <tf/tf.h>
 
-#include "filters/filter_chain.h"
+#include "filters/filter_chain.hpp"
 
 // Messages
 #include <pr2_msgs/LaserScannerSignal.h>

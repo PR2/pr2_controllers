@@ -33,7 +33,7 @@
  *********************************************************************/
 
 #include "robot_mechanism_controllers/joint_velocity_controller.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::JointVelocityController, pr2_controller_interface::Controller)
 

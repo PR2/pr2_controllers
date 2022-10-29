@@ -59,7 +59,7 @@ Rectangular: (running = 1, pulsed = 0)
 
 #include "ethercat_trigger_controllers/trigger_controller.h"
 #include "ros/console.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::TriggerController, pr2_controller_interface::Controller)
 

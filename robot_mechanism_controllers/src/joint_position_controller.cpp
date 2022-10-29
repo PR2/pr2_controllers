@@ -34,7 +34,7 @@
 
 #include "robot_mechanism_controllers/joint_position_controller.h"
 #include "angles/angles.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::JointPositionController, pr2_controller_interface::Controller)
 

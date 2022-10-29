@@ -32,7 +32,7 @@
  */
 
 #include "pr2_calibration_controllers/wrist_calibration_controller.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(controller::WristCalibrationController, pr2_controller_interface::Controller)
 

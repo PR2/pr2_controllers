@@ -39,7 +39,7 @@
 
 #include "ethercat_trigger_controllers/multi_trigger_controller.h"
 #include "ros/console.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::MultiTriggerController, pr2_controller_interface::Controller)
 

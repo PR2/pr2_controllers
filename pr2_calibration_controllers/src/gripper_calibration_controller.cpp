@@ -34,7 +34,7 @@
 
 #include "pr2_calibration_controllers/gripper_calibration_controller.h"
 #include "ros/time.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 using namespace std;
 using namespace controller;

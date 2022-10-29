@@ -37,7 +37,7 @@
 #include "robot_mechanism_controllers/cartesian_pose_controller.h"
 #include <algorithm>
 #include "kdl/chainfksolverpos_recursive.hpp"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 #include "tf_conversions/tf_kdl.h"
 
 

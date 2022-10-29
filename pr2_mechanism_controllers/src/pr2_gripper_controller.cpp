@@ -34,7 +34,7 @@
 
 #include "pr2_mechanism_controllers/pr2_gripper_controller.h"
 #include "angles/angles.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::Pr2GripperController, pr2_controller_interface::Controller)
 

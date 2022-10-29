@@ -34,7 +34,7 @@
  *********************************************************************/
 #include "ethercat_trigger_controllers/projector_controller.h"
 #include "ros/console.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::ProjectorController, pr2_controller_interface::Controller)
 

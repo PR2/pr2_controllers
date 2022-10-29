@@ -34,7 +34,7 @@
 
 #include "pr2_calibration_controllers/joint_calibration_controller.h"
 #include "ros/time.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(controller::JointCalibrationController, pr2_controller_interface::Controller)
 

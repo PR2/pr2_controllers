@@ -36,7 +36,7 @@
  */
 
 #include "pr2_mechanism_controllers/pr2_base_controller2.h"
-#include "pluginlib/class_list_macros.h"
+#include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS( controller::Pr2BaseController2, pr2_controller_interface::Controller)
 
