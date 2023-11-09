@@ -43,6 +43,7 @@
 #include "robot_mechanism_controllers/joint_velocity_controller.h"
 #include "realtime_tools/realtime_publisher.h"
 #include "std_msgs/Empty.h"
+#include "std_msgs/Float32.h"
 #include "pr2_controllers_msgs/QueryCalibrationState.h"
 
 
@@ -65,13 +66,15 @@ public:
 protected:
   pr2_mechanism_model::RobotState* robot_;
   ros::NodeHandle node_;
-  ros::Time last_publish_time_;
   ros::ServiceServer is_calibrated_srv_;
   boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Empty> > pub_calibrated_;
+  boost::scoped_ptr<realtime_tools::RealtimePublisher<std_msgs::Float32> > pub_zero_offset_;
 
   enum { INITIALIZED, BEGINNING, MOVING_TO_LOW, MOVING_TO_HIGH, CALIBRATED };
   int state_;
+  bool announced_calibration_success_;
   int countdown_;
+  int tics_moving_past_calibration_reading_;
 
   double search_velocity_;
   double original_position_;
